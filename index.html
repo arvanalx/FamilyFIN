@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Family FiN</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💰</text></svg>">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- Sidebar Navigation -->
+<nav class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <div class="logo">
+      <span class="logo-icon">💰</span>
+      <span class="logo-text">Family <strong>FiN</strong></span>
+    </div>
+    <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar">☰</button>
+  </div>
+  <ul class="nav-links">
+    <li><a href="#" class="nav-link active" data-page="dashboard">
+      <span class="nav-icon">📊</span><span class="nav-label">Γρήγορη ματιά</span>
+    </a></li>
+    <li><a href="#" class="nav-link" data-page="transactions">
+      <span class="nav-icon">📋</span><span class="nav-label">Κινήσεις</span>
+    </a></li>
+    <li><a href="#" class="nav-link" data-page="income">
+      <span class="nav-icon">💵</span><span class="nav-label">Έσοδα</span>
+    </a></li>
+    <li><a href="#" class="nav-link" data-page="cards">
+      <span class="nav-icon">💳</span><span class="nav-label">Πιστωτικές Κάρτες</span>
+    </a></li>
+    <li><a href="#" class="nav-link" data-page="installments">
+      <span class="nav-icon">📅</span><span class="nav-label">Δόσεις</span>
+    </a></li>
+    <li><a href="#" class="nav-link" data-page="subscriptions">
+      <span class="nav-icon">🔄</span><span class="nav-label">Συνδρομές</span>
+    </a></li>
+    <li><a href="#" class="nav-link" data-page="settings">
+      <span class="nav-icon">⚙️</span><span class="nav-label">Ρυθμίσεις</span>
+    </a></li>
+    <li><a href="#" class="nav-link" data-page="help">
+      <span class="nav-icon">📖</span><span class="nav-label">Βοήθεια</span>
+    </a></li>
+  </ul>
+  <div class="sidebar-footer">
+    <span class="version">v1.0</span>
+  </div>
+</nav>
+
+<!-- Main Content -->
+<main class="main-content" id="mainContent">
+  <header class="top-bar">
+    <button class="mobile-menu-btn" id="mobileMenuBtn">☰</button>
+    <h1 class="page-title" id="pageTitle">Γρήγορη ματιά</h1>
+    <button class="btn-privacy" id="privacyToggle" onclick="togglePrivacy()" title="Απόκρυψη ποσών">👁️</button>
+  </header>
+
+  <!-- DASHBOARD PAGE -->
+  <section class="page active" id="page-dashboard">
+    <div class="dashboard-grid">
+      <!-- Account Balances Summary -->
+      <div class="card card-wide">
+        <div class="card-header">
+          <h2>Υπόλοιπα Λογαριασμών</h2>
+          <span class="card-date" id="dashFutureDate"></span>
+        </div>
+        <div class="balance-table-wrapper">
+          <table class="balance-table">
+            <thead>
+              <tr>
+                <th></th>
+                <th>Σήμερα</th>
+                <th>Μέλλον</th>
+              </tr>
+            </thead>
+            <tbody id="balanceTbody">
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Chart -->
+      <div class="card">
+        <div class="card-header">
+          <h2>Γράφημα Υπολοίπων</h2>
+        </div>
+        <div class="bar-chart-container">
+          <canvas id="balanceChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Quick Stats -->
+      <div class="card stats-card">
+        <div class="card-header"><h2>Στατιστικά Μήνα</h2></div>
+        <div class="stats-grid">
+          <div class="stat-item stat-income">
+            <span class="stat-icon">↑</span>
+            <div>
+              <div class="stat-label">Έσοδα</div>
+              <div class="stat-value" id="monthlyIncome">0,00 €</div>
+            </div>
+          </div>
+          <div class="stat-item stat-expense">
+            <span class="stat-icon">↓</span>
+            <div>
+              <div class="stat-label">Έξοδα</div>
+              <div class="stat-value" id="monthlyExpenses">0,00 €</div>
+            </div>
+          </div>
+          <div class="stat-item stat-balance stat-full">
+            <span class="stat-icon">≈</span>
+            <div>
+              <div class="stat-label">Υπόλοιπο</div>
+              <div class="stat-value" id="monthlyBalance">0,00 €</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Credit Cards Summary -->
+      <div class="card">
+        <div class="card-header"><h2>Πιστωτικές Κάρτες</h2></div>
+        <div class="credit-cards-summary" id="creditCardsSummary"></div>
+      </div>
+
+      <!-- Expenses by Category Chart -->
+      <div class="card card-wide">
+        <div class="card-header">
+          <h2>Έξοδα ανά Κατηγορία</h2>
+          <span class="card-date" id="expChartMonth"></span>
+        </div>
+        <div class="donut-chart-container">
+          <canvas id="expenseCategoryChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Recent Transactions -->
+      <div class="card card-wide">
+        <div class="card-header">
+          <h2>Τελευταίες Κινήσεις</h2>
+          <button class="btn-link" onclick="showPage('transactions')">Όλες →</button>
+        </div>
+        <div class="transactions-list" id="recentTransactions">
+          <div class="empty-state">Δεν υπάρχουν κινήσεις</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TRANSACTIONS PAGE -->
+  <section class="page" id="page-transactions">
+    <div class="page-toolbar">
+      <div class="filter-group">
+        <input type="month" id="txMonthFilter" class="form-control">
+        <select id="txAccountFilter" class="form-control">
+          <option value="">Όλοι οι λογαριασμοί</option>
+        </select>
+        <select id="txCategoryFilter" class="form-control">
+          <option value="">Όλες οι κατηγορίες</option>
+        </select>
+        <input type="text" id="txSearch" class="form-control" placeholder="🔍 Αναζήτηση...">
+      </div>
+      <button class="btn btn-primary" onclick="openModal('addTransactionModal')">+ Νέα Κίνηση</button>
+    </div>
+
+    <div class="summary-bar" id="txSummaryBar">
+      <span>Έσοδα: <strong id="txTotalIncome" class="positive">0,00 €</strong></span>
+      <span>Έξοδα: <strong id="txTotalExpense" class="negative">0,00 €</strong></span>
+      <span>Υπόλοιπο: <strong id="txBalance">0,00 €</strong></span>
+    </div>
+
+    <div class="card">
+      <table class="data-table" id="transactionsTable">
+        <thead>
+          <tr>
+            <th data-sort="date">Ημερομηνία ↕</th>
+            <th data-sort="description">Περιγραφή ↕</th>
+            <th data-sort="category">Κατηγορία</th>
+            <th data-sort="account">Λογαριασμός</th>
+            <th data-sort="amount">Ποσό ↕</th>
+            <th>Ενέργειες</th>
+          </tr>
+        </thead>
+        <tbody id="transactionsTbody">
+        </tbody>
+      </table>
+      <div class="empty-state hidden" id="txEmptyState">Δεν βρέθηκαν κινήσεις</div>
+    </div>
+  </section>
+
+  <!-- INCOME PAGE -->
+  <section class="page" id="page-income">
+    <div class="page-toolbar">
+      <input type="month" id="incomeMonthFilter" class="form-control">
+      <button class="btn btn-primary" onclick="openIncomeModal()">+ Νέο Έσοδο</button>
+    </div>
+    <div class="dashboard-grid">
+      <div class="card stats-card">
+        <div class="card-header"><h2>Σύνοψη Εσόδων</h2></div>
+        <div class="stats-grid">
+          <div class="stat-item stat-income">
+            <span class="stat-icon">💰</span>
+            <div>
+              <div class="stat-label">Μηνιαία Έσοδα</div>
+              <div class="stat-value" id="incomeMonthTotal">0,00 €</div>
+            </div>
+          </div>
+          <div class="stat-item stat-balance">
+            <span class="stat-icon">📆</span>
+            <div>
+              <div class="stat-label">Ετήσια (εκτίμηση)</div>
+              <div class="stat-value" id="incomeYearEstimate">0,00 €</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card card-wide">
+        <div class="card-header"><h2>Έσοδα Μήνα</h2></div>
+        <table class="data-table" id="incomeTable">
+          <thead>
+            <tr>
+              <th>Ημερομηνία</th>
+              <th>Περιγραφή</th>
+              <th>Κατηγορία</th>
+              <th>Λογαριασμός</th>
+              <th>Ποσό</th>
+              <th>Ενέργειες</th>
+            </tr>
+          </thead>
+          <tbody id="incomeTbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- CARDS PAGE -->
+  <section class="page" id="page-cards">
+    <div class="card-tabs" id="cardTabs"></div>
+    <div class="dashboard-grid" id="cardPageContent"></div>
+  </section>
+
+  <!-- INSTALLMENTS PAGE -->
+  <section class="page" id="page-installments">
+    <div class="page-toolbar">
+      <span class="page-subtitle">Παρακολούθηση όλων των δόσεων</span>
+      <button class="btn btn-primary" onclick="openInstallmentModal()">+ Νέα Δόση</button>
+    </div>
+    <div class="dashboard-grid">
+      <div class="card stats-card">
+        <div class="card-header"><h2>Σύνοψη Δόσεων</h2></div>
+        <div class="stats-grid">
+          <div class="stat-item stat-expense">
+            <span class="stat-icon">💳</span>
+            <div>
+              <div class="stat-label">Μηνιαία Επιβάρυνση</div>
+              <div class="stat-value" id="installmentMonthly">0,00 €</div>
+            </div>
+          </div>
+          <div class="stat-item stat-card">
+            <span class="stat-icon">📋</span>
+            <div>
+              <div class="stat-label">Εναπομείναντα Ποσό</div>
+              <div class="stat-value" id="installmentRemaining">0,00 €</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card card-wide">
+        <div class="card-header"><h2>Ενεργές Δόσεις</h2></div>
+        <div class="installments-list" id="allInstallmentsList"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SUBSCRIPTIONS PAGE -->
+  <section class="page" id="page-subscriptions">
+    <div class="page-toolbar">
+      <span class="page-subtitle">Μηνιαίες & ετήσιες συνδρομές</span>
+      <button class="btn btn-primary" onclick="openSubscriptionModal()">+ Νέα Συνδρομή</button>
+    </div>
+    <div class="dashboard-grid">
+      <div class="card stats-card">
+        <div class="card-header"><h2>Κόστος Συνδρομών</h2></div>
+        <div class="stats-grid">
+          <div class="stat-item stat-expense">
+            <span class="stat-icon">📅</span>
+            <div>
+              <div class="stat-label">Μηνιαία</div>
+              <div class="stat-value" id="subMonthly">0,00 €</div>
+            </div>
+          </div>
+          <div class="stat-item stat-card">
+            <span class="stat-icon">📆</span>
+            <div>
+              <div class="stat-label">Ετήσια</div>
+              <div class="stat-value" id="subYearly">0,00 €</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card card-wide">
+        <div class="card-header"><h2>Ενεργές Συνδρομές</h2></div>
+        <div class="subscriptions-grid" id="subscriptionsGrid"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- HELP PAGE -->
+  <section class="page" id="page-help">
+    <div class="card help-card">
+      <div class="help-content" id="helpContent">
+        <div class="empty-state">Φόρτωση οδηγιών...</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SETTINGS PAGE -->
+  <section class="page" id="page-settings">
+    <div class="dashboard-grid">
+      <div class="card">
+        <div class="card-header">
+          <h2>Λογαριασμοί</h2>
+          <button class="btn btn-sm btn-primary" onclick="addAccount()">+ Νέος</button>
+        </div>
+        <div class="settings-section" id="accountsSettingsContainer"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><h2>Κάρτες</h2></div>
+        <div class="settings-section" id="cardsSettingsContainer"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><h2>Κατηγορίες Εξόδων</h2></div>
+        <div class="settings-section">
+          <div id="categoriesList" class="tags-list"></div>
+          <div class="input-group mt-1">
+            <input type="text" id="newCategory" class="form-control" placeholder="Νέα κατηγορία...">
+            <button class="btn btn-sm btn-primary" onclick="addCategory()">Προσθήκη</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><h2>Κατηγορίες Εσόδων</h2></div>
+        <div class="settings-section">
+          <div id="incomeCategoriesList" class="tags-list"></div>
+          <div class="input-group mt-1">
+            <input type="text" id="newIncomeCategory" class="form-control" placeholder="Νέα κατηγορία...">
+            <button class="btn btn-sm btn-primary" onclick="addIncomeCategory()">Προσθήκη</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><h2>Δεδομένα</h2></div>
+        <div class="settings-section settings-actions">
+          <button class="btn btn-secondary" onclick="exportData()">📤 Εξαγωγή JSON</button>
+          <button class="btn btn-secondary" onclick="importData()">📥 Εισαγωγή JSON</button>
+          <input type="file" id="importFile" accept=".json" style="display:none" onchange="handleImport(event)">
+          <button class="btn btn-danger" onclick="confirmReset()">🗑️ Επαναφορά</button>
+        </div>
+      </div>
+
+    </div>
+  </section>
+</main>
+
+<!-- MODALS -->
+<!-- Add Transaction Modal -->
+<div class="modal-overlay" id="addTransactionModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="transactionModalTitle">Νέα Κίνηση</h3>
+      <button class="modal-close" onclick="closeModal('addTransactionModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="editTransactionId">
+      <div class="form-group">
+        <label>Τύπος</label>
+        <div class="radio-group">
+          <label class="radio-label"><input type="radio" name="txType" value="expense" checked> Έξοδο</label>
+          <label class="radio-label"><input type="radio" name="txType" value="income"> Έσοδο</label>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Ημερομηνία *</label>
+          <input type="date" id="txDate" class="form-control" required>
+        </div>
+        <div class="form-group">
+          <label>Ποσό (€) *</label>
+          <input type="number" id="txAmount" class="form-control" step="0.01" min="0" placeholder="0,00" required>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Περιγραφή *</label>
+        <input type="text" id="txDesc" class="form-control" placeholder="π.χ. Σούπερ μάρκετ" required>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Κατηγορία</label>
+          <select id="txCategory" class="form-control"></select>
+        </div>
+        <div class="form-group">
+          <label>Λογαριασμός *</label>
+          <select id="txAccount" class="form-control" required>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Σημειώσεις</label>
+        <textarea id="txNotes" class="form-control" rows="2" placeholder="Προαιρετικές σημειώσεις..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('addTransactionModal')">Άκυρο</button>
+      <button class="btn btn-primary" onclick="saveTransaction()">Αποθήκευση</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Income Modal -->
+<div class="modal-overlay" id="addIncomeModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Νέο Έσοδο</h3>
+      <button class="modal-close" onclick="closeModal('addIncomeModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="editIncomeId">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Ημερομηνία *</label>
+          <input type="date" id="incDate" class="form-control" required>
+        </div>
+        <div class="form-group">
+          <label>Ποσό (€) *</label>
+          <input type="number" id="incAmount" class="form-control" step="0.01" min="0" required>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Περιγραφή *</label>
+        <input type="text" id="incDesc" class="form-control" placeholder="π.χ. Μισθός" required>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Κατηγορία</label>
+          <select id="incCategory" class="form-control">
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Λογαριασμός</label>
+          <select id="incAccount" class="form-control">
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('addIncomeModal')">Άκυρο</button>
+      <button class="btn btn-primary" onclick="saveIncome()">Αποθήκευση</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Installment Modal -->
+<div class="modal-overlay" id="addInstallmentModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="installmentModalTitle">Νέα Δόση</h3>
+      <button class="modal-close" onclick="closeModal('addInstallmentModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="editInstallmentId">
+      <div class="form-group">
+        <label>Περιγραφή *</label>
+        <input type="text" id="instDesc" class="form-control" placeholder="π.χ. KOTSOVOLOS - Laptop" required>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Συνολικό Ποσό (€) *</label>
+          <input type="number" id="instTotal" class="form-control" step="0.01" min="0" required>
+        </div>
+        <div class="form-group">
+          <label>Μηνιαία Δόση (€) *</label>
+          <input type="number" id="instMonthly" class="form-control" step="0.01" min="0" required>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Δόσεις που πληρώθηκαν</label>
+          <input type="number" id="instPaid" class="form-control" min="0" value="0">
+        </div>
+        <div class="form-group">
+          <label>Συνολικές Δόσεις *</label>
+          <input type="number" id="instTotalCount" class="form-control" min="1" required>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Κάρτα</label>
+          <select id="instCard" class="form-control">
+            <option value="visa">VISA (Alpha Bank)</option>
+            <option value="mastercard">MASTERCARD (WinBank)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Κατάστημα / Πάροχος</label>
+          <input type="text" id="instStore" class="form-control" placeholder="π.χ. KOTSOVOLOS">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Κατηγορία Εξόδου</label>
+          <select id="instCategory" class="form-control"></select>
+        </div>
+        <div class="form-group">
+          <label>Ημερομηνία έναρξης</label>
+          <input type="month" id="instStart" class="form-control">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('addInstallmentModal')">Άκυρο</button>
+      <button class="btn btn-primary" onclick="saveInstallment()">Αποθήκευση</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Subscription Modal -->
+<div class="modal-overlay" id="addSubscriptionModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="subscriptionModalTitle">Νέα Συνδρομή</h3>
+      <button class="modal-close" onclick="closeModal('addSubscriptionModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="editSubscriptionId">
+      <div class="form-group">
+        <label>Υπηρεσία *</label>
+        <input type="text" id="subName" class="form-control" placeholder="π.χ. Netflix" required>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Ποσό (€) *</label>
+          <input type="number" id="subAmount" class="form-control" step="0.01" min="0" required>
+        </div>
+        <div class="form-group">
+          <label>Συχνότητα</label>
+          <select id="subFrequency" class="form-control">
+            <option value="monthly">Μηνιαία</option>
+            <option value="yearly">Ετήσια</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Κάρτα/Λογαριασμός</label>
+          <select id="subCard" class="form-control">
+            <option value="visa">VISA</option>
+            <option value="mastercard">MASTERCARD</option>
+            <option value="cash">Μετρητά</option>
+            <option value="alpha">AlphaBank</option>
+            <option value="winbank">WinBank</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Ημέρα χρέωσης</label>
+          <input type="number" id="subDay" class="form-control" min="1" max="31" placeholder="1">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Κατηγορία Εξόδου</label>
+          <select id="subCategory" class="form-control"></select>
+        </div>
+        <div class="form-group">
+          <label>Εικονίδιο / Emoji</label>
+          <input type="text" id="subIcon" class="form-control" placeholder="🎬" maxlength="2">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('addSubscriptionModal')">Άκυρο</button>
+      <button class="btn btn-primary" onclick="saveSubscription()">Αποθήκευση</button>
+    </div>
+  </div>
+</div>
+
+<!-- Card Transaction Modal -->
+<div class="modal-overlay" id="cardTransactionModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="cardTxModalTitle">Κίνηση Κάρτας</h3>
+      <button class="modal-close" onclick="closeModal('cardTransactionModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="cardTxCard">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Ημερομηνία *</label>
+          <input type="date" id="cardTxDate" class="form-control" required>
+        </div>
+        <div class="form-group">
+          <label>Ποσό (€) *</label>
+          <input type="number" id="cardTxAmount" class="form-control" step="0.01" min="0" required>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Περιγραφή *</label>
+        <input type="text" id="cardTxDesc" class="form-control" required>
+      </div>
+      <div class="form-group">
+        <label>Κατηγορία</label>
+        <select id="cardTxCategory" class="form-control"></select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('cardTransactionModal')">Άκυρο</button>
+      <button class="btn btn-primary" onclick="saveCardTransaction()">Αποθήκευση</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast notification -->
+<div class="toast" id="toast"></div>
+
+<!-- Confirm dialog -->
+<div class="modal-overlay" id="confirmModal">
+  <div class="modal modal-sm">
+    <div class="modal-header">
+      <h3 id="confirmTitle">Επιβεβαίωση</h3>
+    </div>
+    <div class="modal-body">
+      <p id="confirmMessage"></p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('confirmModal')">Άκυρο</button>
+      <button class="btn btn-danger" id="confirmBtn">Επιβεβαίωση</button>
+    </div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
