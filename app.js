@@ -564,13 +564,13 @@ function renderExpenseCategoryChart(catData) {
 function renderHelp() {
   const cont = document.getElementById('helpContent');
   if (!cont || cont.dataset.loaded) return;  // cache — don't re-parse on every nav click
-  fetch('/ΟΔΗΓΙΕΣ_ΧΡΗΣΗΣ.md')
+  fetch('/README.md')
     .then(r => r.ok ? r.text() : Promise.reject('not found'))
     .then(md => { cont.innerHTML = mdToHtml(md); cont.dataset.loaded = '1'; })
     .catch(() => { cont.innerHTML = '<p class="muted" style="padding:24px">Δεν βρέθηκε το αρχείο οδηγιών.</p>'; });
 }
 
-// Lightweight Markdown → HTML converter (supports the subset used in ΟΔΗΓΙΕΣ_ΧΡΗΣΗΣ.md)
+// Lightweight Markdown → HTML converter (supports the subset used in README.md)
 function mdToHtml(md) {
   const lines = md.split('\n');
   const out   = [];
