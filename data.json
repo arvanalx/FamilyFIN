@@ -1,1 +1,105 @@
-{"accounts":[{"id":"cash","name":"Μετρητά","type":"cash","bank":"","balance":0}],"cards":[{"id":"visa","name":"VISA","bank":"Alpha Bank","linkedAccount":"alpha"},{"id":"mastercard","name":"MASTERCARD","bank":"","linkedAccount":"winbank"}],"categories":["Σούπερ μάρκετ","Εστιατόριο / Καφέ","Μεταφορές","Υγεία / Γιατροί","Ρουχισμός","Ηλεκτρονικά","Ψυχαγωγία","Εκπαίδευση","Τηλεπικοινωνίες","Ενέργεια / Νερό","Ενοίκιο","Ασφάλειες","Δάνειο","Παιδιά","Εφάπαξ","Άλλο"],"incomeCategories":["Μισθός","Ελεύθερος Επαγγελματίας","Σύνταξη","Ενοίκιο (είσπραξη)","Επίδομα","Άλλο"],"transactions":[],"installments":[{"id":"i1","desc":"Apple Watch S10","store":"KOTSOVOLOS","card":"visa","totalAmount":null,"monthlyAmount":null,"paidCount":16,"totalCount":24,"startMonth":null,"active":true},{"id":"i2","desc":"PUBLIC RETAIL SA","store":"PUBLIC","card":"visa","totalAmount":null,"monthlyAmount":null,"paidCount":7,"totalCount":24,"startMonth":null,"active":true},{"id":"i3","desc":"NEXT GEN RETAIL SA","store":"NEXT GEN","card":"visa","totalAmount":null,"monthlyAmount":null,"paidCount":12,"totalCount":24,"startMonth":"2025-01","active":true},{"id":"i4","desc":"DRONE","store":"","card":"visa","totalAmount":null,"monthlyAmount":null,"paidCount":0,"totalCount":null,"startMonth":"2025-05","active":true},{"id":"i5","desc":"GKEKA EVAGGELIA","store":"","card":"mastercard","totalAmount":null,"monthlyAmount":null,"paidCount":3,"totalCount":4,"startMonth":null,"active":true},{"id":"i6","desc":"KIRITSIS ORTHOPEDIKA","store":"","card":"mastercard","totalAmount":null,"monthlyAmount":null,"paidCount":0,"totalCount":null,"startMonth":null,"active":true}],"subscriptions":[{"id":"s1","name":"iCloud","icon":"☁️","amount":0.99,"frequency":"monthly","card":"visa","day":1,"startMonth":"2026-03"},{"id":"s2","name":"Apple Music","icon":"🎵","amount":5.99,"frequency":"monthly","card":"visa","day":1,"startMonth":"2026-03"},{"id":"s3","name":"Netflix","icon":"🎬","amount":13.99,"frequency":"monthly","card":"visa","day":1,"startMonth":"2026-03"},{"id":"s4","name":"COSMOTE","icon":"📱","amount":0,"frequency":"monthly","card":"winbank","day":5,"startMonth":"2026-03"}],"cardTransactions":[{"id":"mmi40wsuf8vz","card":"visa","date":"2026-03-01","amount":0.99,"desc":"iCloud","category":"Συνδρομές","subId":"s1","subMonth":"2026-03"},{"id":"mmi40wsuz4zs","card":"visa","date":"2026-03-01","amount":5.99,"desc":"Apple Music","category":"Συνδρομές","subId":"s2","subMonth":"2026-03"},{"id":"mmi40wsu32pu","card":"visa","date":"2026-03-01","amount":13.99,"desc":"Netflix","category":"Συνδρομές","subId":"s3","subMonth":"2026-03"}],"deletedSubKeys":[]}
+{
+  "accounts": [
+    {"id":"cash",    "name":"Μετρητά",              "type":"cash",     "bank":"",                    "balance":1000},
+    {"id":"alpha",   "name":"Alpha Bank",            "type":"checking", "bank":"Alpha Bank",          "balance":1200},
+    {"id":"piraeus", "name":"Πειραιώς (Winbank)",    "type":"checking", "bank":"Τράπεζα Πειραιώς",   "balance":950},
+    {"id":"ethniki", "name":"Εθνική — Ταμιευτήριο", "type":"savings",  "bank":"Εθνική Τράπεζα",     "balance":15500}
+  ],
+
+  "cards": [
+    {"id":"visa",       "name":"VISA Gold",  "bank":"Alpha Bank",         "linkedAccount":"alpha"},
+    {"id":"mastercard", "name":"Mastercard", "bank":"Τράπεζα Πειραιώς",  "linkedAccount":"piraeus"}
+  ],
+
+  "categories": [
+    "Σούπερ μάρκετ","Εστιατόριο / Καφέ","Μεταφορές","Υγεία / Γιατροί",
+    "Ρουχισμός","Ηλεκτρονικά","Ψυχαγωγία","Εκπαίδευση","Τηλεπικοινωνίες",
+    "Ενέργεια / Νερό","Ενοίκιο","Ασφάλειες","Δάνειο","Παιδιά","Εφάπαξ","Άλλο"
+  ],
+
+  "incomeCategories": [
+    "Μισθός","Ελεύθερος Επαγγελματίας","Σύνταξη","Ενοίκιο (είσπραξη)","Επίδομα","Άλλο"
+  ],
+
+  "transactions": [
+    {"id":"tx001","type":"income", "date":"2026-01-05","amount":1850,"desc":"Μισθός Γεωργίου Παπαδόπουλου",      "category":"Μισθός",             "account":"alpha",   "notes":""},
+    {"id":"tx002","type":"income", "date":"2026-01-10","amount":1150,"desc":"Μισθός Μαρίας Παπαδοπούλου",        "category":"Μισθός",             "account":"piraeus", "notes":""},
+    {"id":"tx003","type":"income", "date":"2026-01-31","amount":450, "desc":"Ενοίκιο διαμερίσματος Κηφισιάς",   "category":"Ενοίκιο (είσπραξη)","account":"alpha",   "notes":"Ιανουάριος 2026"},
+    {"id":"tx004","type":"expense","date":"2026-01-02","amount":750, "desc":"Ενοίκιο κατοικίας Ιανουαρίου",     "category":"Ενοίκιο",           "account":"piraeus", "notes":""},
+    {"id":"tx005","type":"expense","date":"2026-01-05","amount":94,  "desc":"ΔΕΗ — Δεκέμβριος 2025",            "category":"Ενέργεια / Νερό",   "account":"alpha",   "notes":""},
+    {"id":"tx006","type":"expense","date":"2026-01-06","amount":52,  "desc":"Λαϊκή Αγορά Κυριακάτου",           "category":"Σούπερ μάρκετ",     "account":"cash",    "notes":""},
+    {"id":"tx007","type":"expense","date":"2026-01-12","amount":32,  "desc":"Φαρμακείο Βαλτινού",               "category":"Υγεία / Γιατροί",   "account":"cash",    "notes":""},
+    {"id":"tx008","type":"expense","date":"2026-01-17","amount":18,  "desc":"Καφετέρια Friends",                 "category":"Εστιατόριο / Καφέ", "account":"cash",    "notes":""},
+    {"id":"tx009","type":"expense","date":"2026-01-20","amount":80,  "desc":"Φροντιστήριο Αγγλικών — Νίκος",    "category":"Παιδιά",            "account":"alpha",   "notes":"Μηνιαία δόση"},
+    {"id":"tx010","type":"expense","date":"2026-01-28","amount":320, "desc":"Ασφάλεια αυτοκινήτου",             "category":"Ασφάλειες",         "account":"alpha",   "notes":"Ετήσια ανανέωση"},
+
+    {"id":"tx011","type":"income", "date":"2026-02-05","amount":1850,"desc":"Μισθός Γεωργίου Παπαδόπουλου",     "category":"Μισθός",             "account":"alpha",   "notes":""},
+    {"id":"tx012","type":"income", "date":"2026-02-10","amount":1150,"desc":"Μισθός Μαρίας Παπαδοπούλου",       "category":"Μισθός",             "account":"piraeus", "notes":""},
+    {"id":"tx013","type":"income", "date":"2026-02-28","amount":450, "desc":"Ενοίκιο διαμερίσματος Κηφισιάς",  "category":"Ενοίκιο (είσπραξη)","account":"alpha",   "notes":"Φεβρουάριος 2026"},
+    {"id":"tx014","type":"expense","date":"2026-02-02","amount":750, "desc":"Ενοίκιο κατοικίας Φεβρουαρίου",   "category":"Ενοίκιο",           "account":"piraeus", "notes":""},
+    {"id":"tx015","type":"expense","date":"2026-02-04","amount":42,  "desc":"ΕΥΔΑΠ — Ιανουάριος 2026",          "category":"Ενέργεια / Νερό",   "account":"piraeus", "notes":""},
+    {"id":"tx016","type":"expense","date":"2026-02-06","amount":48,  "desc":"Λαϊκή Αγορά Κυριακάτου",           "category":"Σούπερ μάρκετ",     "account":"cash",    "notes":""},
+    {"id":"tx017","type":"expense","date":"2026-02-10","amount":50,  "desc":"Παιδίατρος Δρ. Κωστόπουλος",       "category":"Υγεία / Γιατροί",   "account":"cash",    "notes":"Τακτικός έλεγχος"},
+    {"id":"tx018","type":"expense","date":"2026-02-14","amount":75,  "desc":"Εστιατόριο Μπουκαδούρα",           "category":"Εστιατόριο / Καφέ", "account":"cash",    "notes":"Αγίου Βαλεντίνου"},
+    {"id":"tx019","type":"expense","date":"2026-02-20","amount":88,  "desc":"ΔΕΗ — Ιανουάριος 2026",            "category":"Ενέργεια / Νερό",   "account":"alpha",   "notes":""},
+    {"id":"tx020","type":"expense","date":"2026-02-25","amount":120, "desc":"Ορθοδοντικός — Α΄ δόση νάρθηκα",  "category":"Υγεία / Γιατροί",   "account":"alpha",   "notes":"Ορθοδοντική αγωγή Νίκου"},
+
+    {"id":"tx021","type":"income", "date":"2026-03-05","amount":1850,"desc":"Μισθός Γεωργίου Παπαδόπουλου",     "category":"Μισθός",             "account":"alpha",   "notes":""},
+    {"id":"tx022","type":"income", "date":"2026-03-08","amount":1150,"desc":"Μισθός Μαρίας Παπαδοπούλου",       "category":"Μισθός",             "account":"piraeus", "notes":""},
+    {"id":"tx023","type":"expense","date":"2026-03-02","amount":750, "desc":"Ενοίκιο κατοικίας Μαρτίου",        "category":"Ενοίκιο",           "account":"piraeus", "notes":""},
+    {"id":"tx024","type":"expense","date":"2026-03-04","amount":55,  "desc":"Λαϊκή Αγορά Κυριακάτου",           "category":"Σούπερ μάρκετ",     "account":"cash",    "notes":""},
+    {"id":"tx025","type":"expense","date":"2026-03-07","amount":28,  "desc":"Φαρμακείο Δημητρίου",              "category":"Υγεία / Γιατροί",   "account":"cash",    "notes":""}
+  ],
+
+  "installments": [
+    {"id":"i1","desc":"iPhone 15 Pro Max",       "store":"KOTSOVOLOS",  "card":"visa",       "totalAmount":1100, "monthlyAmount":45.83,"paidCount":16,"totalCount":24,"startMonth":"2024-11","active":true},
+    {"id":"i2","desc":"Laptop HP Pavilion 15",   "store":"PUBLIC",      "card":"visa",       "totalAmount":700,  "monthlyAmount":29.17,"paidCount":8, "totalCount":24,"startMonth":"2025-07","active":true},
+    {"id":"i3","desc":"TV Samsung QLED 65\"",    "store":"MEDIA MARKT", "card":"visa",       "totalAmount":500,  "monthlyAmount":41.67,"paidCount":12,"totalCount":12,"startMonth":"2025-03","active":false},
+    {"id":"i4","desc":"Ηλεκτρική σκούπα Dyson V15","store":"PLAISIO",  "card":"mastercard", "totalAmount":300,  "monthlyAmount":49.99,"paidCount":3, "totalCount":6, "startMonth":"2025-12","active":true},
+    {"id":"i5","desc":"Στρώμα + Βάση Διπλό",    "store":"IKEA",        "card":"mastercard", "totalAmount":420,  "monthlyAmount":35.00,"paidCount":6, "totalCount":12,"startMonth":"2025-09","active":true}
+  ],
+
+  "subscriptions": [
+    {"id":"s1","name":"iCloud 50GB",       "icon":"☁️","amount":0.99, "frequency":"monthly","card":"visa",       "day":1,"startMonth":"2026-01"},
+    {"id":"s2","name":"Apple Music Family","icon":"🎵","amount":14.99,"frequency":"monthly","card":"visa",       "day":1,"startMonth":"2026-01"},
+    {"id":"s3","name":"Netflix Standard",  "icon":"🎬","amount":13.99,"frequency":"monthly","card":"visa",       "day":1,"startMonth":"2026-01"},
+    {"id":"s4","name":"Spotify Premium",   "icon":"🎧","amount":10.99,"frequency":"monthly","card":"mastercard", "day":5,"startMonth":"2026-01"},
+    {"id":"s5","name":"COSMOTE TV",        "icon":"📺","amount":8.99, "frequency":"monthly","card":"mastercard", "day":5,"startMonth":"2026-01"}
+  ],
+
+  "cardTransactions": [
+    {"id":"ct001","card":"visa",       "date":"2026-01-01","amount":0.99, "desc":"iCloud 50GB",            "category":"Συνδρομές",         "subId":"s1","subMonth":"2026-01"},
+    {"id":"ct002","card":"visa",       "date":"2026-01-01","amount":14.99,"desc":"Apple Music Family",     "category":"Συνδρομές",         "subId":"s2","subMonth":"2026-01"},
+    {"id":"ct003","card":"visa",       "date":"2026-01-01","amount":13.99,"desc":"Netflix Standard",       "category":"Συνδρομές",         "subId":"s3","subMonth":"2026-01"},
+    {"id":"ct004","card":"visa",       "date":"2026-01-08","amount":23.99,"desc":"Amazon — Θήκη Tablet",  "category":"Ηλεκτρονικά"},
+    {"id":"ct005","card":"visa",       "date":"2026-01-15","amount":28.50,"desc":"Pizza Fan",              "category":"Εστιατόριο / Καφέ"},
+    {"id":"ct006","card":"visa",       "date":"2026-01-20","amount":45.00,"desc":"Plaisio — Καλώδια USB", "category":"Ηλεκτρονικά"},
+    {"id":"ct007","card":"mastercard", "date":"2026-01-05","amount":10.99,"desc":"Spotify Premium",        "category":"Συνδρομές",         "subId":"s4","subMonth":"2026-01"},
+    {"id":"ct008","card":"mastercard", "date":"2026-01-05","amount":8.99, "desc":"COSMOTE TV",             "category":"Συνδρομές",         "subId":"s5","subMonth":"2026-01"},
+    {"id":"ct009","card":"mastercard", "date":"2026-01-12","amount":65.00,"desc":"Shell — Βενζίνη",        "category":"Μεταφορές"},
+    {"id":"ct010","card":"mastercard", "date":"2026-01-19","amount":89.00,"desc":"Zara",                   "category":"Ρουχισμός"},
+
+    {"id":"ct011","card":"visa",       "date":"2026-02-01","amount":0.99, "desc":"iCloud 50GB",            "category":"Συνδρομές",         "subId":"s1","subMonth":"2026-02"},
+    {"id":"ct012","card":"visa",       "date":"2026-02-01","amount":14.99,"desc":"Apple Music Family",     "category":"Συνδρομές",         "subId":"s2","subMonth":"2026-02"},
+    {"id":"ct013","card":"visa",       "date":"2026-02-01","amount":13.99,"desc":"Netflix Standard",       "category":"Συνδρομές",         "subId":"s3","subMonth":"2026-02"},
+    {"id":"ct014","card":"visa",       "date":"2026-02-12","amount":12.50,"desc":"Everest",                "category":"Εστιατόριο / Καφέ"},
+    {"id":"ct015","card":"visa",       "date":"2026-02-18","amount":105.00,"desc":"ΑΒ Βασιλόπουλος",      "category":"Σούπερ μάρκετ"},
+    {"id":"ct016","card":"visa",       "date":"2026-02-22","amount":38.00,"desc":"Flanco — Αξεσουάρ",     "category":"Ηλεκτρονικά"},
+    {"id":"ct017","card":"mastercard", "date":"2026-02-05","amount":10.99,"desc":"Spotify Premium",        "category":"Συνδρομές",         "subId":"s4","subMonth":"2026-02"},
+    {"id":"ct018","card":"mastercard", "date":"2026-02-05","amount":8.99, "desc":"COSMOTE TV",             "category":"Συνδρομές",         "subId":"s5","subMonth":"2026-02"},
+    {"id":"ct019","card":"mastercard", "date":"2026-02-08","amount":60.00,"desc":"BP — Βενζίνη",           "category":"Μεταφορές"},
+    {"id":"ct020","card":"mastercard", "date":"2026-02-20","amount":55.00,"desc":"H&M — Ρούχα παιδιών",   "category":"Ρουχισμός"},
+
+    {"id":"ct021","card":"visa",       "date":"2026-03-01","amount":0.99, "desc":"iCloud 50GB",            "category":"Συνδρομές",         "subId":"s1","subMonth":"2026-03"},
+    {"id":"ct022","card":"visa",       "date":"2026-03-01","amount":14.99,"desc":"Apple Music Family",     "category":"Συνδρομές",         "subId":"s2","subMonth":"2026-03"},
+    {"id":"ct023","card":"visa",       "date":"2026-03-01","amount":13.99,"desc":"Netflix Standard",       "category":"Συνδρομές",         "subId":"s3","subMonth":"2026-03"},
+    {"id":"ct024","card":"visa",       "date":"2026-03-03","amount":9.50, "desc":"Starbucks",              "category":"Εστιατόριο / Καφέ"},
+    {"id":"ct025","card":"visa",       "date":"2026-03-05","amount":55.00,"desc":"Kotsovolos — Ακουστικά","category":"Ηλεκτρονικά"},
+    {"id":"ct026","card":"mastercard", "date":"2026-03-02","amount":72.00,"desc":"EKO — Βενζίνη",          "category":"Μεταφορές"},
+    {"id":"ct027","card":"mastercard", "date":"2026-03-05","amount":10.99,"desc":"Spotify Premium",        "category":"Συνδρομές",         "subId":"s4","subMonth":"2026-03"},
+    {"id":"ct028","card":"mastercard", "date":"2026-03-05","amount":8.99, "desc":"COSMOTE TV",             "category":"Συνδρομές",         "subId":"s5","subMonth":"2026-03"},
+    {"id":"ct029","card":"mastercard", "date":"2026-03-06","amount":120.00,"desc":"Notos Home — Κουζινικά","category":"Άλλο"}
+  ],
+
+  "deletedSubKeys": []
+}
