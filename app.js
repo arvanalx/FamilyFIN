@@ -1366,9 +1366,33 @@ function renderCardsSettings() {
       </div>
       <div class="acc-setting-actions">
         <button class="btn btn-sm btn-primary" onclick="saveCardSetting('${card.id}')">Αποθήκευση</button>
+        <button class="btn btn-sm btn-danger"  onclick="deleteCard('${card.id}')">🗑️ Διαγραφή</button>
       </div>
     </div>
   `).join('');
+}
+
+function deleteCard(id) {
+  const card = (state.cards || []).find(c => c.id === id);
+  if (!card) return;
+  const hasTx   = (state.cardTransactions || []).some(t => t.card === id);
+  const hasInst = (state.installments     || []).some(i => i.card === id);
+  const hasSub  = (state.subscriptions    || []).some(s => s.card === id);
+  const extras  = [hasTx && 'συναλλαγές', hasInst && 'δόσεις', hasSub && 'συνδρομές']
+                    .filter(Boolean).join(', ');
+  const msg = extras
+    ? `Η κάρτα "${card.name}" και οι συνδεδεμένες ${extras} της θα διαγραφούν οριστικά.`
+    : `Να διαγραφεί η κάρτα "${card.name}";`;
+  showConfirm('Διαγραφή Κάρτας', msg, () => {
+    state.cards            = state.cards.filter(c => c.id !== id);
+    state.cardTransactions = (state.cardTransactions || []).filter(t => t.card !== id);
+    state.installments     = (state.installments     || []).filter(i => i.card !== id);
+    state.subscriptions    = (state.subscriptions    || []).filter(s => s.card !== id);
+    saveState();
+    renderCardsSettings();
+    populateAllDropdowns();
+    showToast('Η κάρτα διαγράφηκε', 'success');
+  });
 }
 
 function toggleBankField(accId) {
