@@ -6,15 +6,8 @@
 
 // ── DATA STORE ──────────────────────────────────────────────
 const DEFAULT_STATE = {
-  accounts: [
-    { id: 'cash',    name: 'Μετρητά',   type: 'cash', bank: '',           balance: 0       },
-    { id: 'alpha',   name: 'AlphaBank', type: 'bank', bank: 'Alpha Bank', balance: 414.07  },
-    { id: 'winbank', name: 'WinBank',   type: 'bank', bank: 'WinBank',    balance: 2667.15 },
-  ],
-  cards: [
-    { id: 'visa',       name: 'VISA',       bank: 'Alpha Bank', linkedAccount: 'alpha'   },
-    { id: 'mastercard', name: 'MASTERCARD', bank: 'WinBank',    linkedAccount: 'winbank' },
-  ],
+  accounts:         [],
+  cards:            [],
   categories: [
     'Σούπερ μάρκετ', 'Εστιατόριο / Καφέ', 'Μεταφορές', 'Υγεία / Γιατροί',
     'Ρουχισμός', 'Ηλεκτρονικά', 'Ψυχαγωγία', 'Εκπαίδευση',
@@ -25,35 +18,11 @@ const DEFAULT_STATE = {
     'Μισθός', 'Ελεύθερος Επαγγελματίας', 'Σύνταξη',
     'Ενοίκιο (είσπραξη)', 'Επίδομα', 'Άλλο',
   ],
-  transactions: [],    // { id, date, desc, category, account, amount, type, notes }
-  installments: [      // Pre-populated from the spreadsheet
-    { id: 'i1', desc: 'Apple Watch S10', store: 'KOTSOVOLOS', card: 'visa',
-      totalAmount: null, monthlyAmount: null, paidCount: 16, totalCount: 24,
-      startMonth: null, active: true },
-    { id: 'i2', desc: 'PUBLIC RETAIL SA', store: 'PUBLIC', card: 'visa',
-      totalAmount: null, monthlyAmount: null, paidCount: 7, totalCount: 24,
-      startMonth: null, active: true },
-    { id: 'i3', desc: 'NEXT GEN RETAIL SA', store: 'NEXT GEN', card: 'visa',
-      totalAmount: null, monthlyAmount: null, paidCount: 12, totalCount: 24,
-      startMonth: '2025-01', active: true },
-    { id: 'i4', desc: 'DRONE', store: '', card: 'visa',
-      totalAmount: null, monthlyAmount: null, paidCount: 0, totalCount: null,
-      startMonth: '2025-05', active: true },
-    { id: 'i5', desc: 'GKEKA EVAGGELIA', store: '', card: 'mastercard',
-      totalAmount: null, monthlyAmount: null, paidCount: 3, totalCount: 4,
-      startMonth: null, active: true },
-    { id: 'i6', desc: 'KIRITSIS ORTHOPEDIKA', store: '', card: 'mastercard',
-      totalAmount: null, monthlyAmount: null, paidCount: 0, totalCount: null,
-      startMonth: null, active: true },
-  ],
-  subscriptions: [
-    { id: 's1', name: 'iCloud',      icon: '☁️',  amount: 0.99,  frequency: 'monthly', card: 'visa',    day: 1, startMonth: '2026-03' },
-    { id: 's2', name: 'Apple Music', icon: '🎵',  amount: 5.99,  frequency: 'monthly', card: 'visa',    day: 1, startMonth: '2026-03' },
-    { id: 's3', name: 'Netflix',     icon: '🎬',  amount: 13.99, frequency: 'monthly', card: 'visa',    day: 1, startMonth: '2026-03' },
-    { id: 's4', name: 'COSMOTE',     icon: '📱',  amount: 0,     frequency: 'monthly', card: 'winbank', day: 5, startMonth: '2026-03' },
-  ],
+  transactions:     [], // { id, date, desc, category, account, amount, type, notes }
+  installments:     [],
+  subscriptions:    [],
   cardTransactions: [], // { id, date, desc, category, card, amount, [subId, subMonth] }
-  deletedSubKeys: [],   // "subId|YYYY-MM" — tracks manually-deleted auto transactions
+  deletedSubKeys:   [], // "subId|YYYY-MM" — tracks manually-deleted auto transactions
 };
 
 let state;        // populated async on DOMContentLoaded
