@@ -1352,6 +1352,9 @@ function renderAccountsSettings() {
 function renderCardsSettings() {
   const container = document.getElementById('cardsSettingsContainer');
   if (!container) return;
+  const accOptions = (state.accounts || []).map(a =>
+    `<option value="${a.id}">${esc(a.name)}</option>`
+  ).join('');
   container.innerHTML = (state.cards || []).map(card => `
     <div class="acc-setting-block">
       <div class="acc-setting-fields">
@@ -1363,6 +1366,13 @@ function renderCardsSettings() {
           <label>Τράπεζα Έκδοσης</label>
           <input type="text" id="cardBank_${card.id}" class="form-control" value="${esc(card.bank || '')}" placeholder="π.χ. Alpha Bank">
         </div>
+        <div class="form-group">
+          <label>Συνδεδεμένος Λογαριασμός</label>
+          <select id="cardLinkedAcc_${card.id}" class="form-control">
+            <option value="">— Κανένας —</option>
+            ${accOptions}
+          </select>
+        </div>
       </div>
       <div class="acc-setting-actions">
         <button class="btn btn-sm btn-primary" onclick="saveCardSetting('${card.id}')">Αποθήκευση</button>
@@ -1370,6 +1380,11 @@ function renderCardsSettings() {
       </div>
     </div>
   `).join('');
+  // Set current linkedAccount value for each card
+  (state.cards || []).forEach(card => {
+    const sel = document.getElementById(`cardLinkedAcc_${card.id}`);
+    if (sel) sel.value = card.linkedAccount || '';
+  });
 }
 
 function deleteCard(id) {
@@ -1437,13 +1452,23 @@ function addAccount() {
 function saveCardSetting(id) {
   const card = (state.cards || []).find(c => c.id === id);
   if (!card) return;
-  const name = document.getElementById(`cardName_${id}`).value.trim();
-  const bank = document.getElementById(`cardBank_${id}`).value.trim();
+  const name      = document.getElementById(`cardName_${id}`).value.trim();
+  const bank      = document.getElementById(`cardBank_${id}`).value.trim();
+  const linkedAcc = document.getElementById(`cardLinkedAcc_${id}`).value;
   if (!name) { showToast('Εισάγετε όνομα κάρτας', 'error'); return; }
-  card.name = name; card.bank = bank;
+  card.name = name; card.bank = bank; card.linkedAccount = linkedAcc;
   saveState();
   populateAllDropdowns();
   showToast('Αποθηκεύτηκε ✓', 'success');
+}
+
+function addCard() {
+  const newId = 'card_' + uid();
+  state.cards = state.cards || [];
+  state.cards.push({ id: newId, name: 'Νέα Κάρτα', bank: '', linkedAccount: '' });
+  saveState();
+  renderCardsSettings();
+  populateAllDropdowns();
 }
 
 function renderCategoriesList() {
