@@ -733,18 +733,18 @@ function filterAndRenderTransactions() {
 }
 
 function editTransaction(id) {
-  const t = state.transactions.find(x => x.id === id);
-  if (!t) return;
+  const tx = state.transactions.find(x => x.id === id);
+  if (!tx) return;
   document.getElementById('transactionModalTitle').textContent = t('modal_edit_tx');
   document.getElementById('editTransactionId').value = id;
-  document.querySelector(`input[name="txType"][value="${t.type}"]`).checked = true;
-  document.getElementById('txDate').value     = t.date;
-  document.getElementById('txAmount').value   = t.amount;
-  document.getElementById('txDesc').value     = t.desc;
-  document.getElementById('txNotes').value    = t.notes || '';
+  document.querySelector(`input[name="txType"][value="${tx.type}"]`).checked = true;
+  document.getElementById('txDate').value     = tx.date;
+  document.getElementById('txAmount').value   = tx.amount;
+  document.getElementById('txDesc').value     = tx.desc;
+  document.getElementById('txNotes').value    = tx.notes || '';
   populateTxCategorySelect();
-  document.getElementById('txCategory').value = t.category || '';
-  document.getElementById('txAccount').value  = t.account;
+  document.getElementById('txCategory').value = tx.category || '';
+  document.getElementById('txAccount').value  = tx.account;
   openModal('addTransactionModal');
 }
 
