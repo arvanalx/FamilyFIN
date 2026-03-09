@@ -920,7 +920,7 @@ function renderCard(cardId) {
         </div>
         <div class="cc-stat">
           <div class="cc-stat-label">${t('card_monthly_inst')}</div>
-          <div class="cc-stat-value">${fmtEuro(totalInst)}${t('per_month')}</div>
+          <div class="cc-stat-value">${fmtEuro(totalInst)}</div>
         </div>
         <div class="cc-stat">
           <div class="cc-stat-label">${t('card_monthly_tx')}</div>
