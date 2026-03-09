@@ -105,7 +105,7 @@ class ReusableHTTPServer(HTTPServer):
 if __name__ == '__main__':
 # Change 'localhost' to '0.0.0.0' to listen on all network interfaces
     server = ReusableHTTPServer(('0.0.0.0', PORT), FamilyFinHandler)
-    print(f'  Family FiN  →  http://192.168.68.10:{PORT}')
+    print(f'  Family FiN  →  http://localhost:{PORT}')
     print(f'  Data file   →  {DATA_FILE}')
     print('  Press Ctrl+C to stop.\n')
     try:
