@@ -678,12 +678,12 @@ function filterAndRenderTransactions() {
   const search  = document.getElementById('txSearch').value.trim().toLowerCase();
 
   let txs = [...state.transactions];
-  if (month)   txs = txs.filter(t => t.date.startsWith(month));
-  if (account) txs = txs.filter(t => t.account === account);
-  if (cat)     txs = txs.filter(t => t.category === cat);
-  if (search)  txs = txs.filter(t =>
-    t.desc.toLowerCase().includes(search) ||
-    (t.notes || '').toLowerCase().includes(search)
+  if (month)   txs = txs.filter(tx => tx.date.startsWith(month));
+  if (account) txs = txs.filter(tx => tx.account === account);
+  if (cat)     txs = txs.filter(tx => tx.category === cat);
+  if (search)  txs = txs.filter(tx =>
+    tx.desc.toLowerCase().includes(search) ||
+    (tx.notes || '').toLowerCase().includes(search)
   );
 
   // Sort
