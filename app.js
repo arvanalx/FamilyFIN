@@ -712,21 +712,21 @@ function filterAndRenderTransactions() {
   }
   empty.classList.add('hidden');
 
-  tbody.innerHTML = txs.map(t => `
+  tbody.innerHTML = txs.map(tx => `
     <tr>
-      <td>${fmtDate(t.date)}</td>
+      <td>${fmtDate(tx.date)}</td>
       <td>
-        <div style="font-weight:600">${esc(t.desc)}${t.subId ? ` <span title="${t('auto_sub_note')}" style="font-size:.85em">🔄</span>` : ''}</div>
-        ${t.notes && !t.subId ? `<div style="font-size:.75rem;color:#64748b">${esc(t.notes)}</div>` : ''}
+        <div style="font-weight:600">${esc(tx.desc)}${tx.subId ? ` <span title="${t('auto_sub_note')}" style="font-size:.85em">🔄</span>` : ''}</div>
+        ${tx.notes && !tx.subId ? `<div style="font-size:.75rem;color:#64748b">${esc(tx.notes)}</div>` : ''}
       </td>
-      <td>${t.category ? `<span class="badge badge-blue">${esc(t.category)}</span>` : '<span class="muted">—</span>'}</td>
-      <td><span class="badge badge-gray">${accountLabel(t.account)}</span></td>
-      <td class="amount-cell ${t.type === 'income' ? 'positive' : 'negative'}">
-        ${t.type === 'income' ? '+' : '-'}${fmtEuro(t.amount)}
+      <td>${tx.category ? `<span class="badge badge-blue">${esc(tx.category)}</span>` : '<span class="muted">—</span>'}</td>
+      <td><span class="badge badge-gray">${accountLabel(tx.account)}</span></td>
+      <td class="amount-cell ${tx.type === 'income' ? 'positive' : 'negative'}">
+        ${tx.type === 'income' ? '+' : '-'}${fmtEuro(tx.amount)}
       </td>
       <td>
-        ${!t.subId ? `<button class="btn-icon" onclick="editTransaction('${t.id}')">✏️</button>` : ''}
-        <button class="btn-icon danger" onclick="deleteTransaction('${t.id}')">🗑️</button>
+        ${!tx.subId ? `<button class="btn-icon" onclick="editTransaction('${tx.id}')">✏️</button>` : ''}
+        <button class="btn-icon danger" onclick="deleteTransaction('${tx.id}')">🗑️</button>
       </td>
     </tr>
   `).join('');
