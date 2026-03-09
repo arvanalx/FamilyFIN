@@ -103,7 +103,8 @@ function saveState() {
 // ── HELPERS ─────────────────────────────────────────────────
 const fmtEuro = n => {
   const abs = Math.abs(n || 0);
-  const str = abs.toLocaleString('el-GR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const locale = (typeof getLang === 'function' && getLang() === 'en') ? 'en-US' : 'el-GR';
+  const str = abs.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   return (n < 0 ? '-' : '') + str + ' €';
 };
 
@@ -141,7 +142,7 @@ const fmtDate = s => {
 const fmtMonth = s => {
   if (!s) return '—';
   const [y,m] = s.split('-');
-  const months = ['Ιαν','Φεβ','Μαρ','Απρ','Μαΐ','Ιουν','Ιουλ','Αυγ','Σεπ','Οκτ','Νοε','Δεκ'];
+  const months = (typeof t === 'function') ? t('months') : ['Ιαν','Φεβ','Μαρ','Απρ','Μαΐ','Ιουν','Ιουλ','Αυγ','Σεπ','Οκτ','Νοε','Δεκ'];
   return `${months[+m-1]} ${y}`;
 };
 
@@ -217,7 +218,7 @@ function cardMonthlyDebt(cardId) {
 function renderDashboard() {
   // Auto-calculated future date
   const fd = calcFutureDate();
-  document.getElementById('dashFutureDate').textContent = 'μέλλον ' + fmtDate(fd);
+  document.getElementById('dashFutureDate').textContent = t('dash_future_label') + ' ' + fmtDate(fd);
 
   // Per-account future balance = current balance + net income/expense transactions up to future date
   const futureMap = {};
@@ -246,7 +247,7 @@ function renderDashboard() {
     </tr>`;
   });
   rows.push(`<tr class="total-row">
-    <td class="account-name"><strong>Σύνολο</strong></td>
+    <td class="account-name"><strong>${t('dash_total')}</strong></td>
     <td class="amount"><strong>${fmtEuro(totalNow)}</strong></td>
     <td class="amount"><strong>${fmtEuro(totalFut)}</strong></td>
   </tr>`);
@@ -283,8 +284,8 @@ function renderDashboard() {
           <div class="cc-balance">${fmtEuro(txAmt)}</div>
         </div>
         <div class="cc-extra">
-          ${instAmt > 0 ? `<div class="cc-inst">+${fmtEuro(instAmt)} δόσεις/μήνα</div>` : ''}
-          <div class="cc-total-debt">Σύνολο: <strong>${fmtEuro(total)}</strong></div>
+          ${instAmt > 0 ? `<div class="cc-inst">+${fmtEuro(instAmt)} ${t('dash_installments_pm')}</div>` : ''}
+          <div class="cc-total-debt">${t('dash_total_colon')} <strong>${fmtEuro(total)}</strong></div>
         </div>
       </div>`;
   }).join('');
@@ -298,7 +299,7 @@ function renderDashboard() {
   // Expense category chart
   const catMap = {};
   const addCat = (cat, amt) => {
-    const k = (cat && cat.trim()) ? cat : 'Χωρίς κατηγορία';
+    const k = (cat && cat.trim()) ? cat : t('no_category');
     catMap[k] = (catMap[k] || 0) + amt;
   };
   // 1. Account expenses — εξαιρούνται οι κινήσεις με κατηγορία 'Κάρτες'
@@ -312,7 +313,7 @@ function renderDashboard() {
   // 3. Ενεργές δόσεις (μηνιαία δόση)
   state.installments
     .filter(i => i.active && i.monthlyAmount)
-    .forEach(i => addCat(i.category || 'Δόσεις', i.monthlyAmount));
+    .forEach(i => addCat(i.category || t('installments_cat'), i.monthlyAmount));
 
   const catData = Object.entries(catMap)
     .map(([category, amount]) => ({ category, amount }))
@@ -336,7 +337,7 @@ function monthlyInstallmentTotal() {
 
 function renderRecentTransactions(txs) {
   const el = document.getElementById('recentTransactions');
-  if (!txs.length) { el.innerHTML = '<div class="empty-state">Δεν υπάρχουν κινήσεις ακόμα</div>'; return; }
+  if (!txs.length) { el.innerHTML = `<div class="empty-state">${t('dash_no_tx')}</div>`; return; }
   el.innerHTML = txs.map(t => `
     <div class="tx-item">
       <div class="tx-icon ${t.type}">${t.type === 'income' ? '↑' : '↓'}</div>
@@ -376,8 +377,8 @@ function renderBalanceChart(accounts) {
   const data = [];
   accounts.forEach((a, i) => {
     const p = PALETTE[i % PALETTE.length];
-    data.push({ label: a.label + ' σήμερα', value: a.now,    color: p.now    });
-    data.push({ label: a.label + ' μέλλον', value: a.future, color: p.future });
+    data.push({ label: a.label + ' ' + t('dash_today_label'),  value: a.now,    color: p.now    });
+    data.push({ label: a.label + ' ' + t('dash_future_label'), value: a.future, color: p.future });
   });
   if (!data.length) return;
 
@@ -437,7 +438,7 @@ function renderExpenseCategoryChart(catData) {
     canvas.width = W; canvas.height = 60;
     ctx.clearRect(0, 0, W, 60);
     ctx.fillStyle = '#94a3b8'; ctx.font = '13px system-ui'; ctx.textAlign = 'center';
-    ctx.fillText('Δεν υπάρχουν έξοδα αυτόν τον μήνα', W / 2, 34);
+    ctx.fillText(t('dash_no_expenses'), W / 2, 34);
     return;
   }
 
@@ -496,7 +497,7 @@ function renderExpenseCategoryChart(catData) {
   ctx.fillText(fmtEuro(total).replace(' €', '€'), cx, cy + 5);
   ctx.fillStyle = '#94a3b8';
   ctx.font = '9px system-ui';
-  ctx.fillText('σύνολο', cx, cy + 16);
+  ctx.fillText(t('dash_subtotal'), cx, cy + 16);
 
   // ── Legend ───────────────────────────────────────────────────
   const maxLabelChars = SIDE ? Math.max(10, Math.floor((lgW * 0.62) / 6.2)) : 22;
@@ -533,10 +534,11 @@ function renderExpenseCategoryChart(catData) {
 function renderHelp() {
   const cont = document.getElementById('helpContent');
   if (!cont || cont.dataset.loaded) return;  // cache — don't re-parse on every nav click
-  fetch('/README.md')
+  const file = (typeof getLang === 'function' && getLang() === 'en') ? '/README.en.md' : '/README.md';
+  fetch(file)
     .then(r => r.ok ? r.text() : Promise.reject('not found'))
     .then(md => { cont.innerHTML = mdToHtml(md); cont.dataset.loaded = '1'; })
-    .catch(() => { cont.innerHTML = '<p class="muted" style="padding:24px">Δεν βρέθηκε το αρχείο οδηγιών.</p>'; });
+    .catch(() => { cont.innerHTML = `<p class="muted" style="padding:24px">${t('help_not_found')}</p>`; });
 }
 
 // Lightweight Markdown → HTML converter (supports the subset used in README.md)
@@ -714,7 +716,7 @@ function filterAndRenderTransactions() {
     <tr>
       <td>${fmtDate(t.date)}</td>
       <td>
-        <div style="font-weight:600">${esc(t.desc)}${t.subId ? ' <span title="Αυτόματη συνδρομή" style="font-size:.85em">🔄</span>' : ''}</div>
+        <div style="font-weight:600">${esc(t.desc)}${t.subId ? ` <span title="${t('auto_sub_note')}" style="font-size:.85em">🔄</span>` : ''}</div>
         ${t.notes && !t.subId ? `<div style="font-size:.75rem;color:#64748b">${esc(t.notes)}</div>` : ''}
       </td>
       <td>${t.category ? `<span class="badge badge-blue">${esc(t.category)}</span>` : '<span class="muted">—</span>'}</td>
@@ -723,8 +725,8 @@ function filterAndRenderTransactions() {
         ${t.type === 'income' ? '+' : '-'}${fmtEuro(t.amount)}
       </td>
       <td>
-        ${!t.subId ? `<button class="btn-icon" onclick="editTransaction('${t.id}')" title="Επεξεργασία">✏️</button>` : ''}
-        <button class="btn-icon danger" onclick="deleteTransaction('${t.id}')" title="Διαγραφή">🗑️</button>
+        ${!t.subId ? `<button class="btn-icon" onclick="editTransaction('${t.id}')">✏️</button>` : ''}
+        <button class="btn-icon danger" onclick="deleteTransaction('${t.id}')">🗑️</button>
       </td>
     </tr>
   `).join('');
@@ -733,7 +735,7 @@ function filterAndRenderTransactions() {
 function editTransaction(id) {
   const t = state.transactions.find(x => x.id === id);
   if (!t) return;
-  document.getElementById('transactionModalTitle').textContent = 'Επεξεργασία Κίνησης';
+  document.getElementById('transactionModalTitle').textContent = t('modal_edit_tx');
   document.getElementById('editTransactionId').value = id;
   document.querySelector(`input[name="txType"][value="${t.type}"]`).checked = true;
   document.getElementById('txDate').value     = t.date;
@@ -748,10 +750,8 @@ function editTransaction(id) {
 
 function deleteTransaction(id) {
   const tx = state.transactions.find(t => t.id === id);
-  const msg = tx?.subId
-    ? 'Να διαγραφεί αυτή η αυτόματη κίνηση συνδρομής;\nΔεν θα ξαναδημιουργηθεί.'
-    : 'Να διαγραφεί οριστικά αυτή η κίνηση;';
-  showConfirm('Διαγραφή Κίνησης', msg, () => {
+  const msg = tx?.subId ? t('confirm_del_sub_tx') : t('confirm_del_tx_msg');
+  showConfirm(t('confirm_del_tx'), msg, () => {
     if (tx?.subId && tx?.subMonth) {
       if (!state.deletedSubKeys) state.deletedSubKeys = [];
       state.deletedSubKeys.push(`${tx.subId}|${tx.subMonth}`);
@@ -759,7 +759,7 @@ function deleteTransaction(id) {
     state.transactions = state.transactions.filter(t => t.id !== id);
     saveState();
     filterAndRenderTransactions();
-    showToast('Η κίνηση διαγράφηκε', 'success');
+    showToast(t('toast_tx_deleted'), 'success');
   });
 }
 
@@ -774,11 +774,11 @@ function saveTransaction() {
   const editId  = document.getElementById('editTransactionId').value;
 
   if (!date || !desc || isNaN(amount) || amount <= 0) {
-    showToast('Συμπλήρωσε τα υποχρεωτικά πεδία', 'error'); return;
+    showToast(t('toast_fill_required'), 'error'); return;
   }
 
   if (editId) {
-    const idx = state.transactions.findIndex(t => t.id === editId);
+    const idx = state.transactions.findIndex(tx => tx.id === editId);
     if (idx >= 0) state.transactions[idx] = { ...state.transactions[idx], type, date, amount, desc, category: cat, account, notes };
   } else {
     state.transactions.push({ id: uid(), type, date, amount, desc, category: cat, account, notes });
@@ -786,7 +786,7 @@ function saveTransaction() {
 
   saveState();
   closeModal('addTransactionModal');
-  showToast(editId ? 'Η κίνηση ενημερώθηκε' : 'Η κίνηση αποθηκεύτηκε', 'success');
+  showToast(editId ? t('toast_tx_updated') : t('toast_tx_saved'), 'success');
   renderPage(currentPage());
 }
 
@@ -820,7 +820,7 @@ function filterAndRenderIncome() {
             <button class="btn-icon danger" onclick="deleteTransaction('${t.id}')">🗑️</button>
           </td>
         </tr>`).join('')
-    : '<tr><td colspan="6" class="empty-state">Δεν υπάρχουν έσοδα αυτόν τον μήνα</td></tr>';
+    : `<tr><td colspan="6" class="empty-state">${t('income_none')}</td></tr>`;
 }
 
 function copyIncomeToNextMonth(id) {
@@ -834,7 +834,7 @@ function copyIncomeToNextMonth(id) {
 
   state.transactions.push({ ...tx, id: uid(), date: newDate });
   saveState();
-  showToast(`Αντιγράφηκε στις ${fmtDate(newDate)}`, 'success');
+  showToast(`${t('toast_copied_to')} ${fmtDate(newDate)}`, 'success');
   renderPage(currentPage());
 }
 
@@ -846,13 +846,13 @@ function saveIncome() {
   const account = document.getElementById('incAccount').value;
 
   if (!date || !desc || isNaN(amount) || amount <= 0) {
-    showToast('Συμπλήρωσε τα υποχρεωτικά πεδία', 'error'); return;
+    showToast(t('toast_fill_required'), 'error'); return;
   }
 
   state.transactions.push({ id: uid(), type: 'income', date, amount, desc, category: cat, account, notes: '' });
   saveState();
   closeModal('addIncomeModal');
-  showToast('Το έσοδο αποθηκεύτηκε', 'success');
+  showToast(t('toast_income_saved'), 'success');
   renderPage(currentPage());
 }
 
@@ -865,7 +865,7 @@ function renderCardsPage() {
 
   if (!cards.length) {
     tabs.innerHTML = '';
-    cont.innerHTML = '<div class="empty-state" style="padding:40px">Δεν έχουν οριστεί κάρτες στις Ρυθμίσεις.</div>';
+    cont.innerHTML = `<div class="empty-state" style="padding:40px">${t('cards_not_set')}</div>`;
     return;
   }
 
@@ -915,15 +915,15 @@ function renderCard(cardId) {
       </div>
       <div class="cc-summary">
         <div class="cc-stat">
-          <div class="cc-stat-label">Τρέχον Υπόλοιπο</div>
+          <div class="cc-stat-label">${t('card_current_balance')}</div>
           <div class="cc-stat-value">${fmtEuro(totalBalance)}</div>
         </div>
         <div class="cc-stat">
-          <div class="cc-stat-label">Μηνιαίες Δόσεις</div>
-          <div class="cc-stat-value">${fmtEuro(totalInst)}/μήνα</div>
+          <div class="cc-stat-label">${t('card_monthly_inst')}</div>
+          <div class="cc-stat-value">${fmtEuro(totalInst)}${t('per_month')}</div>
         </div>
         <div class="cc-stat">
-          <div class="cc-stat-label">Μηνιαίες Κινήσεις</div>
+          <div class="cc-stat-label">${t('card_monthly_tx')}</div>
           <div class="cc-stat-value">${fmtEuro(monthlyTx)}</div>
         </div>
       </div>
@@ -931,20 +931,20 @@ function renderCard(cardId) {
 
     <div class="card card-wide">
       <div class="card-header">
-        <h2>Δόσεις ${esc(name)}</h2>
-        <button class="btn btn-sm btn-primary" onclick="openInstallmentModal('${cardId}')">+ Προσθήκη</button>
+        <h2>${t('card_inst_hdr')} ${esc(name)}</h2>
+        <button class="btn btn-sm btn-primary" onclick="openInstallmentModal('${cardId}')">${t('btn_add_inst')}</button>
       </div>
       <div class="installments-list" id="cardInstallmentsList"></div>
     </div>
 
     <div class="card card-wide">
       <div class="card-header">
-        <h2>Κινήσεις ${esc(name)}</h2>
-        <button class="btn btn-sm btn-primary" onclick="openCardTransactionModal('${cardId}')">+ Κίνηση</button>
+        <h2>${t('card_tx_hdr')} ${esc(name)}</h2>
+        <button class="btn btn-sm btn-primary" onclick="openCardTransactionModal('${cardId}')">${t('btn_add_card_tx')}</button>
       </div>
       <table class="data-table">
         <thead>
-          <tr><th>Ημερομηνία</th><th>Περιγραφή</th><th>Κατηγορία</th><th>Ποσό</th><th>Ενέργειες</th></tr>
+          <tr><th>${t('col_date')}</th><th>${t('col_desc')}</th><th>${t('col_category')}</th><th>${t('col_amount')}</th><th>${t('col_actions')}</th></tr>
         </thead>
         <tbody id="cardTransactionsTbody"></tbody>
       </table>
@@ -957,7 +957,7 @@ function renderCard(cardId) {
 
 function renderInstallmentCards(containerId, list) {
   const el = document.getElementById(containerId);
-  if (!list.length) { el.innerHTML = '<div class="empty-state">Δεν υπάρχουν δόσεις</div>'; return; }
+  if (!list.length) { el.innerHTML = `<div class="empty-state">${t('inst_none')}</div>`; return; }
 
   el.innerHTML = list.map(i => {
     const pct = i.totalCount ? Math.round((i.paidCount / i.totalCount) * 100) : 0;
@@ -975,12 +975,12 @@ function renderInstallmentCards(containerId, list) {
         <div class="progress-fill" style="width:${pct}%"></div>
       </div>
       <div class="inst-footer">
-        <span>${i.paidCount}/${i.totalCount || '?'} δόσεις (${pct}%)</span>
-        <span>${remaining} εναπομένουν</span>
-        ${i.monthlyAmount ? `<span><strong class="pv">${fmtEuro(i.monthlyAmount)}</strong>/μήνα</span>` : ''}
+        <span>${i.paidCount}/${i.totalCount || '?'} ${t('inst_installments')} (${pct}%)</span>
+        <span>${remaining} ${t('inst_remaining')}</span>
+        ${i.monthlyAmount ? `<span><strong class="pv">${fmtEuro(i.monthlyAmount)}</strong>${t('per_month')}</span>` : ''}
       </div>
       <div class="inst-actions">
-        <button class="btn btn-sm btn-secondary" onclick="payInstallment('${i.id}')">+1 Δόση</button>
+        <button class="btn btn-sm btn-secondary" onclick="payInstallment('${i.id}')">${t('btn_pay_inst')}</button>
         <button class="btn btn-sm btn-secondary" onclick="editInstallment('${i.id}')">✏️</button>
         <button class="btn btn-sm btn-danger" onclick="deleteInstallment('${i.id}')">🗑️</button>
       </div>
@@ -992,15 +992,15 @@ function renderCardTransactions(tbodyId, txs) {
   const tbody = document.getElementById(tbodyId);
   txs.sort((a,b) => b.date.localeCompare(a.date));
   tbody.innerHTML = txs.length
-    ? txs.map(t => `
+    ? txs.map(tx => `
         <tr>
-          <td>${fmtDate(t.date)}</td>
-          <td>${esc(t.desc)}${t.subId ? ' <span title="Αυτόματη συνδρομή" style="font-size:.85em">🔄</span>' : ''}</td>
-          <td>${t.category ? `<span class="badge badge-blue">${esc(t.category)}</span>` : '—'}</td>
-          <td class="amount-cell negative">-${fmtEuro(t.amount)}</td>
-          <td><button class="btn-icon danger" onclick="deleteCardTx('${t.id}')">🗑️</button></td>
+          <td>${fmtDate(tx.date)}</td>
+          <td>${esc(tx.desc)}${tx.subId ? ` <span title="${t('auto_sub_note')}" style="font-size:.85em">🔄</span>` : ''}</td>
+          <td>${tx.category ? `<span class="badge badge-blue">${esc(tx.category)}</span>` : '—'}</td>
+          <td class="amount-cell negative">-${fmtEuro(tx.amount)}</td>
+          <td><button class="btn-icon danger" onclick="deleteCardTx('${tx.id}')">🗑️</button></td>
         </tr>`).join('')
-    : '<tr><td colspan="5" class="empty-state">Δεν υπάρχουν κινήσεις</td></tr>';
+    : `<tr><td colspan="5" class="empty-state">${t('tx_empty')}</td></tr>`;
 }
 
 // ── INSTALLMENTS PAGE ────────────────────────────────────────
@@ -1010,13 +1010,13 @@ function renderInstallments() {
   const totalRem = active.filter(i=>i.monthlyAmount && i.totalCount)
     .reduce((s,i) => s + i.monthlyAmount * (i.totalCount - i.paidCount), 0);
 
-  document.getElementById('installmentMonthly').textContent   = fmtEuro(monthly) + '/μήνα';
+  document.getElementById('installmentMonthly').textContent   = fmtEuro(monthly) + t('per_month');
   document.getElementById('installmentRemaining').textContent = fmtEuro(totalRem);
   renderInstallmentCards('allInstallmentsList', active);
 }
 
 function openInstallmentModal(card) {
-  document.getElementById('installmentModalTitle').textContent = 'Νέα Δόση';
+  document.getElementById('installmentModalTitle').textContent = t('modal_new_inst');
   document.getElementById('editInstallmentId').value = '';
   document.getElementById('instDesc').value  = '';
   document.getElementById('instTotal').value = '';
@@ -1033,7 +1033,7 @@ function openInstallmentModal(card) {
 function editInstallment(id) {
   const i = state.installments.find(x => x.id === id);
   if (!i) return;
-  document.getElementById('installmentModalTitle').textContent = 'Επεξεργασία Δόσης';
+  document.getElementById('installmentModalTitle').textContent = t('modal_edit_inst');
   document.getElementById('editInstallmentId').value = id;
   document.getElementById('instDesc').value  = i.desc;
   document.getElementById('instTotal').value = i.totalAmount || '';
@@ -1060,7 +1060,7 @@ function saveInstallment() {
   const category = document.getElementById('instCategory').value;
   const editId   = document.getElementById('editInstallmentId').value;
 
-  if (!desc) { showToast('Εισάγετε περιγραφή', 'error'); return; }
+  if (!desc) { showToast(t('toast_enter_desc'), 'error'); return; }
 
   const obj = { desc, totalAmount: total, monthlyAmount: monthly, paidCount: paid,
     totalCount, card, store, startMonth: start, category, active: true };
@@ -1074,7 +1074,7 @@ function saveInstallment() {
 
   saveState();
   closeModal('addInstallmentModal');
-  showToast('Η δόση αποθηκεύτηκε', 'success');
+  showToast(t('toast_inst_saved'), 'success');
   renderPage(currentPage());
 }
 
@@ -1085,15 +1085,15 @@ function payInstallment(id) {
   if (i.totalCount && i.paidCount >= i.totalCount) i.active = false;
   saveState();
   renderPage(currentPage());
-  showToast('Δόση καταχωρήθηκε ✓', 'success');
+  showToast(t('toast_inst_paid'), 'success');
 }
 
 function deleteInstallment(id) {
-  showConfirm('Διαγραφή Δόσης', 'Να διαγραφεί αυτή η δόση;', () => {
+  showConfirm(t('confirm_del_inst'), t('confirm_del_inst_msg'), () => {
     state.installments = state.installments.filter(i => i.id !== id);
     saveState();
     renderPage(currentPage());
-    showToast('Η δόση διαγράφηκε', 'success');
+    showToast(t('toast_inst_deleted'), 'success');
   });
 }
 
@@ -1151,7 +1151,7 @@ function syncSubscriptionTransactions() {
           state.transactions.push({
             id: uid(), type: 'expense', date, amount: sub.amount,
             desc: sub.name, category: subCat, account: sub.card,
-            notes: 'Αυτόματη συνδρομή', subId: sub.id, subMonth: month,
+            notes: t('auto_sub_note'), subId: sub.id, subMonth: month,
           });
           changed = true;
         }
@@ -1172,7 +1172,7 @@ function renderSubscriptions() {
   document.getElementById('subYearly').textContent  = fmtEuro(yearly);
 
   const grid = document.getElementById('subscriptionsGrid');
-  if (!subs.length) { grid.innerHTML = '<div class="empty-state">Δεν υπάρχουν συνδρομές</div>'; return; }
+  if (!subs.length) { grid.innerHTML = `<div class="empty-state">${t('sub_none')}</div>`; return; }
 
   grid.innerHTML = subs.map(s => `
     <div class="sub-card" onclick="editSubscription('${s.id}')">
@@ -1180,14 +1180,14 @@ function renderSubscriptions() {
       <div class="sub-icon">${s.icon || '📱'}</div>
       <div class="sub-name">${esc(s.name)}</div>
       <div class="sub-amount">${fmtEuro(s.amount)}</div>
-      <div class="sub-freq">${s.frequency === 'monthly' ? 'μηνιαία' : 'ετήσια'}</div>
+      <div class="sub-freq">${s.frequency === 'monthly' ? t('freq_monthly') : t('freq_yearly')}</div>
       <div class="sub-card-type">${accountLabel(s.card)}</div>
     </div>
   `).join('');
 }
 
 function openSubscriptionModal() {
-  document.getElementById('subscriptionModalTitle').textContent = 'Νέα Συνδρομή';
+  document.getElementById('subscriptionModalTitle').textContent = t('modal_new_sub');
   document.getElementById('editSubscriptionId').value = '';
   document.getElementById('subName').value      = '';
   document.getElementById('subAmount').value    = '';
@@ -1201,7 +1201,7 @@ function openSubscriptionModal() {
 function editSubscription(id) {
   const s = state.subscriptions.find(x => x.id === id);
   if (!s) return;
-  document.getElementById('subscriptionModalTitle').textContent = 'Επεξεργασία Συνδρομής';
+  document.getElementById('subscriptionModalTitle').textContent = t('modal_edit_sub');
   document.getElementById('editSubscriptionId').value = id;
   document.getElementById('subName').value      = s.name;
   document.getElementById('subAmount').value    = s.amount;
@@ -1224,7 +1224,7 @@ function saveSubscription() {
   const category = document.getElementById('subCategory').value;
   const editId   = document.getElementById('editSubscriptionId').value;
 
-  if (!name || isNaN(amount)) { showToast('Συμπλήρωσε τα υποχρεωτικά πεδία', 'error'); return; }
+  if (!name || isNaN(amount)) { showToast(t('toast_fill_required'), 'error'); return; }
 
   const obj = { name, amount, frequency: freq, card, day, icon, category };
   if (editId) {
@@ -1244,13 +1244,12 @@ function saveSubscription() {
   saveState();
   syncSubscriptionTransactions();
   closeModal('addSubscriptionModal');
-  showToast('Η συνδρομή αποθηκεύτηκε', 'success');
+  showToast(t('toast_sub_saved'), 'success');
   renderPage(currentPage());
 }
 
 function deleteSubscription(id) {
-  showConfirm('Διαγραφή Συνδρομής',
-    'Να διαγραφεί αυτή η συνδρομή;\nΘα διαγραφούν επίσης όλες οι αυτόματες κινήσεις της.', () => {
+  showConfirm(t('confirm_del_sub'), t('confirm_del_sub_msg'), () => {
     // Remove all auto-generated transactions for this subscription
     state.cardTransactions = state.cardTransactions.filter(t => t.subId !== id);
     state.transactions     = state.transactions.filter(t => t.subId !== id);
@@ -1259,14 +1258,14 @@ function deleteSubscription(id) {
     state.subscriptions  = state.subscriptions.filter(s => s.id !== id);
     saveState();
     renderPage(currentPage());
-    showToast('Η συνδρομή και οι κινήσεις της διαγράφηκαν', 'success');
+    showToast(t('toast_sub_deleted'), 'success');
   });
 }
 
 // ── CARD TRANSACTIONS ────────────────────────────────────────
 function openCardTransactionModal(card) {
   document.getElementById('cardTxCard').value = card;
-  document.getElementById('cardTxModalTitle').textContent = 'Κίνηση ' + card.toUpperCase();
+  document.getElementById('cardTxModalTitle').textContent = t('modal_card_tx') + ' ' + card.toUpperCase();
   document.getElementById('cardTxDate').value = today();
   document.getElementById('cardTxAmount').value = '';
   document.getElementById('cardTxDesc').value = '';
@@ -1281,29 +1280,29 @@ function saveCardTransaction() {
   const desc   = document.getElementById('cardTxDesc').value.trim();
   const cat    = document.getElementById('cardTxCategory').value;
 
-  if (!date || !desc || isNaN(amount) || amount <= 0) { showToast('Συμπλήρωσε τα πεδία', 'error'); return; }
+  if (!date || !desc || isNaN(amount) || amount <= 0) { showToast(t('toast_fill_fields'), 'error'); return; }
 
   state.cardTransactions.push({ id: uid(), card, date, amount, desc, category: cat });
   saveState();
   closeModal('cardTransactionModal');
-  showToast('Η κίνηση αποθηκεύτηκε', 'success');
+  showToast(t('toast_tx_saved'), 'success');
   renderPage(currentPage());
 }
 
 function deleteCardTx(id) {
   const tx = state.cardTransactions.find(t => t.id === id);
   const msg = tx?.subId
-    ? 'Να διαγραφεί αυτή η αυτόματη κίνηση συνδρομής;\nΔεν θα ξαναδημιουργηθεί.'
-    : 'Να διαγραφεί αυτή η κίνηση κάρτας;';
-  showConfirm('Διαγραφή', msg, () => {
+    ? t('confirm_del_sub_tx')
+    : t('confirm_del_card_tx_msg');
+  showConfirm(t('confirm_del_tx'), msg, () => {
     if (tx?.subId && tx?.subMonth) {
       if (!state.deletedSubKeys) state.deletedSubKeys = [];
       state.deletedSubKeys.push(`${tx.subId}|${tx.subMonth}`);
     }
-    state.cardTransactions = state.cardTransactions.filter(t => t.id !== id);
+    state.cardTransactions = state.cardTransactions.filter(tx => tx.id !== id);
     saveState();
     renderPage(currentPage());
-    showToast('Διαγράφηκε', 'success');
+    showToast(t('toast_card_tx_deleted'), 'success');
   });
 }
 
@@ -1322,27 +1321,27 @@ function renderAccountsSettings() {
     <div class="acc-setting-block">
       <div class="acc-setting-fields">
         <div class="form-group">
-          <label>Όνομα</label>
+          <label>${t('acc_label_name')}</label>
           <input type="text" id="accName_${acc.id}" class="form-control" value="${esc(acc.name)}">
         </div>
         <div class="form-group">
-          <label>Τύπος</label>
+          <label>${t('acc_label_type')}</label>
           <select id="accType_${acc.id}" class="form-control" onchange="toggleBankField('${acc.id}')">
-            <option value="cash" ${acc.type === 'cash' ? 'selected' : ''}>Μετρητά</option>
-            <option value="bank" ${acc.type === 'bank' ? 'selected' : ''}>Τραπεζικός</option>
+            <option value="cash" ${acc.type === 'cash' ? 'selected' : ''}>${t('acc_type_cash')}</option>
+            <option value="bank" ${acc.type === 'bank' ? 'selected' : ''}>${t('acc_type_bank')}</option>
           </select>
         </div>
         <div class="form-group" id="accBankGroup_${acc.id}" ${acc.type === 'cash' ? 'style="display:none"' : ''}>
-          <label>Τράπεζα</label>
+          <label>${t('acc_label_bank')}</label>
           <input type="text" id="accBank_${acc.id}" class="form-control" value="${esc(acc.bank || '')}" placeholder="π.χ. Alpha Bank">
         </div>
         <div class="form-group">
-          <label>Υπόλοιπο (€)</label>
+          <label>${t('acc_label_balance')}</label>
           <input type="number" id="accBalance_${acc.id}" class="form-control" step="0.01" value="${acc.balance || 0}">
         </div>
       </div>
       <div class="acc-setting-actions">
-        <button class="btn btn-sm btn-primary" onclick="saveAccountSetting('${acc.id}')">Αποθήκευση</button>
+        <button class="btn btn-sm btn-primary" onclick="saveAccountSetting('${acc.id}')">${t('btn_save')}</button>
         <button class="btn btn-sm btn-danger" onclick="deleteAccount('${acc.id}')">🗑️</button>
       </div>
     </div>
@@ -1359,24 +1358,24 @@ function renderCardsSettings() {
     <div class="acc-setting-block">
       <div class="acc-setting-fields">
         <div class="form-group">
-          <label>Όνομα Κάρτας</label>
+          <label>${t('card_label_name')}</label>
           <input type="text" id="cardName_${card.id}" class="form-control" value="${esc(card.name)}">
         </div>
         <div class="form-group">
-          <label>Τράπεζα Έκδοσης</label>
+          <label>${t('card_label_bank')}</label>
           <input type="text" id="cardBank_${card.id}" class="form-control" value="${esc(card.bank || '')}" placeholder="π.χ. Alpha Bank">
         </div>
         <div class="form-group">
-          <label>Συνδεδεμένος Λογαριασμός</label>
+          <label>${t('card_label_linked')}</label>
           <select id="cardLinkedAcc_${card.id}" class="form-control">
-            <option value="">— Κανένας —</option>
+            <option value="">${t('card_none_linked')}</option>
             ${accOptions}
           </select>
         </div>
       </div>
       <div class="acc-setting-actions">
-        <button class="btn btn-sm btn-primary" onclick="saveCardSetting('${card.id}')">Αποθήκευση</button>
-        <button class="btn btn-sm btn-danger"  onclick="deleteCard('${card.id}')">🗑️ Διαγραφή</button>
+        <button class="btn btn-sm btn-primary" onclick="saveCardSetting('${card.id}')">${t('btn_save')}</button>
+        <button class="btn btn-sm btn-danger"  onclick="deleteCard('${card.id}')">${t('btn_delete_card')}</button>
       </div>
     </div>
   `).join('');
@@ -1390,23 +1389,23 @@ function renderCardsSettings() {
 function deleteCard(id) {
   const card = (state.cards || []).find(c => c.id === id);
   if (!card) return;
-  const hasTx   = (state.cardTransactions || []).some(t => t.card === id);
+  const hasTx   = (state.cardTransactions || []).some(tx => tx.card === id);
   const hasInst = (state.installments     || []).some(i => i.card === id);
   const hasSub  = (state.subscriptions    || []).some(s => s.card === id);
-  const extras  = [hasTx && 'συναλλαγές', hasInst && 'δόσεις', hasSub && 'συνδρομές']
+  const extras  = [hasTx && t('linked_card_tx'), hasInst && t('linked_inst'), hasSub && t('linked_subs')]
                     .filter(Boolean).join(', ');
   const msg = extras
-    ? `Η κάρτα "${card.name}" και οι συνδεδεμένες ${extras} της θα διαγραφούν οριστικά.`
-    : `Να διαγραφεί η κάρτα "${card.name}";`;
-  showConfirm('Διαγραφή Κάρτας', msg, () => {
+    ? tf('confirm_del_card_msg_extras', card.name, extras)
+    : tf('confirm_del_card_msg_simple', card.name);
+  showConfirm(t('confirm_del_card'), msg, () => {
     state.cards            = state.cards.filter(c => c.id !== id);
-    state.cardTransactions = (state.cardTransactions || []).filter(t => t.card !== id);
+    state.cardTransactions = (state.cardTransactions || []).filter(tx => tx.card !== id);
     state.installments     = (state.installments     || []).filter(i => i.card !== id);
     state.subscriptions    = (state.subscriptions    || []).filter(s => s.card !== id);
     saveState();
     renderCardsSettings();
     populateAllDropdowns();
-    showToast('Η κάρτα διαγράφηκε', 'success');
+    showToast(t('toast_card_deleted'), 'success');
   });
 }
 
@@ -1423,27 +1422,27 @@ function saveAccountSetting(id) {
   const type = document.getElementById(`accType_${id}`).value;
   const bank = type === 'bank' ? (document.getElementById(`accBank_${id}`).value.trim()) : '';
   const bal  = parseFloat(document.getElementById(`accBalance_${id}`).value);
-  if (!name) { showToast('Εισάγετε όνομα λογαριασμού', 'error'); return; }
-  if (isNaN(bal)) { showToast('Μη έγκυρο υπόλοιπο', 'error'); return; }
+  if (!name) { showToast(t('toast_enter_acc_name'), 'error'); return; }
+  if (isNaN(bal)) { showToast(t('toast_invalid_balance'), 'error'); return; }
   acc.name = name; acc.type = type; acc.bank = bank; acc.balance = bal;
   saveState();
   populateAllDropdowns();
-  showToast('Αποθηκεύτηκε ✓', 'success');
+  showToast(t('toast_saved'), 'success');
 }
 
 function deleteAccount(id) {
-  showConfirm('Διαγραφή Λογαριασμού', 'Να διαγραφεί αυτός ο λογαριασμός;', () => {
+  showConfirm(t('confirm_del_acc'), t('confirm_del_acc_msg'), () => {
     state.accounts = state.accounts.filter(a => a.id !== id);
     saveState();
     renderAccountsSettings();
     populateAllDropdowns();
-    showToast('Ο λογαριασμός διαγράφηκε', 'success');
+    showToast(t('toast_acc_deleted'), 'success');
   });
 }
 
 function addAccount() {
   const newId = 'acc_' + uid();
-  state.accounts.push({ id: newId, name: 'Νέος Λογαριασμός', type: 'bank', bank: '', balance: 0 });
+  state.accounts.push({ id: newId, name: t('account_new'), type: 'bank', bank: '', balance: 0 });
   saveState();
   renderAccountsSettings();
   populateAllDropdowns();
@@ -1455,17 +1454,17 @@ function saveCardSetting(id) {
   const name      = document.getElementById(`cardName_${id}`).value.trim();
   const bank      = document.getElementById(`cardBank_${id}`).value.trim();
   const linkedAcc = document.getElementById(`cardLinkedAcc_${id}`).value;
-  if (!name) { showToast('Εισάγετε όνομα κάρτας', 'error'); return; }
+  if (!name) { showToast(t('toast_enter_card_name'), 'error'); return; }
   card.name = name; card.bank = bank; card.linkedAccount = linkedAcc;
   saveState();
   populateAllDropdowns();
-  showToast('Αποθηκεύτηκε ✓', 'success');
+  showToast(t('toast_saved'), 'success');
 }
 
 function addCard() {
   const newId = 'card_' + uid();
   state.cards = state.cards || [];
-  state.cards.push({ id: newId, name: 'Νέα Κάρτα', bank: '', linkedAccount: '' });
+  state.cards.push({ id: newId, name: t('card_new'), bank: '', linkedAccount: '' });
   saveState();
   renderCardsSettings();
   populateAllDropdowns();
@@ -1488,7 +1487,7 @@ function addCategory() {
     saveState();
     renderCategoriesList();
     document.getElementById('newCategory').value = '';
-    showToast('Η κατηγορία προστέθηκε', 'success');
+    showToast(t('toast_cat_added'), 'success');
   }
 }
 
@@ -1516,7 +1515,7 @@ function addIncomeCategory() {
     renderIncomeCategoriesList();
     populateIncomeCategorySelect('incCategory');
     document.getElementById('newIncomeCategory').value = '';
-    showToast('Η κατηγορία προστέθηκε', 'success');
+    showToast(t('toast_cat_added'), 'success');
   }
 }
 
@@ -1541,7 +1540,7 @@ function populateIncomeCategorySelect(id) {
   const el = document.getElementById(id);
   if (!el) return;
   const current = el.value;
-  el.innerHTML = '<option value="">— Χωρίς κατηγορία —</option>' +
+  el.innerHTML = `<option value="">${t('no_cat_option')}</option>` +
     state.incomeCategories.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('');
   if (current) el.value = current;
 }
@@ -1560,7 +1559,7 @@ function exportData() {
   a.href = URL.createObjectURL(blob);
   a.download = `familyfin-backup-${today()}.json`;
   a.click();
-  showToast('Εξαγωγή δεδομένων ✓', 'success');
+  showToast(t('toast_export'), 'success');
 }
 
 function importData() { document.getElementById('importFile').click(); }
@@ -1576,22 +1575,22 @@ function handleImport(event) {
         state = data;
         saveState();
         renderPage(currentPage());
-        showToast('Τα δεδομένα εισήχθησαν ✓', 'success');
+        showToast(t('toast_import_ok'), 'success');
       } else {
-        showToast('Μη έγκυρο αρχείο', 'error');
+        showToast(t('toast_import_invalid'), 'error');
       }
-    } catch { showToast('Σφάλμα εισαγωγής', 'error'); }
+    } catch { showToast(t('toast_import_error'), 'error'); }
   };
   reader.readAsText(file);
   event.target.value = '';
 }
 
 function confirmReset() {
-  showConfirm('Επαναφορά Δεδομένων', 'Θα διαγραφούν ΟΛΑ τα δεδομένα. Συνέχεια;', () => {
+  showConfirm(t('confirm_reset'), t('confirm_reset_msg'), () => {
     state = JSON.parse(JSON.stringify(DEFAULT_STATE));
     saveState();
     renderPage(currentPage());
-    showToast('Επαναφορά ολοκληρώθηκε', 'success');
+    showToast(t('toast_reset_done'), 'success');
   });
 }
 
@@ -1621,7 +1620,7 @@ function populateAllDropdowns() {
   const txFil = document.getElementById('txAccountFilter');
   if (txFil) {
     const cur = txFil.value;
-    txFil.innerHTML = '<option value="">Όλοι οι λογαριασμοί</option>' +
+    txFil.innerHTML = `<option value="">${t('filter_all_accounts')}</option>` +
       state.accounts.map(a => `<option value="${a.id}">${esc(a.name)}</option>`).join('');
     if (cur) txFil.value = cur;
   }
@@ -1650,7 +1649,7 @@ function populateCategorySelect(id) {
   const el = document.getElementById(id);
   if (!el) return;
   const current = el.value;
-  el.innerHTML = '<option value="">— Χωρίς κατηγορία —</option>' +
+  el.innerHTML = `<option value="">${t('no_cat_option')}</option>` +
     state.categories.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('');
   if (current) el.value = current;
 }
@@ -1663,7 +1662,7 @@ function togglePrivacy() {
   const on  = document.body.classList.toggle('privacy-mode');
   const btn = document.getElementById('privacyToggle');
   btn.textContent = on ? '🙈' : '👁️';
-  btn.title       = on ? 'Εμφάνιση ποσών' : 'Απόκρυψη ποσών';
+  btn.title       = on ? t('privacy_show') : t('privacy_hide');
 }
 
 function currentPage() {
@@ -1794,6 +1793,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   window.addEventListener('resize', () => {
     if (currentPage() === 'dashboard') renderDashboard();
   });
+
+  // Apply translations (static elements with data-i18n)
+  applyTranslations();
 
   // Initial render
   showPage('dashboard');
