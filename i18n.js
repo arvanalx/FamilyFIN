@@ -230,6 +230,11 @@ const TRANSLATIONS = {
     confirm_del_card_tx_msg:       'Να διαγραφεί αυτή η κίνηση κάρτας;',
     confirm_del_card_msg_simple:   'Να διαγραφεί η κάρτα "{0}";',
     confirm_del_card_msg_extras:   'Η κάρτα "{0}" και οι συνδεδεμένες {1} της θα διαγραφούν οριστικά.',
+
+    // Settled / completed transaction
+    label_settled:       'Ολοκληρωμένη',
+    label_settled_hint:  'Επηρεάζει το υπόλοιπο του λογαριασμού',
+    btn_toggle_settled:  'Εναλλαγή κατάστασης ολοκλήρωσης',
   },
 
   en: {
@@ -457,6 +462,11 @@ const TRANSLATIONS = {
     confirm_del_card_tx_msg:       'Delete this card transaction?',
     confirm_del_card_msg_simple:   'Delete card "{0}"?',
     confirm_del_card_msg_extras:   'Card "{0}" and its linked {1} will be permanently deleted.',
+
+    // Settled / completed transaction
+    label_settled:       'Settled',
+    label_settled_hint:  'Affects account balance',
+    btn_toggle_settled:  'Toggle settled status',
   },
 };
 

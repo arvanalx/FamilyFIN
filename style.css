@@ -886,6 +886,43 @@ canvas#balanceChart { width: 100% !important; height: 100% !important; }
 
 .btn-icon:hover { background: var(--bg); color: var(--text); }
 .btn-icon.danger:hover { background: var(--danger-light); color: var(--danger); }
+.btn-icon.settled { color: #16a34a; }
+
+/* Transaction action column — fixed 3 slots (settled, edit, delete) */
+.tx-actions {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  justify-content: flex-end;
+  min-width: 96px;
+}
+.btn-icon-spacer {
+  display: inline-block;
+  width: 30px;
+  flex-shrink: 0;
+}
+
+/* Inline checkbox row in modal */
+.form-group-inline {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 6px 0;
+}
+.form-group-inline input[type="checkbox"] {
+  margin-top: 3px;
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+.form-group-inline > label {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  cursor: pointer;
+}
+.text-muted { font-size: .75rem; color: var(--text-muted); }
 
 /* ============================================================
    MODALS

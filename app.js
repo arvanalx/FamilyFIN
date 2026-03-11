@@ -223,7 +223,7 @@ function renderDashboard() {
   // Per-account future balance = current balance + net income/expense transactions up to future date
   const futureMap = {};
   state.accounts.forEach(acc => {
-    const accTxs  = state.transactions.filter(t => t.account === acc.id && t.date <= fd);
+    const accTxs  = state.transactions.filter(t => t.account === acc.id && t.date <= fd && !t.settled);
     const income  = accTxs.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
     const expense = accTxs.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
     futureMap[acc.id] = (acc.balance || 0) + income - expense;
@@ -725,11 +725,27 @@ function filterAndRenderTransactions() {
         ${tx.type === 'income' ? '+' : '-'}${fmtEuro(tx.amount)}
       </td>
       <td>
-        ${!tx.subId ? `<button class="btn-icon" onclick="editTransaction('${tx.id}')">✏️</button>` : ''}
-        <button class="btn-icon danger" onclick="deleteTransaction('${tx.id}')">🗑️</button>
+        <div class="tx-actions">
+          <button class="btn-icon${tx.settled ? ' settled' : ''}" onclick="toggleTransactionSettled('${tx.id}')" title="${t('btn_toggle_settled')}">${tx.settled ? '✅' : '☐'}</button>
+          ${!tx.subId ? `<button class="btn-icon" onclick="editTransaction('${tx.id}')">✏️</button>` : '<span class="btn-icon-spacer"></span>'}
+          <button class="btn-icon danger" onclick="deleteTransaction('${tx.id}')">🗑️</button>
+        </div>
       </td>
     </tr>
   `).join('');
+}
+
+function openNewTransactionModal() {
+  document.getElementById('transactionModalTitle').textContent = t('modal_new_tx');
+  document.getElementById('editTransactionId').value = '';
+  document.querySelector('input[name="txType"][value="expense"]').checked = true;
+  document.getElementById('txDate').value   = today();
+  document.getElementById('txAmount').value = '';
+  document.getElementById('txDesc').value   = '';
+  document.getElementById('txNotes').value  = '';
+  document.getElementById('txSettled').checked = false;
+  populateTxCategorySelect();
+  openModal('addTransactionModal');
 }
 
 function editTransaction(id) {
@@ -745,6 +761,7 @@ function editTransaction(id) {
   populateTxCategorySelect();
   document.getElementById('txCategory').value = tx.category || '';
   document.getElementById('txAccount').value  = tx.account;
+  document.getElementById('txSettled').checked = !!tx.settled;
   openModal('addTransactionModal');
 }
 
@@ -756,11 +773,35 @@ function deleteTransaction(id) {
       if (!state.deletedSubKeys) state.deletedSubKeys = [];
       state.deletedSubKeys.push(`${tx.subId}|${tx.subMonth}`);
     }
+    // Reverse settled balance effect before removing
+    if (tx?.settled) {
+      const acc = state.accounts.find(a => a.id === tx.account);
+      if (acc) {
+        const delta = tx.type === 'income' ? tx.amount : -tx.amount;
+        acc.balance = (acc.balance || 0) - delta;
+      }
+    }
     state.transactions = state.transactions.filter(t => t.id !== id);
     saveState();
     filterAndRenderTransactions();
     showToast(t('toast_tx_deleted'), 'success');
   });
+}
+
+function toggleTransactionSettled(id) {
+  const tx = state.transactions.find(x => x.id === id);
+  if (!tx) return;
+  const acc = state.accounts.find(a => a.id === tx.account);
+  if (!acc) return;
+
+  const wasSettled = !!tx.settled;
+  tx.settled = !wasSettled;
+
+  const delta = tx.type === 'income' ? tx.amount : -tx.amount;
+  acc.balance = (acc.balance || 0) + (wasSettled ? -delta : delta);
+
+  saveState();
+  filterAndRenderTransactions();
 }
 
 function saveTransaction() {
@@ -771,6 +812,7 @@ function saveTransaction() {
   const cat     = document.getElementById('txCategory').value;
   const account = document.getElementById('txAccount').value;
   const notes   = document.getElementById('txNotes').value.trim();
+  const settled = document.getElementById('txSettled').checked;
   const editId  = document.getElementById('editTransactionId').value;
 
   if (!date || !desc || isNaN(amount) || amount <= 0) {
@@ -779,9 +821,35 @@ function saveTransaction() {
 
   if (editId) {
     const idx = state.transactions.findIndex(tx => tx.id === editId);
-    if (idx >= 0) state.transactions[idx] = { ...state.transactions[idx], type, date, amount, desc, category: cat, account, notes };
+    if (idx >= 0) {
+      const oldTx = state.transactions[idx];
+      // Reverse old settled effect on old account
+      if (oldTx.settled) {
+        const oldAcc = state.accounts.find(a => a.id === oldTx.account);
+        if (oldAcc) {
+          const d = oldTx.type === 'income' ? oldTx.amount : -oldTx.amount;
+          oldAcc.balance = (oldAcc.balance || 0) - d;
+        }
+      }
+      state.transactions[idx] = { ...oldTx, type, date, amount, desc, category: cat, account, notes, settled };
+      // Apply new settled effect on (possibly new) account
+      if (settled) {
+        const newAcc = state.accounts.find(a => a.id === account);
+        if (newAcc) {
+          const d = type === 'income' ? amount : -amount;
+          newAcc.balance = (newAcc.balance || 0) + d;
+        }
+      }
+    }
   } else {
-    state.transactions.push({ id: uid(), type, date, amount, desc, category: cat, account, notes });
+    state.transactions.push({ id: uid(), type, date, amount, desc, category: cat, account, notes, settled });
+    if (settled) {
+      const newAcc = state.accounts.find(a => a.id === account);
+      if (newAcc) {
+        const d = type === 'income' ? amount : -amount;
+        newAcc.balance = (newAcc.balance || 0) + d;
+      }
+    }
   }
 
   saveState();
@@ -1784,8 +1852,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
       e.preventDefault();
-      populateTxCategorySelect();
-      openModal('addTransactionModal');
+      openNewTransactionModal();
     }
   });
 
