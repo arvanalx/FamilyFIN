@@ -112,8 +112,8 @@ The home page provides a comprehensive view of your financial situation.
 
 A table with two columns for each account:
 
-- **Today:** The current balance as entered in Settings
-- **Future:** Calculated balance that takes into account **all recorded transactions** (up to the end of next month)
+- **Today:** The current balance as entered in Settings (includes all settled transactions)
+- **Future:** Calculated balance that takes into account **only unsettled transactions** (up to the end of next month)
 
 > 💡 The "Future" date is calculated automatically as the latest transaction date, capped at the end of next month.
 
@@ -174,22 +174,41 @@ Fill in the fields:
 | **Description** | ✅ | Short description |
 | **Category** | — | From the category list (expense or income categories, depending on type) |
 | **Account** | ✅ | The account to debit/credit |
+| **Settled** | — | Whether the transaction has cleared (see §5.2) |
 | **Notes** | — | Optional text |
 
 > 💡 Changing the **Type** (Expense/Income) automatically updates the category list — showing Expense or Income categories respectively.
 
-### 5.2 Editing / Deleting a transaction
+### 5.2 The "Settled" field
 
-- **✏️** — Opens the edit form
-- **🗑️** — Asks for confirmation and deletes the transaction
+Each account transaction can be marked as **Settled**, meaning the money has actually moved to/from the account.
 
-### 5.3 Copy income to next month
+**How to toggle:**
+- **Quick toggle:** Click the **☐** button (1st in the Actions column) → it becomes **✅**
+- **From the form:** Check the "Settled" checkbox when adding or editing a transaction
+
+**Effect:**
+- **Expense ✅** → The amount is deducted from the account balance
+- **Income ✅** → The amount is added to the account balance
+- The transaction is **excluded** from the "Future" balance calculation in the Dashboard (it is already reflected in the stored balance)
+
+Clicking ✅ again → ☐ reverses the effect on the balance.
+
+> ℹ️ Transactions created automatically by Subscriptions (🔄) can also be marked as settled, but have no edit button.
+
+### 5.3 Editing / Deleting a transaction
+
+- **☐ / ✅** — Toggle "Settled" status (affects the balance immediately)
+- **✏️** — Opens the edit form (not shown for subscription transactions 🔄)
+- **🗑️** — Asks for confirmation and deletes the transaction (if it was settled, the balance effect is automatically reversed)
+
+### 5.4 Copy income to next month
 
 For transactions of type **Income**, the **📋** icon appears. Clicking it automatically creates a copy of the transaction with a date **+1 month** from the original.
 
 > Useful for recurring income (salary, pension, etc.).
 
-### 5.4 Filtering & Searching
+### 5.5 Filtering & Searching
 
 Above the table there are 4 filters:
 
@@ -204,7 +223,7 @@ Filters **combine** with each other. Below the filters a summary bar shows:
 
 - **Income** (green) | **Expenses** (red) | **Balance**
 
-### 5.5 Sorting
+### 5.6 Sorting
 
 Click any column header (**Date ↕**, **Description ↕**, **Amount ↕**) to sort. A second click reverses the order.
 
