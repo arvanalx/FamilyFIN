@@ -215,6 +215,64 @@ function cardMonthlyDebt(cardId) {
   return txAmt + instAmt;
 }
 
+// ── CHART STATE ───────────────────────────────────────────────────────────────
+let _balanceData = [];
+let _balanceView = 'compare'; // 'compare' | 'delta'
+let _expChartOffset = 0;      // 0 = current month, -1 = previous, etc.
+let _expView = 'donut';       // 'donut' | 'bars'
+
+function setBalanceView(v) {
+  _balanceView = v;
+  document.querySelectorAll('[data-bal-view]').forEach(b =>
+    b.classList.toggle('chart-tog-active', b.dataset.balView === v));
+  renderBalanceChart(_balanceData);
+}
+
+function setExpView(v) {
+  _expView = v;
+  document.querySelectorAll('[data-exp-view]').forEach(b =>
+    b.classList.toggle('chart-tog-active', b.dataset.expView === v));
+  renderExpChartForOffset();
+}
+
+function navigateExpChart(dir) {
+  _expChartOffset = Math.min(0, _expChartOffset + dir);
+  renderExpChartForOffset();
+}
+
+function renderExpChartForOffset() {
+  const now   = new Date();
+  const d     = new Date(now.getFullYear(), now.getMonth() + _expChartOffset, 1);
+  const month = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+
+  const nextBtn = document.getElementById('expChartNext');
+  if (nextBtn) nextBtn.disabled = _expChartOffset >= 0;
+
+  const expMonthEl = document.getElementById('expChartMonth');
+  if (expMonthEl) expMonthEl.textContent = fmtDate(month + '-01').slice(3);
+
+  const catMap = {};
+  const addCat = (cat, amt) => {
+    const k = (cat && cat.trim()) ? cat : t('no_category');
+    catMap[k] = (catMap[k] || 0) + amt;
+  };
+  state.transactions
+    .filter(tx => tx.type === 'expense' && tx.date.startsWith(month) && tx.category !== 'Κάρτες')
+    .forEach(tx => addCat(tx.category, tx.amount));
+  state.cardTransactions
+    .filter(tx => tx.date.startsWith(month))
+    .forEach(tx => addCat(tx.category, tx.amount));
+  if (_expChartOffset === 0) {
+    state.installments
+      .filter(i => i.active && i.monthlyAmount)
+      .forEach(i => addCat(i.category || t('installments_cat'), i.monthlyAmount));
+  }
+  const catData = Object.entries(catMap)
+    .map(([category, amount]) => ({ category, amount }))
+    .sort((a, b) => b.amount - a.amount);
+  renderExpenseCategoryChart(catData);
+}
+
 function renderDashboard() {
   // Auto-calculated future date
   const fd = calcFutureDate();
@@ -296,34 +354,11 @@ function renderDashboard() {
     .slice(0, 6);
   renderRecentTransactions(recent);
 
-  // Expense category chart
-  const catMap = {};
-  const addCat = (cat, amt) => {
-    const k = (cat && cat.trim()) ? cat : t('no_category');
-    catMap[k] = (catMap[k] || 0) + amt;
-  };
-  // 1. Account expenses — εξαιρούνται οι κινήσεις με κατηγορία 'Κάρτες'
-  state.transactions
-    .filter(t => t.type === 'expense' && t.date.startsWith(month) && t.category !== 'Κάρτες')
-    .forEach(t => addCat(t.category, t.amount));
-  // 2. Κινήσεις καρτών τρέχοντος μήνα
-  state.cardTransactions
-    .filter(t => t.date.startsWith(month))
-    .forEach(t => addCat(t.category, t.amount));
-  // 3. Ενεργές δόσεις (μηνιαία δόση)
-  state.installments
-    .filter(i => i.active && i.monthlyAmount)
-    .forEach(i => addCat(i.category || t('installments_cat'), i.monthlyAmount));
+  // Expense chart — reset to current month on dashboard navigation
+  _expChartOffset = 0;
+  renderExpChartForOffset();
 
-  const catData = Object.entries(catMap)
-    .map(([category, amount]) => ({ category, amount }))
-    .sort((a, b) => b.amount - a.amount);
-
-  const expMonthEl = document.getElementById('expChartMonth');
-  if (expMonthEl) expMonthEl.textContent = fmtDate(month + '-01').slice(3);
-  renderExpenseCategoryChart(catData);
-
-  // Chart — all accounts (including cash)
+  // Balance chart (SVG)
   renderBalanceChart(state.accounts.map(a => ({
     label: a.name, now: a.balance || 0, future: futureMap[a.id],
   })));
@@ -354,74 +389,163 @@ function renderRecentTransactions(txs) {
   `).join('');
 }
 
-// Simple canvas bar chart — accounts is [{ label, now, future }]
+// ── SVG BALANCE CHART ─────────────────────────────────────────────────────────
+// Palette: [solid color, light extension color]
+const _BAL_PAL = [
+  ['#1e40af', '#93c5fd'], ['#b91c1c', '#fca5a5'], ['#15803d', '#86efac'],
+  ['#b45309', '#fcd34d'], ['#6d28d9', '#c4b5fd'], ['#0e7490', '#67e8f9'],
+];
+
 function renderBalanceChart(accounts) {
-  const canvas = document.getElementById('balanceChart');
-  if (!canvas) return;
-  const ctx = canvas.getContext('2d');
-  const W = canvas.parentElement.clientWidth - 40;
-  const H = 180;
-  canvas.width = W;
-  canvas.height = H;
-  ctx.clearRect(0, 0, W, H);
+  _balanceData = accounts;
+  const wrap = document.getElementById('balanceChartWrapper');
+  if (!wrap) return;
+  if (!accounts.length) {
+    wrap.innerHTML = '<p style="padding:20px;text-align:center;color:#94a3b8">Δεν υπάρχουν λογαριασμοί</p>';
+    return;
+  }
+  _balanceView === 'delta'
+    ? _renderBalanceDelta(accounts, wrap)
+    : _renderBalanceCompare(accounts, wrap);
+}
 
-  // Paired palette: same hue per account — vivid=now, pastel=future
-  const PALETTE = [
-    { now: '#1e40af', future: '#93c5fd' },  // Μπλε
-    { now: '#b91c1c', future: '#fca5a5' },  // Κόκκινο
-    { now: '#15803d', future: '#86efac' },  // Πράσινο
-    { now: '#b45309', future: '#fcd34d' },  // Κεχριμπάρι
-    { now: '#6d28d9', future: '#c4b5fd' },  // Μωβ
-    { now: '#0e7490', future: '#67e8f9' },  // Κυανό
-  ];
-  const data = [];
+function _renderBalanceCompare(accounts, wrap) {
+  const W   = Math.max(wrap.clientWidth || 0, 280);
+  const LW  = Math.min(100, Math.floor(W * 0.27));  // label area
+  const RW  = 148;                                    // right values area
+  const BW  = Math.max(40, W - LW - RW - 20);        // bar area
+  const RH  = 62;                                     // row height
+  const PAD = 10;
+  const LEG = 24;
+  const H   = accounts.length * RH + PAD * 2 + LEG + 4;
+  const maxV = Math.max(...accounts.flatMap(a => [Math.abs(a.now), Math.abs(a.future)]), 1);
+
+  let rows = '';
   accounts.forEach((a, i) => {
-    const p = PALETTE[i % PALETTE.length];
-    data.push({ label: a.label + ' ' + t('dash_today_label'),  value: a.now,    color: p.now    });
-    data.push({ label: a.label + ' ' + t('dash_future_label'), value: a.future, color: p.future });
+    const [baseCol, lightCol] = _BAL_PAL[i % _BAL_PAL.length];
+    const isNeg = a.now < 0;
+    const col   = isNeg ? '#dc2626' : baseCol;
+    const ext   = isNeg ? '#fca5a5' : lightCol;
+
+    const y0    = PAD + i * RH;
+    const barY  = y0 + 14;
+    const barH  = 26;
+    const nowPx = Math.max(0, (Math.abs(a.now)    / maxV) * BW);
+    const futPx = Math.max(0, (Math.abs(a.future) / maxV) * BW);
+    const delta  = a.future - a.now;
+    const pct    = a.now !== 0 ? (delta / Math.abs(a.now) * 100).toFixed(1) : null;
+    const up     = delta > 0;
+    const flat   = Math.abs(delta) < 0.005;
+    const arrow  = up ? '↑' : flat ? '→' : '↓';
+    const acol   = up ? '#16a34a' : flat ? '#94a3b8' : '#dc2626';
+
+    // Background track
+    const track = `<rect x="${LW + 8}" y="${barY}" width="${BW}" height="${barH}" rx="5" fill="#f1f5f9"/>`;
+
+    // Today bar
+    const todayBar = nowPx > 0
+      ? `<rect x="${LW + 8}" y="${barY}" width="${nowPx}" height="${barH}" rx="5" fill="${esc(col)}" opacity="0.88"/>`
+      : '';
+
+    // Future delta overlay (gain extension or loss overlay)
+    let futOver = '';
+    if (!flat) {
+      const extX = LW + 8 + Math.min(nowPx, futPx);
+      const extW = Math.abs(futPx - nowPx);
+      if (extW > 1) {
+        const da = up ? `stroke="${esc(col)}" stroke-width="1" stroke-dasharray="4,2"` : '';
+        futOver = `<rect x="${extX}" y="${barY + 5}" width="${extW}" height="${barH - 10}" rx="3" fill="${esc(ext)}" opacity="${up ? '0.65' : '0.55'}" ${da}/>`;
+      }
+    }
+
+    // Future marker line (vertical dashed)
+    const futLine = `<line x1="${LW + 8 + futPx}" y1="${barY - 5}" x2="${LW + 8 + futPx}" y2="${barY + barH + 5}" stroke="${esc(acol)}" stroke-width="2.5" stroke-linecap="round"/>`;
+
+    // Account name
+    const lbl  = a.label.length > 13 ? a.label.slice(0, 12) + '…' : a.label;
+    const nameEl = `<text x="${LW + 4}" y="${barY + barH / 2 + 4}" text-anchor="end" font-size="12" fill="#475569" font-family="system-ui,sans-serif" font-weight="500">${esc(lbl)}</text>`;
+
+    // Right column
+    const rx = LW + BW + 18;
+    const todayTxt  = `<text x="${rx}" y="${barY + 10}"  font-size="10" fill="#94a3b8" font-family="system-ui,sans-serif">Σήμερα: ${esc(fmtEuro(a.now))}</text>`;
+    const futureTxt = `<text x="${rx}" y="${barY + barH - 2}" font-size="11" fill="${esc(acol)}" font-weight="600" font-family="system-ui,sans-serif">${esc(arrow)} ${esc(fmtEuro(a.future))}${pct ? ' (' + (up ? '+' : '') + esc(pct) + '%)' : ''}</text>`;
+
+    const ttip = `<title>${esc(a.label)}: Σήμερα ${esc(fmtEuro(a.now))} → Μέλλον ${esc(fmtEuro(a.future))}${pct ? ' (' + (up ? '+' : '') + pct + '%)' : ''}</title>`;
+
+    rows += `<g>${ttip}${track}${todayBar}${futOver}${futLine}${nameEl}${todayTxt}${futureTxt}</g>\n`;
   });
-  if (!data.length) return;
 
-  const max = Math.max(...data.map(d => Math.abs(d.value)), 100);
-  const barW = Math.min(60, (W - 40) / data.length - 10);
-  const gap  = (W - 40 - barW * data.length) / (data.length + 1);
-  const baseline = H - 30;
+  // Legend
+  const legY = PAD + accounts.length * RH + 4;
+  const legend = `
+    <rect x="${LW + 8}" y="${legY + 4}" width="14" height="13" rx="3" fill="#1e40af" opacity="0.88"/>
+    <text x="${LW + 26}" y="${legY + 14}" font-size="10" fill="#94a3b8" font-family="system-ui,sans-serif">Σήμερα</text>
+    <rect x="${LW + 78}" y="${legY + 4}" width="14" height="13" rx="3" fill="#93c5fd" opacity="0.65" stroke="#1e40af" stroke-width="1" stroke-dasharray="4,2"/>
+    <text x="${LW + 96}" y="${legY + 14}" font-size="10" fill="#94a3b8" font-family="system-ui,sans-serif">Κέρδος Μέλλον</text>
+    <rect x="${LW + 196}" y="${legY + 4}" width="14" height="13" rx="3" fill="#fca5a5" opacity="0.55"/>
+    <text x="${LW + 214}" y="${legY + 14}" font-size="10" fill="#94a3b8" font-family="system-ui,sans-serif">Μείωση</text>
+    <line x1="${LW + 265}" y1="${legY + 10}" x2="${LW + 278}" y2="${legY + 10}" stroke="#16a34a" stroke-width="2.5" stroke-linecap="round"/>
+    <text x="${LW + 282}" y="${legY + 14}" font-size="10" fill="#94a3b8" font-family="system-ui,sans-serif">Στόχος</text>`;
 
-  ctx.font = '11px system-ui';
-  ctx.textAlign = 'center';
+  wrap.innerHTML = `<svg width="100%" height="${H}" viewBox="0 0 ${W} ${H}" style="display:block;overflow:visible">${rows}${legend}</svg>`;
+}
 
-  data.forEach((d, i) => {
-    const x = 20 + gap + i * (barW + gap) + barW / 2;
-    const barH = Math.abs(d.value / max) * (baseline - 30);
-    const y = d.value >= 0 ? baseline - barH : baseline;
+function _renderBalanceDelta(accounts, wrap) {
+  const W    = Math.max(wrap.clientWidth || 0, 280);
+  const LW   = Math.min(100, Math.floor(W * 0.27));
+  const RW   = 140;
+  const BW   = Math.max(40, W - LW - RW - 20);
+  const RH   = 52;
+  const PAD  = 16;
+  const H    = accounts.length * RH + PAD * 2;
+  const midX = LW + 8 + BW / 2;
 
-    ctx.fillStyle = d.color;
-    roundRect(ctx, x - barW/2, y, barW, barH || 2, 4);
-    ctx.fill();
+  const maxD = Math.max(...accounts.map(a => Math.abs(a.future - a.now)), 1);
 
-    // Value label
-    ctx.fillStyle = d.value < 0 ? '#dc2626' : '#1e293b';
-    ctx.fillText(fmtEuro(d.value).replace(' €','€'), x, d.value >= 0 ? y - 5 : y + barH + 14);
+  let rows = '';
+  accounts.forEach((a, i) => {
+    const y0    = PAD + i * RH;
+    const barY  = y0 + 6;
+    const barH  = 32;
+    const delta = a.future - a.now;
+    const pct   = a.now !== 0 ? (delta / Math.abs(a.now) * 100).toFixed(1) : null;
+    const up    = delta >= 0;
+    const flat  = Math.abs(delta) < 0.005;
+    const col   = flat ? '#94a3b8' : up ? '#16a34a' : '#dc2626';
+    const hw    = flat ? 0 : (Math.abs(delta) / maxD) * (BW / 2);
+    const sign  = delta > 0 ? '+' : '';
 
-    // X label
-    ctx.fillStyle = '#94a3b8';
-    ctx.font = '10px system-ui';
-    const words = d.label.split(' ');
-    ctx.fillText(words[0], x, H - 14);
-    ctx.fillText(words.slice(1).join(' '), x, H - 4);
-    ctx.font = '11px system-ui';
+    const track = `<rect x="${LW + 8}" y="${barY + 8}" width="${BW}" height="${barH - 16}" rx="3" fill="#f1f5f9"/>`;
+    const zline = `<line x1="${midX}" y1="${barY}" x2="${midX}" y2="${barY + barH}" stroke="#cbd5e1" stroke-width="1.5"/>`;
+    const bar   = flat
+      ? `<circle cx="${midX}" cy="${barY + barH / 2}" r="5" fill="#94a3b8"/>`
+      : `<rect x="${up ? midX : midX - hw}" y="${barY + 5}" width="${hw}" height="${barH - 10}" rx="3" fill="${esc(col)}" opacity="0.82"/>`;
+
+    const lbl    = a.label.length > 13 ? a.label.slice(0, 12) + '…' : a.label;
+    const nameEl = `<text x="${LW + 4}" y="${barY + barH / 2 + 5}" text-anchor="end" font-size="12" fill="#475569" font-family="system-ui,sans-serif" font-weight="500">${esc(lbl)}</text>`;
+
+    const rx     = LW + BW + 18;
+    const valTxt = `<text x="${rx}" y="${barY + barH / 2 - 2}" font-size="11" fill="${esc(col)}" font-weight="600" font-family="system-ui,sans-serif">${esc(sign + fmtEuro(delta))}</text>`;
+    const pctTxt = pct
+      ? `<text x="${rx}" y="${barY + barH / 2 + 13}" font-size="10" fill="${esc(col)}" font-family="system-ui,sans-serif">${esc(sign + pct + '%')}</text>`
+      : '';
+
+    const ttip = `<title>${esc(a.label)}: ${esc(sign + fmtEuro(delta))}${pct ? ' (' + sign + pct + '%)' : ''}</title>`;
+
+    rows += `<g>${ttip}${track}${zline}${bar}${nameEl}${valTxt}${pctTxt}</g>\n`;
   });
 
-  // Baseline
-  ctx.beginPath();
-  ctx.strokeStyle = '#e2e8f0';
-  ctx.lineWidth = 1;
-  ctx.moveTo(10, baseline);
-  ctx.lineTo(W - 10, baseline);
-  ctx.stroke();
+  const zeroLbl = `<text x="${midX}" y="${PAD - 4}" text-anchor="middle" font-size="10" fill="#cbd5e1" font-family="system-ui,sans-serif">Μεταβολή</text>`;
+
+  wrap.innerHTML = `<svg width="100%" height="${H}" viewBox="0 0 ${W} ${H}" style="display:block;overflow:visible">${zeroLbl}${rows}</svg>`;
 }
 
 function renderExpenseCategoryChart(catData) {
+  if (_expView === 'bars') { _renderExpBarsChart(catData); return; }
+  _renderExpDonutChart(catData);
+}
+
+function _renderExpDonutChart(catData) {
   const canvas = document.getElementById('expenseCategoryChart');
   if (!canvas) return;
   const ctx = canvas.getContext('2d');
@@ -527,6 +651,80 @@ function renderExpenseCategoryChart(catData) {
     ctx.textAlign = 'right';
     ctx.fillText(fmtEuro(c.amount).replace(' €', '€'), lgX + lgW, y + 14);
   });
+}
+
+function _renderExpBarsChart(catData) {
+  const canvas = document.getElementById('expenseCategoryChart');
+  if (!canvas) return;
+  const ctx  = canvas.getContext('2d');
+  const W    = canvas.parentElement.clientWidth - 40;
+  const COLORS = ['#1e40af','#b91c1c','#15803d','#b45309','#6d28d9',
+                  '#0e7490','#be185d','#0f766e','#92400e','#374151','#7c3aed','#0369a1'];
+
+  if (!catData.length) {
+    canvas.width = W; canvas.height = 60;
+    ctx.clearRect(0, 0, W, 60);
+    ctx.fillStyle = '#94a3b8'; ctx.font = '13px system-ui'; ctx.textAlign = 'center';
+    ctx.fillText(t('dash_no_expenses'), W / 2, 34);
+    return;
+  }
+
+  const total  = catData.reduce((s, c) => s + c.amount, 0);
+  const maxAmt = catData[0].amount;
+  const BAR_H  = 26;
+  const GAP    = 9;
+  const LW     = Math.min(150, Math.floor(W * 0.36));
+  const RW     = 95;
+  const BW     = W - LW - RW - 8;
+  const H      = catData.length * (BAR_H + GAP) + GAP + 22;
+
+  canvas.width  = W;
+  canvas.height = H;
+  ctx.clearRect(0, 0, W, H);
+
+  catData.forEach((c, i) => {
+    const y   = GAP + i * (BAR_H + GAP);
+    const col = COLORS[i % COLORS.length];
+    const bw  = Math.max(2, (c.amount / maxAmt) * BW);
+    const pct = Math.round(c.amount / total * 100);
+
+    // Track
+    ctx.fillStyle = '#f1f5f9';
+    roundRect(ctx, LW, y, BW, BAR_H, 5); ctx.fill();
+
+    // Bar
+    ctx.fillStyle = col;
+    ctx.globalAlpha = 0.85;
+    roundRect(ctx, LW, y, bw, BAR_H, 5); ctx.fill();
+    ctx.globalAlpha = 1;
+
+    // Category label
+    const lbl = c.category.length > 21 ? c.category.slice(0, 20) + '…' : c.category;
+    ctx.fillStyle = '#475569';
+    ctx.font = '11px system-ui';
+    ctx.textAlign = 'right';
+    ctx.fillText(lbl, LW - 6, y + BAR_H / 2 + 4);
+
+    // Percentage inside bar (if wide enough)
+    if (bw > 32) {
+      ctx.fillStyle = '#fff';
+      ctx.font = 'bold 10px system-ui';
+      ctx.textAlign = 'left';
+      ctx.fillText(pct + '%', LW + 6, y + BAR_H / 2 + 4);
+    }
+
+    // Amount right
+    ctx.fillStyle = '#1e293b';
+    ctx.font = 'bold 11px system-ui';
+    ctx.textAlign = 'left';
+    ctx.fillText(fmtEuro(c.amount).replace(' €', '€'), LW + BW + 7, y + BAR_H / 2 + 4);
+  });
+
+  // Total footer
+  ctx.fillStyle = '#94a3b8';
+  ctx.font = '10px system-ui';
+  ctx.textAlign = 'left';
+  ctx.fillText('Σύνολο: ' + fmtEuro(total), LW, H - 5);
 }
 
 // ── HELP / MANUAL PAGE ───────────────────────────────────────

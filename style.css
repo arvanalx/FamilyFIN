@@ -356,20 +356,68 @@ body.privacy-mode .pv {
 .future-amount.negative { color: var(--danger); }
 
 /* ============================================================
-   BAR CHART (CSS-based)
+   CHART CONTROLS (toggle buttons + nav)
    ============================================================ */
-.bar-chart-container {
-  padding: 20px;
-  height: 220px;
-  position: relative;
+.chart-toggle-group {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.chart-tog {
+  padding: 3px 10px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 11px;
+  cursor: pointer;
+  transition: background var(--transition), color var(--transition), border-color var(--transition);
+  white-space: nowrap;
+}
+
+.chart-tog:hover:not(.chart-tog-active) {
+  background: var(--accent-light);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.chart-tog-active {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
+.chart-controls {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.chart-nav-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 5px;
+  transition: color var(--transition);
+}
+
+.chart-nav-btn:hover { color: var(--accent); }
+.chart-nav-btn:disabled { opacity: 0.3; cursor: default; }
+
+/* SVG balance chart wrapper */
+.balance-svg-wrap {
+  padding: 12px 16px 8px;
+  min-height: 80px;
 }
 
 /* Container for donut/pie charts — no fixed height, grows with canvas */
 .donut-chart-container {
   padding: 16px 20px;
 }
-
-canvas#balanceChart { width: 100% !important; height: 100% !important; }
 
 /* ============================================================
    STATS CARD

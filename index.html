@@ -86,10 +86,12 @@
       <div class="card">
         <div class="card-header">
           <h2 data-i18n="dash_balance_chart">Γράφημα Υπολοίπων</h2>
+          <div class="chart-toggle-group">
+            <button class="chart-tog chart-tog-active" data-bal-view="compare" onclick="setBalanceView('compare')" title="Σύγκριση Σήμερα vs Μέλλον">⊞ Σύγκριση</button>
+            <button class="chart-tog" data-bal-view="delta" onclick="setBalanceView('delta')" title="Μεταβολή υπολοίπων">⇅ Μεταβολή</button>
+          </div>
         </div>
-        <div class="bar-chart-container">
-          <canvas id="balanceChart"></canvas>
-        </div>
+        <div class="balance-svg-wrap" id="balanceChartWrapper"></div>
       </div>
 
       <!-- Quick Stats -->
@@ -130,7 +132,15 @@
       <div class="card card-wide">
         <div class="card-header">
           <h2 data-i18n="dash_expense_by_cat">Έξοδα ανά Κατηγορία</h2>
-          <span class="card-date" id="expChartMonth"></span>
+          <div class="chart-controls">
+            <button class="chart-nav-btn" id="expChartPrev" onclick="navigateExpChart(-1)" title="Προηγούμενος μήνας">‹</button>
+            <span class="card-date" id="expChartMonth"></span>
+            <button class="chart-nav-btn" id="expChartNext" onclick="navigateExpChart(1)" title="Επόμενος μήνας">›</button>
+            <div class="chart-toggle-group">
+              <button class="chart-tog chart-tog-active" data-exp-view="donut" onclick="setExpView('donut')" title="Κυκλικό γράφημα">◎</button>
+              <button class="chart-tog" data-exp-view="bars" onclick="setExpView('bars')" title="Οριζόντιες μπάρες">≡</button>
+            </div>
+          </div>
         </div>
         <div class="donut-chart-container">
           <canvas id="expenseCategoryChart"></canvas>
