@@ -3,6 +3,7 @@
    ============================================================ */
 
 :root {
+  --bottom-nav-h:   62px;
   --primary:        #1a3a6b;
   --primary-light:  #2a5298;
   --primary-dark:   #0f2347;
@@ -1241,4 +1242,142 @@ body.privacy-mode .pv {
 @media (max-width: 600px) {
   .help-table { font-size: .8rem; }
   .help-table th, .help-table td { padding: 5px 8px; }
+}
+
+/* ============================================================
+   BOTTOM NAVIGATION (mobile only)
+   ============================================================ */
+.bottom-nav {
+  display: none;
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  height: var(--bottom-nav-h);
+  /* safe-area for iPhone home indicator */
+  padding-bottom: env(safe-area-inset-bottom);
+  background: var(--sidebar-bg);
+  border-top: 1px solid rgba(255,255,255,.1);
+  z-index: 300;
+  align-items: stretch;
+  justify-content: space-around;
+}
+
+.bottom-nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  gap: 3px;
+  text-decoration: none;
+  color: rgba(255,255,255,.5);
+  font-size: .65rem;
+  letter-spacing: .2px;
+  padding: 8px 4px;
+  transition: color var(--transition);
+  /* min touch target */
+  min-height: 44px;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.bottom-nav-item.active {
+  color: #60a5fa;
+}
+
+.bottom-nav-icon {
+  font-size: 1.3rem;
+  line-height: 1;
+}
+
+.bottom-nav-label {
+  font-size: .6rem;
+  font-weight: 500;
+  text-align: center;
+  white-space: nowrap;
+}
+
+/* ============================================================
+   iOS / MOBILE TOUCH IMPROVEMENTS
+   ============================================================ */
+
+/* Prevent double-tap zoom on interactive elements */
+button, a, select, input {
+  touch-action: manipulation;
+}
+
+/* Smooth momentum scrolling on iOS */
+.nav-links,
+.main-content,
+.modal-body,
+.transactions-list,
+.subscriptions-grid,
+.installments-list,
+.settings-section {
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Safe area — top bar on notched iPhones */
+@supports (padding-top: env(safe-area-inset-top)) {
+  .sidebar {
+    padding-top: env(safe-area-inset-top);
+  }
+  .top-bar {
+    padding-top: max(0px, env(safe-area-inset-top));
+    height: calc(var(--topbar-h) + env(safe-area-inset-top));
+  }
+}
+
+/* ============================================================
+   MOBILE — show bottom nav, adjust layout
+   ============================================================ */
+@media (max-width: 768px) {
+  .bottom-nav {
+    display: flex;
+  }
+
+  /* Extra bottom padding so content isn't hidden behind bottom nav */
+  .main-content {
+    padding-bottom: calc(var(--bottom-nav-h) + env(safe-area-inset-bottom, 0px));
+  }
+
+  /* Increase touch target for action buttons in tables */
+  .btn-icon, .btn-sm {
+    min-height: 36px;
+    min-width: 36px;
+  }
+
+  /* Modals: full-width on small screens */
+  .modal {
+    margin: 12px;
+    max-height: calc(100vh - 24px - var(--bottom-nav-h));
+  }
+}
+
+/* ============================================================
+   PWA INSTALL BANNER (shown when beforeinstallprompt fires)
+   ============================================================ */
+.pwa-install-bar {
+  display: none;
+  position: fixed;
+  bottom: calc(var(--bottom-nav-h) + env(safe-area-inset-bottom, 0px) + 8px);
+  left: 12px; right: 12px;
+  background: var(--primary);
+  color: #fff;
+  border-radius: var(--radius);
+  padding: 12px 16px;
+  z-index: 250;
+  align-items: center;
+  gap: 12px;
+  box-shadow: var(--shadow-lg);
+  font-size: .875rem;
+}
+.pwa-install-bar.visible { display: flex; }
+.pwa-install-bar p { flex: 1; margin: 0; }
+.pwa-install-bar .pwa-dismiss {
+  background: none; border: none; color: rgba(255,255,255,.6);
+  font-size: 1.2rem; cursor: pointer; padding: 4px;
+}
+.pwa-install-bar .btn-pwa {
+  background: #60a5fa; border: none; color: #fff;
+  padding: 6px 14px; border-radius: 8px; font-size: .8rem;
+  font-weight: 600; cursor: pointer; white-space: nowrap;
 }

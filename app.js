@@ -164,9 +164,13 @@ function showPage(name) {
   document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
   const page = document.getElementById('page-' + name);
   if (page) page.classList.add('active');
-  const link = document.querySelector(`[data-page="${name}"]`);
+  const link = document.querySelector(`.nav-link[data-page="${name}"]`);
   if (link) link.classList.add('active');
   document.getElementById('pageTitle').textContent = link?.querySelector('.nav-label')?.textContent || '';
+  // Sync bottom nav active state
+  document.querySelectorAll('.bottom-nav-item').forEach(item => item.classList.remove('active'));
+  const bottomItem = document.querySelector(`.bottom-nav-item[data-page="${name}"]`);
+  if (bottomItem) bottomItem.classList.add('active');
   // Close mobile sidebar
   document.getElementById('sidebar').classList.remove('mobile-open');
   // Render page
@@ -2058,6 +2062,61 @@ document.addEventListener('DOMContentLoaded', async () => {
   window.addEventListener('resize', () => {
     if (currentPage() === 'dashboard') renderDashboard();
   });
+
+  // Bottom nav links
+  document.querySelectorAll('.bottom-nav-item').forEach(item => {
+    item.addEventListener('click', e => {
+      e.preventDefault();
+      showPage(item.dataset.page);
+    });
+  });
+
+  // Swipe gesture: swipe right from left edge → open sidebar; swipe left → close
+  let swipeStartX = 0, swipeStartY = 0, swipeStartTime = 0;
+  document.addEventListener('touchstart', e => {
+    swipeStartX = e.touches[0].clientX;
+    swipeStartY = e.touches[0].clientY;
+    swipeStartTime = Date.now();
+  }, { passive: true });
+
+  document.addEventListener('touchend', e => {
+    const dx = e.changedTouches[0].clientX - swipeStartX;
+    const dy = e.changedTouches[0].clientY - swipeStartY;
+    const dt = Date.now() - swipeStartTime;
+    const sidebar = document.getElementById('sidebar');
+    // Only on mobile, fast swipe, more horizontal than vertical
+    if (window.innerWidth > 768) return;
+    if (dt > 400) return;
+    if (Math.abs(dy) > Math.abs(dx)) return;
+    if (dx > 50 && swipeStartX < 30) {
+      // Swipe right from left edge → open sidebar
+      sidebar.classList.add('mobile-open');
+    } else if (dx < -50 && sidebar.classList.contains('mobile-open')) {
+      // Swipe left → close sidebar
+      sidebar.classList.remove('mobile-open');
+    }
+  }, { passive: true });
+
+  // PWA install prompt (Android/Chrome)
+  window.installPWA = async () => {
+    if (!deferredInstallPrompt) return;
+    deferredInstallPrompt.prompt();
+    await deferredInstallPrompt.userChoice;
+    deferredInstallPrompt = null;
+    document.getElementById('pwaInstallBar')?.classList.remove('visible');
+  };
+  let deferredInstallPrompt = null;
+  window.addEventListener('beforeinstallprompt', e => {
+    e.preventDefault();
+    deferredInstallPrompt = e;
+    const bar = document.getElementById('pwaInstallBar');
+    if (bar) bar.classList.add('visible');
+  });
+
+  // Register Service Worker
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
+  }
 
   // Apply translations (static elements with data-i18n)
   applyTranslations();

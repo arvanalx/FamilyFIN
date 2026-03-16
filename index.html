@@ -2,9 +2,17 @@
 <html lang="el">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Family FiN</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💰</text></svg>">
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0f1f3d">
+  <!-- iOS PWA -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Family FiN">
+  <link rel="apple-touch-icon" href="icon-192.png">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -663,6 +671,37 @@
     </div>
   </div>
 </div>
+
+<!-- PWA Install Banner (Android/Chrome) -->
+<div class="pwa-install-bar" id="pwaInstallBar">
+  <p>Εγκατάσταση Family FiN στην αρχική οθόνη</p>
+  <button class="btn-pwa" onclick="installPWA()">Εγκατάσταση</button>
+  <button class="pwa-dismiss" onclick="document.getElementById('pwaInstallBar').classList.remove('visible')">✕</button>
+</div>
+
+<!-- Bottom Navigation (mobile only) -->
+<nav class="bottom-nav" id="bottomNav">
+  <a href="#" class="bottom-nav-item active" data-page="dashboard">
+    <span class="bottom-nav-icon">📊</span>
+    <span class="bottom-nav-label">Ματιά</span>
+  </a>
+  <a href="#" class="bottom-nav-item" data-page="transactions">
+    <span class="bottom-nav-icon">📋</span>
+    <span class="bottom-nav-label">Κινήσεις</span>
+  </a>
+  <a href="#" class="bottom-nav-item" data-page="cards">
+    <span class="bottom-nav-icon">💳</span>
+    <span class="bottom-nav-label">Κάρτες</span>
+  </a>
+  <a href="#" class="bottom-nav-item" data-page="settings">
+    <span class="bottom-nav-icon">⚙️</span>
+    <span class="bottom-nav-label">Ρυθμίσεις</span>
+  </a>
+  <a href="#" class="bottom-nav-item" data-page="help">
+    <span class="bottom-nav-icon">📖</span>
+    <span class="bottom-nav-label">Βοήθεια</span>
+  </a>
+</nav>
 
 <script src="i18n.js"></script>
 <script src="app.js"></script>
