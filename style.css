@@ -1371,10 +1371,19 @@ button, a, select, input {
     min-width: 36px;
   }
 
-  /* Modals: full-width on small screens, respect bottom nav + safe area */
+  /* Modals: bottom-sheet style on mobile */
+  .modal-overlay {
+    align-items: flex-end;
+    padding: 0;
+  }
   .modal {
-    margin: 8px;
-    max-height: calc(100vh - 16px - var(--bottom-nav-h) - env(safe-area-inset-bottom, 0px));
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+    border-radius: var(--radius) var(--radius) 0 0;
+    /* dvh = dynamic viewport height (accounts for iOS keyboard + safe areas) */
+    max-height: 88vh;
+    max-height: 88dvh;
   }
 
   /* Lang toggle in top bar on mobile */
@@ -1411,6 +1420,11 @@ button, a, select, input {
     padding: 10px 6px;
     white-space: normal;
     overflow: hidden;
+  }
+  /* Compact header text so "ΗΜΕΡΟΜΗΝΙΑ ↕" fits in one line */
+  #transactionsTable th {
+    font-size: .68rem;
+    letter-spacing: 0;
   }
   /* Date: fixed — wide enough for header + "08/03/2026" */
   #transactionsTable th:nth-child(1),
