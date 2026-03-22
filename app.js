@@ -771,13 +771,13 @@ function mdToHtml(md) {
       return !inner.split('|').every(c => /^[\s:|-]+$/.test(c));
     });
     if (!dataRows.length) { inTable = false; tableRows = []; return; }
-    out.push('<table class="help-table"><tbody>');
+    out.push('<div class="table-scroll-wrap"><table class="help-table"><tbody>');
     dataRows.forEach((row, idx) => {
       const cells = row.replace(/^\|/, '').replace(/\|$/, '').split('|').map(c => c.trim());
       const tag   = idx === 0 ? 'th' : 'td';
       out.push(`<tr>${cells.map(c => `<${tag}>${inline(c)}</${tag}>`).join('')}</tr>`);
     });
-    out.push('</tbody></table>');
+    out.push('</tbody></table></div>');
     inTable = false; tableRows = [];
   };
 

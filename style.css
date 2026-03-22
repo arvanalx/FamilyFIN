@@ -1217,11 +1217,18 @@ body.privacy-mode .pv {
 
 .help-content strong { color: var(--text); }
 
-/* Help tables */
+/* Help tables — scrollable wrapper for mobile */
+.table-scroll-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin: 10px 0 14px;
+  border-radius: 8px;
+}
+
 .help-table {
   width: 100%;
   border-collapse: collapse;
-  margin: 10px 0 14px;
+  margin: 0;
   font-size: .875rem;
 }
 
@@ -1247,6 +1254,19 @@ body.privacy-mode .pv {
 @media (max-width: 600px) {
   .help-table { font-size: .8rem; }
   .help-table th, .help-table td { padding: 5px 8px; }
+  /* Prevent pre/code blocks from pushing page wider */
+  .help-content pre {
+    max-width: 100%;
+    font-size: .78rem;
+  }
+  /* Inline code: break long URLs/paths */
+  .help-content code {
+    word-break: break-all;
+  }
+  /* Help card: no horizontal overflow */
+  .help-card {
+    overflow-x: hidden;
+  }
 }
 
 /* Lang toggle mobile (top bar) — hidden on desktop */
