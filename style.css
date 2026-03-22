@@ -1381,16 +1381,67 @@ button, a, select, input {
     align-items: center;
   }
 
-  /* Transactions & Income tables: hide Category + Account on mobile */
+  /* Transactions table: hide Category, Account, Actions — fit in 375px */
   #transactionsTable th:nth-child(3),
   #transactionsTable td:nth-child(3),
   #transactionsTable th:nth-child(4),
   #transactionsTable td:nth-child(4),
+  #transactionsTable th:nth-child(6),
+  #transactionsTable td:nth-child(6) {
+    display: none;
+  }
+
+  /* Income table: hide Category + Account */
   #incomeTable th:nth-child(3),
   #incomeTable td:nth-child(3),
   #incomeTable th:nth-child(4),
   #incomeTable td:nth-child(4) {
     display: none;
+  }
+
+  /* Force table to fit container width */
+  #transactionsTable {
+    table-layout: fixed;
+    width: 100%;
+  }
+  #transactionsTable th,
+  #transactionsTable td {
+    padding: 10px 6px;
+    white-space: normal;
+  }
+  /* Date: fixed narrow */
+  #transactionsTable th:nth-child(1),
+  #transactionsTable td:nth-child(1) {
+    width: 22%;
+    font-size: .78rem;
+  }
+  /* Amount: fixed right */
+  #transactionsTable th:nth-child(5),
+  #transactionsTable td:nth-child(5) {
+    width: 28%;
+    font-size: .82rem;
+  }
+  /* Description: fills remaining, truncate overflow */
+  #transactionsTable td:nth-child(2) {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* Tappable rows (edit via tap) */
+  #transactionsTable tbody tr {
+    cursor: pointer;
+  }
+  #transactionsTable tbody tr:active {
+    background: #e8f0fe;
+  }
+
+  /* Reduce card padding on mobile so table gets more room */
+  #page-transactions .card {
+    padding: 0;
+  }
+  #page-transactions .card .empty-state {
+    padding: 24px;
   }
 }
 

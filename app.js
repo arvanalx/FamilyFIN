@@ -915,10 +915,10 @@ function filterAndRenderTransactions() {
   empty.classList.add('hidden');
 
   tbody.innerHTML = txs.map(tx => `
-    <tr>
+    <tr onclick="editTransaction('${tx.id}')" style="cursor:pointer">
       <td>${fmtDate(tx.date)}</td>
       <td>
-        <div style="font-weight:600">${esc(tx.desc)}${tx.subId ? ` <span title="${t('auto_sub_note')}" style="font-size:.85em">🔄</span>` : ''}</div>
+        <div style="font-weight:600">${esc(tx.desc)}${tx.subId ? ` <span title="${t('auto_sub_note')}" style="font-size:.85em">🔄</span>` : ''}${tx.settled ? ' <span style="font-size:.8em" title="${t(\'label_settled\')}">✅</span>' : ''}</div>
         ${tx.notes && !tx.subId ? `<div style="font-size:.75rem;color:#64748b">${esc(tx.notes)}</div>` : ''}
       </td>
       <td>${tx.category ? `<span class="badge badge-blue">${esc(tx.category)}</span>` : '<span class="muted">—</span>'}</td>
@@ -928,9 +928,9 @@ function filterAndRenderTransactions() {
       </td>
       <td>
         <div class="tx-actions">
-          <button class="btn-icon${tx.settled ? ' settled' : ''}" onclick="toggleTransactionSettled('${tx.id}')" title="${t('btn_toggle_settled')}">${tx.settled ? '✅' : '☐'}</button>
-          ${!tx.subId ? `<button class="btn-icon" onclick="editTransaction('${tx.id}')">✏️</button>` : '<span class="btn-icon-spacer"></span>'}
-          <button class="btn-icon danger" onclick="deleteTransaction('${tx.id}')">🗑️</button>
+          <button class="btn-icon${tx.settled ? ' settled' : ''}" onclick="event.stopPropagation();toggleTransactionSettled('${tx.id}')" title="${t('btn_toggle_settled')}">${tx.settled ? '✅' : '☐'}</button>
+          ${!tx.subId ? `<button class="btn-icon" onclick="event.stopPropagation();editTransaction('${tx.id}')">✏️</button>` : '<span class="btn-icon-spacer"></span>'}
+          <button class="btn-icon danger" onclick="event.stopPropagation();deleteTransaction('${tx.id}')">🗑️</button>
         </div>
       </td>
     </tr>
@@ -946,6 +946,7 @@ function openNewTransactionModal() {
   document.getElementById('txDesc').value   = '';
   document.getElementById('txNotes').value  = '';
   document.getElementById('txSettled').checked = false;
+  document.getElementById('txDeleteBtn').style.display = 'none';
   populateTxCategorySelect();
   openModal('addTransactionModal');
 }
@@ -964,7 +965,16 @@ function editTransaction(id) {
   document.getElementById('txCategory').value = tx.category || '';
   document.getElementById('txAccount').value  = tx.account;
   document.getElementById('txSettled').checked = !!tx.settled;
+  // Show delete button when editing (useful on mobile where Actions col is hidden)
+  document.getElementById('txDeleteBtn').style.display = '';
   openModal('addTransactionModal');
+}
+
+function deleteCurrentTransaction() {
+  const id = document.getElementById('editTransactionId').value;
+  if (!id) return;
+  closeModal('addTransactionModal');
+  deleteTransaction(id);
 }
 
 function deleteTransaction(id) {

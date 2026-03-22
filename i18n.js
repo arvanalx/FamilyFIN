@@ -118,6 +118,7 @@ const TRANSLATIONS = {
     card_label_linked:     'Συνδεδεμένος Λογαριασμός',
     card_none_linked:      '— Κανένας —',
     btn_delete_card:       '🗑️ Διαγραφή',
+    btn_delete_tx:         '🗑️ Διαγραφή',
 
     // Modals
     modal_new_tx:       'Νέα Κίνηση',
@@ -350,6 +351,7 @@ const TRANSLATIONS = {
     card_label_linked:     'Linked Account',
     card_none_linked:      '— None —',
     btn_delete_card:       '🗑️ Delete',
+    btn_delete_tx:         '🗑️ Delete',
 
     // Modals
     modal_new_tx:       'New Transaction',
