@@ -230,7 +230,8 @@ body.privacy-mode .btn-privacy {
 #txTotalIncome, #txTotalExpense, #txBalance,
 #installmentMonthly, #installmentRemaining,
 #subMonthly, #subYearly,
-#incomeMonthTotal, #incomeYearEstimate, .pv {
+#incomeMonthTotal, #incomeYearEstimate, .pv,
+.balance-svg-wrap, #balanceChartWrapper {
   transition: filter .3s ease;
 }
 
@@ -253,6 +254,8 @@ body.privacy-mode #subMonthly,
 body.privacy-mode #subYearly,
 body.privacy-mode #incomeMonthTotal,
 body.privacy-mode #incomeYearEstimate,
+body.privacy-mode .balance-svg-wrap,
+body.privacy-mode #balanceChartWrapper,
 body.privacy-mode .pv {
   filter: blur(8px);
   user-select: none;
@@ -1244,6 +1247,27 @@ body.privacy-mode .pv {
   .help-table th, .help-table td { padding: 5px 8px; }
 }
 
+/* Lang toggle mobile (top bar) — hidden on desktop */
+.lang-toggle-mobile {
+  display: none;
+  margin-left: auto;
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  border-radius: 4px;
+  padding: 2px 8px;
+  font-size: .72rem;
+  font-weight: 700;
+  letter-spacing: .06em;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background var(--transition), color var(--transition);
+}
+.lang-toggle-mobile:hover {
+  background: var(--bg);
+  color: var(--primary);
+}
+
 /* ============================================================
    BOTTOM NAVIGATION (mobile only)
    ============================================================ */
@@ -1349,6 +1373,24 @@ button, a, select, input {
   .modal {
     margin: 12px;
     max-height: calc(100vh - 24px - var(--bottom-nav-h));
+  }
+
+  /* Lang toggle in top bar on mobile */
+  .lang-toggle-mobile {
+    display: inline-flex;
+    align-items: center;
+  }
+
+  /* Transactions & Income tables: hide Category + Account on mobile */
+  #transactionsTable th:nth-child(3),
+  #transactionsTable td:nth-child(3),
+  #transactionsTable th:nth-child(4),
+  #transactionsTable td:nth-child(4),
+  #incomeTable th:nth-child(3),
+  #incomeTable td:nth-child(3),
+  #incomeTable th:nth-child(4),
+  #incomeTable td:nth-child(4) {
+    display: none;
   }
 }
 

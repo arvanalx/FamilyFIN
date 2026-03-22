@@ -1,5 +1,5 @@
 /* Family FiN — Service Worker */
-const CACHE = 'familyfin-v1';
+const CACHE = 'familyfin-v2';
 const ASSETS = [
   '/',
   '/index.html',

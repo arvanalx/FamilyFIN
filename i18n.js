@@ -517,9 +517,11 @@ function applyTranslations() {
   document.querySelectorAll('[data-i18n-title]').forEach(el => {
     el.title = t(el.dataset.i18nTitle);
   });
-  // Update lang toggle button label
+  // Update lang toggle button labels (sidebar + mobile top bar)
   const btn = document.getElementById('langToggle');
   if (btn) btn.textContent = getLang() === 'el' ? 'EN' : 'EL';
+  const btnMobile = document.getElementById('langToggleMobile');
+  if (btnMobile) btnMobile.textContent = getLang() === 'el' ? 'EN' : 'EL';
   // Update html lang attribute
   document.documentElement.lang = getLang();
 }
