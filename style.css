@@ -1002,7 +1002,9 @@ body.privacy-mode .pv {
   width: 100%;
   max-width: 500px;
   max-height: 90vh;
-  overflow-y: auto;
+  /* Flex column: header+footer stay fixed, only body scrolls */
+  display: flex;
+  flex-direction: column;
   animation: modalIn .2s ease;
 }
 
@@ -1027,7 +1029,7 @@ body.privacy-mode .pv {
 
 .modal-close:hover { color: var(--danger); background: var(--danger-light); }
 
-.modal-body { padding: 20px; }
+.modal-body { padding: 20px; flex: 1; overflow-y: auto; min-height: 0; }
 
 .modal-footer {
   display: flex; justify-content: flex-end; gap: 8px;
@@ -1369,10 +1371,10 @@ button, a, select, input {
     min-width: 36px;
   }
 
-  /* Modals: full-width on small screens */
+  /* Modals: full-width on small screens, respect bottom nav + safe area */
   .modal {
-    margin: 12px;
-    max-height: calc(100vh - 24px - var(--bottom-nav-h));
+    margin: 8px;
+    max-height: calc(100vh - 16px - var(--bottom-nav-h) - env(safe-area-inset-bottom, 0px));
   }
 
   /* Lang toggle in top bar on mobile */
@@ -1408,22 +1410,23 @@ button, a, select, input {
   #transactionsTable td {
     padding: 10px 6px;
     white-space: normal;
+    overflow: hidden;
   }
-  /* Date: fixed narrow */
+  /* Date: fixed — wide enough for header + "08/03/2026" */
   #transactionsTable th:nth-child(1),
   #transactionsTable td:nth-child(1) {
-    width: 22%;
+    width: 30%;
     font-size: .78rem;
   }
   /* Amount: fixed right */
   #transactionsTable th:nth-child(5),
   #transactionsTable td:nth-child(5) {
-    width: 28%;
+    width: 27%;
     font-size: .82rem;
+    text-align: right;
   }
-  /* Description: fills remaining, truncate overflow */
+  /* Description: fills remaining ~46%, truncate overflow */
   #transactionsTable td:nth-child(2) {
-    overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
