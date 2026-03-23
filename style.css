@@ -977,6 +977,70 @@ body.privacy-mode .pv {
 .text-muted { font-size: .75rem; color: var(--text-muted); }
 
 /* ============================================================
+   ACTION SHEET  (mobile income row tap)
+   ============================================================ */
+.action-sheet-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.45);
+  z-index: 350;
+  align-items: flex-end;
+}
+.action-sheet-overlay.open { display: flex; animation: overlayIn .15s ease; }
+.action-sheet {
+  width: 100%;
+  background: var(--card-bg);
+  border-radius: var(--radius) var(--radius) 0 0;
+  padding: 12px 12px calc(16px + env(safe-area-inset-bottom, 0px));
+  box-shadow: var(--shadow-lg);
+}
+.action-sheet-title {
+  text-align: center;
+  font-size: .82rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  padding: 2px 0 12px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.action-sheet-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 14px 12px;
+  background: none;
+  border: none;
+  border-radius: 10px;
+  font-size: .95rem;
+  cursor: pointer;
+  text-align: left;
+  color: var(--text);
+  font-family: inherit;
+}
+.action-sheet-btn:active { background: var(--bg); }
+.action-sheet-btn.danger { color: var(--danger); }
+.action-sheet-cancel {
+  display: block;
+  width: 100%;
+  padding: 13px;
+  margin-top: 6px;
+  background: var(--bg);
+  border: none;
+  border-radius: 10px;
+  font-size: .95rem;
+  font-weight: 600;
+  cursor: pointer;
+  color: var(--text);
+  font-family: inherit;
+}
+.action-sheet-cancel:active { opacity: .7; }
+
+/* ============================================================
    MODALS
    ============================================================ */
 .modal-overlay {
@@ -1422,13 +1486,34 @@ button, a, select, input {
     display: none;
   }
 
-  /* Income table: hide Category + Account */
+  /* Income table: hide Category, Account, Actions — row tap opens action sheet */
   #incomeTable th:nth-child(3),
   #incomeTable td:nth-child(3),
   #incomeTable th:nth-child(4),
-  #incomeTable td:nth-child(4) {
+  #incomeTable td:nth-child(4),
+  #incomeTable th:nth-child(6),
+  #incomeTable td:nth-child(6) {
     display: none;
   }
+  #incomeTable {
+    table-layout: fixed;
+    width: 100%;
+  }
+  #incomeTable th,
+  #incomeTable td {
+    padding: 10px 6px;
+    white-space: normal;
+    overflow: hidden;
+  }
+  #incomeTable th { font-size: .68rem; letter-spacing: 0; }
+  #incomeTable th:nth-child(1),
+  #incomeTable td:nth-child(1) { width: 30%; font-size: .78rem; }
+  #incomeTable th:nth-child(5),
+  #incomeTable td:nth-child(5) { width: 27%; font-size: .82rem; text-align: right; }
+  #incomeTable td:nth-child(2) { text-overflow: ellipsis; white-space: nowrap; }
+  #incomeTable tbody tr { cursor: pointer; }
+  #incomeTable tbody tr:active { background: var(--success-light); }
+  #page-income .card { padding: 0; }
 
   /* Force table to fit container width */
   #transactionsTable {

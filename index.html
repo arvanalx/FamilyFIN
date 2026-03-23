@@ -13,7 +13,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Family FiN">
   <link rel="apple-touch-icon" href="icon-192.png">
-  <link rel="stylesheet" href="style.css?v=0.104">
+  <link rel="stylesheet" href="style.css?v=0.105">
 </head>
 <body>
 
@@ -705,7 +705,21 @@
   </a>
 </nav>
 
-<script src="i18n.js?v=0.104"></script>
-<script src="app.js?v=0.104"></script>
+<!-- Income action sheet (mobile row-tap) -->
+<div id="incomeActionSheet" class="action-sheet-overlay" onclick="closeIncomeActionSheet()">
+  <div class="action-sheet" onclick="event.stopPropagation()">
+    <p class="action-sheet-title" id="incomeActionDesc"></p>
+    <button class="action-sheet-btn" onclick="doIncomeAction('copy')">
+      📋 <span data-i18n="action_copy_next_month">Αντιγραφή στον επόμενο μήνα</span>
+    </button>
+    <button class="action-sheet-btn danger" onclick="doIncomeAction('delete')">
+      🗑️ <span data-i18n="btn_delete_tx">Διαγραφή</span>
+    </button>
+    <button class="action-sheet-cancel" onclick="closeIncomeActionSheet()" data-i18n="btn_cancel">Άκυρο</button>
+  </div>
+</div>
+
+<script src="i18n.js?v=0.105"></script>
+<script src="app.js?v=0.105"></script>
 </body>
 </html>

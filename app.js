@@ -1079,25 +1079,26 @@ function renderIncome() {
 
 function filterAndRenderIncome() {
   const month = document.getElementById('incomeMonthFilter').value;
-  let txs = state.transactions.filter(t => t.type === 'income');
-  if (month) txs = txs.filter(t => t.date.startsWith(month));
+  let txs = state.transactions.filter(tx => tx.type === 'income');
+  if (month) txs = txs.filter(tx => tx.date.startsWith(month));
   txs.sort((a,b) => b.date.localeCompare(a.date));
 
-  const total = txs.reduce((s,t) => s + t.amount, 0);
+  const total = txs.reduce((s, tx) => s + tx.amount, 0);
   document.getElementById('incomeMonthTotal').textContent  = fmtEuro(total);
   document.getElementById('incomeYearEstimate').textContent = fmtEuro(total * 12);
 
+  const copyTitle = t('action_copy_next_month');
   document.getElementById('incomeTbody').innerHTML = txs.length
-    ? txs.map(t => `
-        <tr>
-          <td>${fmtDate(t.date)}</td>
-          <td>${esc(t.desc)}</td>
-          <td>${t.category ? `<span class="badge badge-green">${esc(t.category)}</span>` : '—'}</td>
-          <td>${accountLabel(t.account)}</td>
-          <td class="amount-cell positive">+${fmtEuro(t.amount)}</td>
+    ? txs.map(tx => `
+        <tr onclick="showIncomeActions('${tx.id}')">
+          <td>${fmtDate(tx.date)}</td>
+          <td>${esc(tx.desc)}</td>
+          <td>${tx.category ? `<span class="badge badge-green">${esc(tx.category)}</span>` : '—'}</td>
+          <td>${accountLabel(tx.account)}</td>
+          <td class="amount-cell positive">+${fmtEuro(tx.amount)}</td>
           <td>
-            <button class="btn-icon" title="Αντιγραφή στον επόμενο μήνα" onclick="copyIncomeToNextMonth('${t.id}')">📋</button>
-            <button class="btn-icon danger" onclick="deleteTransaction('${t.id}')">🗑️</button>
+            <button class="btn-icon" title="${copyTitle}" onclick="event.stopPropagation();copyIncomeToNextMonth('${tx.id}')">📋</button>
+            <button class="btn-icon danger" onclick="event.stopPropagation();deleteTransaction('${tx.id}')">🗑️</button>
           </td>
         </tr>`).join('')
     : `<tr><td colspan="6" class="empty-state">${t('income_none')}</td></tr>`;
@@ -1116,6 +1117,29 @@ function copyIncomeToNextMonth(id) {
   saveState();
   showToast(`${t('toast_copied_to')} ${fmtDate(newDate)}`, 'success');
   renderPage(currentPage());
+}
+
+// ── Income action sheet (mobile row tap) ─────────────────────
+let _incomeActionId = null;
+
+function showIncomeActions(id) {
+  const tx = state.transactions.find(x => x.id === id);
+  if (!tx) return;
+  _incomeActionId = id;
+  document.getElementById('incomeActionDesc').textContent = tx.desc;
+  document.getElementById('incomeActionSheet').classList.add('open');
+}
+
+function closeIncomeActionSheet() {
+  document.getElementById('incomeActionSheet').classList.remove('open');
+  _incomeActionId = null;
+}
+
+function doIncomeAction(action) {
+  if (!_incomeActionId) return;
+  closeIncomeActionSheet();
+  if (action === 'copy')   copyIncomeToNextMonth(_incomeActionId);
+  if (action === 'delete') deleteTransaction(_incomeActionId);
 }
 
 function saveIncome() {
