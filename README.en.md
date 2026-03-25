@@ -227,6 +227,22 @@ Filters **combine** with each other. Below the filters a summary bar shows:
 
 Click any column header (**Date ↕**, **Description ↕**, **Amount ↕**) to sort. A second click reverses the order.
 
+### 5.7 Transferring Funds Between Accounts
+
+Click **↕ Transfer** (next to "+ New Transaction") to open the transfer form. Fill in:
+
+| Field | Description |
+|-------|-------------|
+| **Date** | Date of the transfer |
+| **Amount** | The amount to transfer |
+| **From Account** | The account to debit |
+| **To Account** | The account to credit |
+| **Notes** | Optional description |
+
+**Result:** Two linked transactions are created automatically — one debit (Expense) on the source account and one credit (Income) on the destination account. Both are marked with the ↔️ icon and the **Transfer** category (purple).
+
+> ⚠️ Transfers immediately update the balances of both accounts. Deleting **either** side automatically deletes **both** and reverses the balance changes.
+
 ---
 
 ## 6. Income
@@ -492,4 +508,4 @@ Calculates for the **current month**:
 
 ---
 
-*Family FiN — Version 0.300 Beta | Last updated: March 2026*
+*Family FiN — Version 0.500 Beta | Last updated: March 2026*

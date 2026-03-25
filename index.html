@@ -13,7 +13,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Family FiN">
   <link rel="apple-touch-icon" href="icon-192.png">
-  <link rel="stylesheet" href="style.css?v=0.300">
+  <link rel="stylesheet" href="style.css?v=0.500">
 </head>
 <body>
 
@@ -54,7 +54,7 @@
   </ul>
   <div class="sidebar-footer">
     <button id="langToggle" class="lang-toggle" onclick="toggleLang()">EN</button>
-    <span class="version">v0.300 Beta</span>
+    <span class="version">v0.500 Beta</span>
   </div>
 </nav>
 
@@ -182,6 +182,7 @@
         </select>
         <input type="text" id="txSearch" class="form-control" data-i18n-placeholder="search_placeholder" placeholder="🔍 Αναζήτηση...">
       </div>
+      <button class="btn btn-secondary" onclick="openTransferModal()" data-i18n="btn_transfer">↕ Μεταφορά</button>
       <button class="btn btn-primary" onclick="openNewTransactionModal()" data-i18n="btn_new_tx">+ Νέα Κίνηση</button>
     </div>
 
@@ -453,6 +454,44 @@
   </div>
 </div>
 
+<!-- Transfer Modal -->
+<div class="modal-overlay" id="transferModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 data-i18n="modal_transfer">Μεταφορά Χρημάτων</h3>
+      <button class="modal-close" onclick="closeModal('transferModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label data-i18n="label_date">Ημερομηνία *</label>
+          <input type="date" id="transferDate" class="form-control" required>
+        </div>
+        <div class="form-group">
+          <label data-i18n="label_amount">Ποσό (€) *</label>
+          <input type="number" id="transferAmount" class="form-control" step="0.01" min="0.01" placeholder="0,00" required>
+        </div>
+      </div>
+      <div class="form-group">
+        <label data-i18n="label_from_account">Από Λογαριασμό *</label>
+        <select id="transferFrom" class="form-control" required></select>
+      </div>
+      <div class="form-group">
+        <label data-i18n="label_to_account">Σε Λογαριασμό *</label>
+        <select id="transferTo" class="form-control" required></select>
+      </div>
+      <div class="form-group">
+        <label data-i18n="label_notes">Σημειώσεις</label>
+        <textarea id="transferNotes" class="form-control" rows="2" data-i18n-placeholder="notes_placeholder" placeholder="Προαιρετικές σημειώσεις..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('transferModal')" data-i18n="btn_cancel">Άκυρο</button>
+      <button class="btn btn-primary" onclick="saveTransfer()" data-i18n="btn_save">Αποθήκευση</button>
+    </div>
+  </div>
+</div>
+
 <!-- Add Income Modal -->
 <div class="modal-overlay" id="addIncomeModal">
   <div class="modal">
@@ -719,7 +758,7 @@
   </div>
 </div>
 
-<script src="i18n.js?v=0.300"></script>
-<script src="app.js?v=0.300"></script>
+<script src="i18n.js?v=0.500"></script>
+<script src="app.js?v=0.500"></script>
 </body>
 </html>

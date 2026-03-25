@@ -1157,7 +1157,8 @@ body.privacy-mode .pv {
 .badge-green { background: var(--success-light); color: var(--success); }
 .badge-red { background: var(--danger-light); color: var(--danger); }
 .badge-yellow { background: var(--warning-light); color: var(--warning); }
-.badge-gray { background: #f1f5f9; color: var(--text-muted); }
+.badge-gray   { background: #f1f5f9; color: var(--text-muted); }
+.badge-purple { background: #ede9fe; color: #7c3aed; }
 
 /* ============================================================
    UTILITIES

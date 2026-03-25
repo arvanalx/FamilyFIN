@@ -237,9 +237,19 @@ const TRANSLATIONS = {
     confirm_del_card_msg_extras:   'Η κάρτα "{0}" και οι συνδεδεμένες {1} της θα διαγραφούν οριστικά.',
 
     // Settled / completed transaction
-    label_settled:       'Ολοκληρωμένη',
-    label_settled_hint:  'Επηρεάζει το υπόλοιπο του λογαριασμού',
-    btn_toggle_settled:  'Εναλλαγή κατάστασης ολοκλήρωσης',
+    label_settled:           'Ολοκληρωμένη',
+    label_settled_hint:      'Επηρεάζει το υπόλοιπο του λογαριασμού',
+    btn_toggle_settled:      'Εναλλαγή κατάστασης ολοκλήρωσης',
+    transfer_label:          'Μεταφορά',
+    btn_transfer:            '↕ Μεταφορά',
+    modal_transfer:          'Μεταφορά Χρημάτων',
+    label_from_account:      'Από Λογαριασμό *',
+    label_to_account:        'Σε Λογαριασμό *',
+    err_same_account:        'Επιλέξτε διαφορετικούς λογαριασμούς',
+    toast_transfer_saved:    'Η μεταφορά καταχωρήθηκε',
+    toast_transfer_deleted:  'Η μεταφορά διαγράφηκε',
+    confirm_del_transfer:    'Διαγραφή Μεταφοράς',
+    confirm_del_transfer_msg:'Θα διαγραφούν και οι δύο πλευρές της μεταφοράς (χρέωση και πίστωση).',
   },
 
   en: {
@@ -474,9 +484,19 @@ const TRANSLATIONS = {
     confirm_del_card_msg_extras:   'Card "{0}" and its linked {1} will be permanently deleted.',
 
     // Settled / completed transaction
-    label_settled:       'Settled',
-    label_settled_hint:  'Affects account balance',
-    btn_toggle_settled:  'Toggle settled status',
+    label_settled:           'Settled',
+    label_settled_hint:      'Affects account balance',
+    btn_toggle_settled:      'Toggle settled status',
+    transfer_label:          'Transfer',
+    btn_transfer:            '↕ Transfer',
+    modal_transfer:          'Transfer Funds',
+    label_from_account:      'From Account *',
+    label_to_account:        'To Account *',
+    err_same_account:        'Please select different accounts',
+    toast_transfer_saved:    'Transfer recorded',
+    toast_transfer_deleted:  'Transfer deleted',
+    confirm_del_transfer:    'Delete Transfer',
+    confirm_del_transfer_msg:'Both sides of the transfer (debit and credit) will be deleted.',
   },
 };
 

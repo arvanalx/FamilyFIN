@@ -922,21 +922,21 @@ function filterAndRenderTransactions() {
   empty.classList.add('hidden');
 
   tbody.innerHTML = txs.map(tx => `
-    <tr onclick="editTransaction('${tx.id}')" style="cursor:pointer">
+    <tr onclick="${tx.transferId ? '' : `editTransaction('${tx.id}')`}" style="cursor:${tx.transferId ? 'default' : 'pointer'}">
       <td>${fmtDate(tx.date)}</td>
       <td>
-        <div style="font-weight:600">${esc(tx.desc)}${tx.subId ? ` <span title="${t('auto_sub_note')}" style="font-size:.85em">🔄</span>` : ''}${tx.settled ? ' <span style="font-size:.8em" title="${t(\'label_settled\')}">✅</span>' : ''}</div>
-        ${tx.notes && !tx.subId ? `<div style="font-size:.75rem;color:#64748b">${esc(tx.notes)}</div>` : ''}
+        <div style="font-weight:600">${esc(tx.desc)}${tx.subId ? ` <span title="${t('auto_sub_note')}" style="font-size:.85em">🔄</span>` : ''}${tx.transferId ? ' <span style="font-size:.85em" title="${t(\'transfer_label\')}">↔️</span>' : ''}${tx.settled && !tx.transferId ? ' <span style="font-size:.8em" title="${t(\'label_settled\')}">✅</span>' : ''}</div>
+        ${tx.notes && !tx.subId && !tx.transferId ? `<div style="font-size:.75rem;color:#64748b">${esc(tx.notes)}</div>` : ''}
       </td>
-      <td>${tx.category ? `<span class="badge badge-blue">${esc(tx.category)}</span>` : '<span class="muted">—</span>'}</td>
+      <td>${tx.category ? `<span class="badge ${tx.transferId ? 'badge-purple' : 'badge-blue'}">${esc(tx.category)}</span>` : '<span class="muted">—</span>'}</td>
       <td><span class="badge badge-gray">${accountLabel(tx.account)}</span></td>
       <td class="amount-cell ${tx.type === 'income' ? 'positive' : 'negative'}">
         ${tx.type === 'income' ? '+' : '-'}${fmtEuro(tx.amount)}
       </td>
       <td>
         <div class="tx-actions">
-          <button class="btn-icon${tx.settled ? ' settled' : ''}" onclick="event.stopPropagation();toggleTransactionSettled('${tx.id}')" title="${t('btn_toggle_settled')}">${tx.settled ? '✅' : '☐'}</button>
-          ${!tx.subId ? `<button class="btn-icon" onclick="event.stopPropagation();editTransaction('${tx.id}')">✏️</button>` : '<span class="btn-icon-spacer"></span>'}
+          ${tx.transferId ? '<span class="btn-icon-spacer"></span>' : `<button class="btn-icon${tx.settled ? ' settled' : ''}" onclick="event.stopPropagation();toggleTransactionSettled('${tx.id}')" title="${t('btn_toggle_settled')}">${tx.settled ? '✅' : '☐'}</button>`}
+          ${(!tx.subId && !tx.transferId) ? `<button class="btn-icon" onclick="event.stopPropagation();editTransaction('${tx.id}')">✏️</button>` : '<span class="btn-icon-spacer"></span>'}
           <button class="btn-icon danger" onclick="event.stopPropagation();deleteTransaction('${tx.id}')">🗑️</button>
         </div>
       </td>
@@ -986,25 +986,103 @@ function deleteCurrentTransaction() {
 
 function deleteTransaction(id) {
   const tx = state.transactions.find(t => t.id === id);
-  const msg = tx?.subId ? t('confirm_del_sub_tx') : t('confirm_del_tx_msg');
-  showConfirm(t('confirm_del_tx'), msg, () => {
-    if (tx?.subId && tx?.subMonth) {
-      if (!state.deletedSubKeys) state.deletedSubKeys = [];
-      state.deletedSubKeys.push(`${tx.subId}|${tx.subMonth}`);
-    }
-    // Reverse settled balance effect before removing
-    if (tx?.settled) {
-      const acc = state.accounts.find(a => a.id === tx.account);
-      if (acc) {
-        const delta = tx.type === 'income' ? tx.amount : -tx.amount;
-        acc.balance = (acc.balance || 0) - delta;
+  if (!tx) return;
+
+  const isTransfer = !!tx.transferId;
+  const title = isTransfer ? t('confirm_del_transfer') : t('confirm_del_tx');
+  const msg   = isTransfer ? t('confirm_del_transfer_msg')
+              : tx.subId   ? t('confirm_del_sub_tx') : t('confirm_del_tx_msg');
+
+  showConfirm(title, msg, () => {
+    if (isTransfer) {
+      // Delete both sides and reverse both balances
+      state.transactions
+        .filter(t => t.transferId === tx.transferId)
+        .forEach(t => {
+          const acc = state.accounts.find(a => a.id === t.account);
+          if (acc && t.settled) {
+            const delta = t.type === 'income' ? t.amount : -t.amount;
+            acc.balance = (acc.balance || 0) - delta;
+          }
+        });
+      state.transactions = state.transactions.filter(t => t.transferId !== tx.transferId);
+      showToast(t('toast_transfer_deleted'), 'success');
+    } else {
+      if (tx.subId && tx.subMonth) {
+        if (!state.deletedSubKeys) state.deletedSubKeys = [];
+        state.deletedSubKeys.push(`${tx.subId}|${tx.subMonth}`);
       }
+      if (tx.settled) {
+        const acc = state.accounts.find(a => a.id === tx.account);
+        if (acc) {
+          const delta = tx.type === 'income' ? tx.amount : -tx.amount;
+          acc.balance = (acc.balance || 0) - delta;
+        }
+      }
+      state.transactions = state.transactions.filter(t => t.id !== id);
+      showToast(t('toast_tx_deleted'), 'success');
     }
-    state.transactions = state.transactions.filter(t => t.id !== id);
     saveState();
     renderPage(currentPage());
-    showToast(t('toast_tx_deleted'), 'success');
   });
+}
+
+// ── TRANSFERS ─────────────────────────────────────────────────
+function openTransferModal() {
+  const opts = state.accounts.map(a => `<option value="${a.id}">${esc(a.name)}</option>`).join('');
+  document.getElementById('transferFrom').innerHTML = opts;
+  document.getElementById('transferTo').innerHTML   = opts;
+  // Default to second account for "To" if available
+  if (state.accounts.length > 1) {
+    document.getElementById('transferTo').value = state.accounts[1].id;
+  }
+  document.getElementById('transferDate').value   = today();
+  document.getElementById('transferAmount').value = '';
+  document.getElementById('transferNotes').value  = '';
+  openModal('transferModal');
+}
+
+function saveTransfer() {
+  const date   = document.getElementById('transferDate').value;
+  const amount = parseFloat(document.getElementById('transferAmount').value);
+  const fromId = document.getElementById('transferFrom').value;
+  const toId   = document.getElementById('transferTo').value;
+  const notes  = document.getElementById('transferNotes').value.trim();
+
+  if (!date || isNaN(amount) || amount <= 0) {
+    showToast(t('toast_fill_required'), 'error'); return;
+  }
+  if (fromId === toId) {
+    showToast(t('err_same_account'), 'error'); return;
+  }
+
+  const fromAcc = state.accounts.find(a => a.id === fromId);
+  const toAcc   = state.accounts.find(a => a.id === toId);
+  if (!fromAcc || !toAcc) return;
+
+  const tid = uid();
+  const label = t('transfer_label');
+
+  state.transactions.push({
+    id: uid(), type: 'expense', date, amount,
+    desc: `${label} → ${toAcc.name}`,
+    category: label, account: fromId,
+    notes, settled: true, transferId: tid,
+  });
+  state.transactions.push({
+    id: uid(), type: 'income', date, amount,
+    desc: `${label} ← ${fromAcc.name}`,
+    category: label, account: toId,
+    notes, settled: true, transferId: tid,
+  });
+
+  fromAcc.balance = (fromAcc.balance || 0) - amount;
+  toAcc.balance   = (toAcc.balance   || 0) + amount;
+
+  saveState();
+  closeModal('transferModal');
+  showToast(t('toast_transfer_saved'), 'success');
+  renderPage(currentPage());
 }
 
 function toggleTransactionSettled(id) {
