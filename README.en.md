@@ -356,11 +356,18 @@ Each subscription **automatically creates** transactions for each month:
 - If charged to a **card** → a transaction is created in Card Transactions
 - If charged to an **account** → a transaction is created in Account Transactions
 
-Automatic transactions are identified by the 🔄 icon. If you delete such a transaction, it **will not** be recreated automatically for that month.
+Automatic creation runs **every time the app is opened**, covering all months retroactively from the subscription's start date up to the current month. Automatic transactions are identified by the 🔄 icon. If you delete such a transaction, it **will not** be recreated automatically for that month.
 
 > 💡 Changing the **category** of a subscription automatically updates **all existing** automatic transactions associated with it.
 
-### 9.4 Subscription actions
+### 9.4 Generate next month's transaction
+
+Each subscription card shows a **📅 +1** button (appears on hover on desktop, always visible on mobile). Tapping it:
+- Immediately creates the subscription transaction for the **next month only**
+- If the transaction already exists, a message is shown without creating a duplicate
+- Useful for getting a **complete view of future balances** before the month ends
+
+### 9.5 Subscription actions
 
 - **✏️** — Edit
 - **🗑️** — Delete the subscription **and** all its automatic transactions
