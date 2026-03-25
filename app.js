@@ -995,7 +995,7 @@ function deleteTransaction(id) {
     }
     state.transactions = state.transactions.filter(t => t.id !== id);
     saveState();
-    filterAndRenderTransactions();
+    renderPage(currentPage());
     showToast(t('toast_tx_deleted'), 'success');
   });
 }
@@ -1113,7 +1113,7 @@ function copyIncomeToNextMonth(id) {
   const next = new Date(y, m, d); // month m is 1-12; Date(y, m, d) treats m as 0-indexed → +1 month
   const newDate = `${next.getFullYear()}-${String(next.getMonth() + 1).padStart(2, '0')}-${String(next.getDate()).padStart(2, '0')}`;
 
-  state.transactions.push({ ...tx, id: uid(), date: newDate });
+  state.transactions.push({ ...tx, id: uid(), date: newDate, settled: false });
   saveState();
   showToast(`${t('toast_copied_to')} ${fmtDate(newDate)}`, 'success');
   renderPage(currentPage());
