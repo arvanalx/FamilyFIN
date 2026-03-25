@@ -1241,8 +1241,9 @@ function closeTransferActionSheet() {
 
 function doTransferAction(action) {
   if (!_transferActionId) return;
+  const id = _transferActionId;
   closeTransferActionSheet();
-  if (action === 'delete') deleteTransaction(_transferActionId);
+  if (action === 'delete') deleteTransaction(id);
 }
 
 // ── Income action sheet (mobile row tap) ─────────────────────
@@ -1263,9 +1264,10 @@ function closeIncomeActionSheet() {
 
 function doIncomeAction(action) {
   if (!_incomeActionId) return;
+  const id = _incomeActionId;
   closeIncomeActionSheet();
-  if (action === 'copy')   copyIncomeToNextMonth(_incomeActionId);
-  if (action === 'delete') deleteTransaction(_incomeActionId);
+  if (action === 'copy')   copyIncomeToNextMonth(id);
+  if (action === 'delete') deleteTransaction(id);
 }
 
 function saveIncome() {
