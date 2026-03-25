@@ -480,6 +480,13 @@
         <label data-i18n="label_to_account">Σε Λογαριασμό *</label>
         <select id="transferTo" class="form-control" required></select>
       </div>
+      <div class="form-group form-group-inline">
+        <input type="checkbox" id="transferSettled">
+        <label for="transferSettled">
+          <span data-i18n="label_settled">Ολοκληρωμένη</span>
+          <small class="text-muted" data-i18n="label_settled_hint">Επηρεάζει το υπόλοιπο του λογαριασμού</small>
+        </label>
+      </div>
       <div class="form-group">
         <label data-i18n="label_notes">Σημειώσεις</label>
         <textarea id="transferNotes" class="form-control" rows="2" data-i18n-placeholder="notes_placeholder" placeholder="Προαιρετικές σημειώσεις..."></textarea>

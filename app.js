@@ -925,7 +925,7 @@ function filterAndRenderTransactions() {
     <tr onclick="${tx.transferId ? '' : `editTransaction('${tx.id}')`}" style="cursor:${tx.transferId ? 'default' : 'pointer'}">
       <td>${fmtDate(tx.date)}</td>
       <td>
-        <div style="font-weight:600">${esc(tx.desc)}${tx.subId ? ` <span title="${t('auto_sub_note')}" style="font-size:.85em">🔄</span>` : ''}${tx.transferId ? ' <span style="font-size:.85em" title="${t(\'transfer_label\')}">↔️</span>' : ''}${tx.settled && !tx.transferId ? ' <span style="font-size:.8em" title="${t(\'label_settled\')}">✅</span>' : ''}</div>
+        <div style="font-weight:600">${esc(tx.desc)}${tx.subId ? ` <span title="${t('auto_sub_note')}" style="font-size:.85em">🔄</span>` : ''}${tx.transferId ? ' <span style="font-size:.85em" title="${t(\'transfer_label\')}">↔️</span>' : ''}${tx.settled ? ' <span style="font-size:.8em" title="${t(\'label_settled\')}">✅</span>' : ''}</div>
         ${tx.notes && !tx.subId && !tx.transferId ? `<div style="font-size:.75rem;color:#64748b">${esc(tx.notes)}</div>` : ''}
       </td>
       <td>${tx.category ? `<span class="badge ${tx.transferId ? 'badge-purple' : 'badge-blue'}">${esc(tx.category)}</span>` : '<span class="muted">—</span>'}</td>
@@ -935,7 +935,7 @@ function filterAndRenderTransactions() {
       </td>
       <td>
         <div class="tx-actions">
-          ${tx.transferId ? '<span class="btn-icon-spacer"></span>' : `<button class="btn-icon${tx.settled ? ' settled' : ''}" onclick="event.stopPropagation();toggleTransactionSettled('${tx.id}')" title="${t('btn_toggle_settled')}">${tx.settled ? '✅' : '☐'}</button>`}
+          <button class="btn-icon${tx.settled ? ' settled' : ''}" onclick="event.stopPropagation();toggleTransactionSettled('${tx.id}')" title="${t('btn_toggle_settled')}">${tx.settled ? '✅' : '☐'}</button>
           ${(!tx.subId && !tx.transferId) ? `<button class="btn-icon" onclick="event.stopPropagation();editTransaction('${tx.id}')">✏️</button>` : '<span class="btn-icon-spacer"></span>'}
           <button class="btn-icon danger" onclick="event.stopPropagation();deleteTransaction('${tx.id}')">🗑️</button>
         </div>
@@ -1036,18 +1036,20 @@ function openTransferModal() {
   if (state.accounts.length > 1) {
     document.getElementById('transferTo').value = state.accounts[1].id;
   }
-  document.getElementById('transferDate').value   = today();
-  document.getElementById('transferAmount').value = '';
-  document.getElementById('transferNotes').value  = '';
+  document.getElementById('transferDate').value      = today();
+  document.getElementById('transferAmount').value   = '';
+  document.getElementById('transferNotes').value    = '';
+  document.getElementById('transferSettled').checked = false;
   openModal('transferModal');
 }
 
 function saveTransfer() {
   const date   = document.getElementById('transferDate').value;
   const amount = parseFloat(document.getElementById('transferAmount').value);
-  const fromId = document.getElementById('transferFrom').value;
-  const toId   = document.getElementById('transferTo').value;
-  const notes  = document.getElementById('transferNotes').value.trim();
+  const fromId  = document.getElementById('transferFrom').value;
+  const toId    = document.getElementById('transferTo').value;
+  const notes   = document.getElementById('transferNotes').value.trim();
+  const settled = document.getElementById('transferSettled').checked;
 
   if (!date || isNaN(amount) || amount <= 0) {
     showToast(t('toast_fill_required'), 'error'); return;
@@ -1067,17 +1069,19 @@ function saveTransfer() {
     id: uid(), type: 'expense', date, amount,
     desc: `${label} → ${toAcc.name}`,
     category: label, account: fromId,
-    notes, settled: true, transferId: tid,
+    notes, settled, transferId: tid,
   });
   state.transactions.push({
     id: uid(), type: 'income', date, amount,
     desc: `${label} ← ${fromAcc.name}`,
     category: label, account: toId,
-    notes, settled: true, transferId: tid,
+    notes, settled, transferId: tid,
   });
 
-  fromAcc.balance = (fromAcc.balance || 0) - amount;
-  toAcc.balance   = (toAcc.balance   || 0) + amount;
+  if (settled) {
+    fromAcc.balance = (fromAcc.balance || 0) - amount;
+    toAcc.balance   = (toAcc.balance   || 0) + amount;
+  }
 
   saveState();
   closeModal('transferModal');
@@ -1088,14 +1092,29 @@ function saveTransfer() {
 function toggleTransactionSettled(id) {
   const tx = state.transactions.find(x => x.id === id);
   if (!tx) return;
-  const acc = state.accounts.find(a => a.id === tx.account);
-  if (!acc) return;
 
   const wasSettled = !!tx.settled;
-  tx.settled = !wasSettled;
+  const newSettled = !wasSettled;
 
-  const delta = tx.type === 'income' ? tx.amount : -tx.amount;
-  acc.balance = (acc.balance || 0) + (wasSettled ? -delta : delta);
+  if (tx.transferId) {
+    // Toggle both sides of the transfer simultaneously
+    state.transactions
+      .filter(t => t.transferId === tx.transferId)
+      .forEach(t => {
+        const acc = state.accounts.find(a => a.id === t.account);
+        if (acc) {
+          const delta = t.type === 'income' ? t.amount : -t.amount;
+          acc.balance = (acc.balance || 0) + (wasSettled ? -delta : delta);
+        }
+        t.settled = newSettled;
+      });
+  } else {
+    const acc = state.accounts.find(a => a.id === tx.account);
+    if (!acc) return;
+    const delta = tx.type === 'income' ? tx.amount : -tx.amount;
+    acc.balance = (acc.balance || 0) + (wasSettled ? -delta : delta);
+    tx.settled = newSettled;
+  }
 
   saveState();
   filterAndRenderTransactions();
