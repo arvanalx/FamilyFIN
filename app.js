@@ -115,6 +115,13 @@ const thisMonth = () => {
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
 };
 
+const nextMonth = () => {
+  const [y, m] = thisMonth().split('-').map(Number);
+  const nm = m === 12 ? 1 : m + 1;
+  const ny = m === 12 ? y + 1 : y;
+  return `${ny}-${String(nm).padStart(2,'0')}`;
+};
+
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,6);
 
 // Returns the number of days in a given "YYYY-MM" month
@@ -1467,6 +1474,51 @@ function syncSubscriptionTransactions() {
   return changed;
 }
 
+// Manually generates the next-month transaction for a single subscription.
+// Bypasses the deletedSubKeys blacklist (intentional user action).
+function generateNextMonthForSub(id) {
+  const sub = state.subscriptions.find(s => s.id === id);
+  if (!sub) return;
+
+  const month  = nextMonth();
+  const isCard = sub.card === 'visa' || sub.card === 'mastercard';
+
+  const exists = isCard
+    ? state.cardTransactions.some(t => t.subId === sub.id && t.subMonth === month)
+    : state.transactions.some(t => t.subId === sub.id && t.subMonth === month);
+
+  if (exists) {
+    showToast(t('toast_sub_next_exists'), 'info');
+    return;
+  }
+
+  // Remove from blacklist so future syncs don't skip it
+  if (state.deletedSubKeys) {
+    state.deletedSubKeys = state.deletedSubKeys.filter(k => k !== `${sub.id}|${month}`);
+  }
+
+  const subCat = sub.category || 'Συνδρομές';
+  const day    = Math.min(sub.day || 1, daysInMonth(month));
+  const date   = `${month}-${String(day).padStart(2,'0')}`;
+
+  if (isCard) {
+    state.cardTransactions.push({
+      id: uid(), card: sub.card, date, amount: sub.amount,
+      desc: sub.name, category: subCat,
+      subId: sub.id, subMonth: month,
+    });
+  } else {
+    state.transactions.push({
+      id: uid(), type: 'expense', date, amount: sub.amount,
+      desc: sub.name, category: subCat, account: sub.card,
+      notes: t('auto_sub_note'), subId: sub.id, subMonth: month,
+    });
+  }
+
+  saveState();
+  showToast(t('toast_sub_next_created'), 'success');
+}
+
 // ── SUBSCRIPTIONS ────────────────────────────────────────────
 function renderSubscriptions() {
   const subs = state.subscriptions;
@@ -1480,7 +1532,8 @@ function renderSubscriptions() {
 
   grid.innerHTML = subs.map(s => `
     <div class="sub-card" onclick="editSubscription('${s.id}')">
-      <button class="sub-delete" onclick="event.stopPropagation();deleteSubscription('${s.id}')">✕</button>
+      <button class="sub-delete" onclick="event.stopPropagation();deleteSubscription('${s.id}')" title="✕">✕</button>
+      <button class="sub-gen-next" onclick="event.stopPropagation();generateNextMonthForSub('${s.id}')" title="${t('btn_gen_next_month')}">📅 +1</button>
       <div class="sub-icon">${s.icon || '📱'}</div>
       <div class="sub-name">${esc(s.name)}</div>
       <div class="sub-amount">${fmtEuro(s.amount)}</div>

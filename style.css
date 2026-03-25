@@ -732,6 +732,19 @@ body.privacy-mode .pv {
 .sub-card:hover .sub-delete { opacity: 1; }
 .sub-delete:hover { color: var(--danger); }
 
+.sub-gen-next {
+  position: absolute;
+  bottom: 6px; left: 8px;
+  background: none; border: none;
+  color: var(--text-muted);
+  cursor: pointer; font-size: .75rem;
+  opacity: 0;
+  transition: opacity var(--transition);
+  padding: 2px 4px;
+}
+.sub-card:hover .sub-gen-next { opacity: 1; }
+.sub-gen-next:hover { color: var(--accent); }
+
 /* ============================================================
    CARD SELECTOR TABS
    ============================================================ */
@@ -1443,6 +1456,10 @@ button, a, select, input {
   .bottom-nav {
     display: flex;
   }
+
+  /* Always show sub-card action buttons on touch devices (no hover) */
+  .sub-delete,
+  .sub-gen-next { opacity: 1; }
 
   /* Extra bottom padding so content isn't hidden behind bottom nav */
   .main-content {
