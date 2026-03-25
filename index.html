@@ -752,6 +752,16 @@
 </nav>
 
 <!-- Income action sheet (mobile row-tap) -->
+<div id="transferActionSheet" class="action-sheet-overlay" onclick="closeTransferActionSheet()">
+  <div class="action-sheet" onclick="event.stopPropagation()">
+    <p class="action-sheet-title" id="transferActionDesc"></p>
+    <button class="action-sheet-btn danger" onclick="doTransferAction('delete')" data-i18n="confirm_del_transfer">
+      🗑️ Διαγραφή Μεταφοράς
+    </button>
+    <button class="action-sheet-cancel" onclick="closeTransferActionSheet()" data-i18n="btn_cancel">Άκυρο</button>
+  </div>
+</div>
+
 <div id="incomeActionSheet" class="action-sheet-overlay" onclick="closeIncomeActionSheet()">
   <div class="action-sheet" onclick="event.stopPropagation()">
     <p class="action-sheet-title" id="incomeActionDesc"></p>

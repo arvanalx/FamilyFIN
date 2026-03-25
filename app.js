@@ -922,7 +922,7 @@ function filterAndRenderTransactions() {
   empty.classList.add('hidden');
 
   tbody.innerHTML = txs.map(tx => `
-    <tr onclick="${tx.transferId ? '' : `editTransaction('${tx.id}')`}" style="cursor:${tx.transferId ? 'default' : 'pointer'}">
+    <tr onclick="${tx.transferId ? `showTransferActions('${tx.id}')` : `editTransaction('${tx.id}')`}" style="cursor:pointer">
       <td>${fmtDate(tx.date)}</td>
       <td>
         <div style="font-weight:600">${esc(tx.desc)}${tx.subId ? ` <span title="${t('auto_sub_note')}" style="font-size:.85em">🔄</span>` : ''}${tx.transferId ? ' <span style="font-size:.85em" title="${t(\'transfer_label\')}">↔️</span>' : ''}${tx.settled ? ' <span style="font-size:.8em" title="${t(\'label_settled\')}">✅</span>' : ''}</div>
@@ -1221,6 +1221,28 @@ function copyIncomeToNextMonth(id) {
   saveState();
   showToast(`${t('toast_copied_to')} ${fmtDate(newDate)}`, 'success');
   renderPage(currentPage());
+}
+
+// ── Transfer action sheet (mobile row tap) ───────────────────
+let _transferActionId = null;
+
+function showTransferActions(id) {
+  const tx = state.transactions.find(x => x.id === id);
+  if (!tx) return;
+  _transferActionId = id;
+  document.getElementById('transferActionDesc').textContent = tx.desc;
+  document.getElementById('transferActionSheet').classList.add('open');
+}
+
+function closeTransferActionSheet() {
+  document.getElementById('transferActionSheet').classList.remove('open');
+  _transferActionId = null;
+}
+
+function doTransferAction(action) {
+  if (!_transferActionId) return;
+  closeTransferActionSheet();
+  if (action === 'delete') deleteTransaction(_transferActionId);
 }
 
 // ── Income action sheet (mobile row tap) ─────────────────────
