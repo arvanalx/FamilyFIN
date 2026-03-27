@@ -184,7 +184,8 @@ Fill in the fields:
 Each account transaction can be marked as **Settled**, meaning the money has actually moved to/from the account.
 
 **How to toggle:**
-- **Quick toggle:** Click the **☐** button (1st in the Actions column) → it becomes **✅**
+- **Quick toggle (desktop):** Click the **☐** button (1st in the Actions column) → it becomes **✅**
+- **On mobile:** Tap a transaction row → select **✅ Mark as Settled** or **☐ Unmark Settled** from the action menu
 - **From the form:** Check the "Settled" checkbox when adding or editing a transaction
 
 **Effect:**
@@ -198,9 +199,13 @@ Clicking ✅ again → ☐ reverses the effect on the balance.
 
 ### 5.3 Editing / Deleting a transaction
 
+**Desktop** (Actions column):
 - **☐ / ✅** — Toggle "Settled" status (affects the balance immediately)
 - **✏️** — Opens the edit form (not shown for subscription transactions 🔄)
 - **🗑️** — Asks for confirmation and deletes the transaction (if it was settled, the balance effect is automatically reversed)
+
+**Mobile** (tap on a transaction row):
+- Opens an action menu with options: **Mark as Settled / Unmark Settled**, **Edit**, **Delete**
 
 ### 5.4 Copy income to next month
 
@@ -241,7 +246,9 @@ Click **↕ Transfer** (next to "+ New Transaction") to open the transfer form. 
 
 **Result:** Two linked transactions are created automatically — one debit (Expense) on the source account and one credit (Income) on the destination account. Both are marked with the ↔️ icon and the **Transfer** category (purple).
 
-> ⚠️ Transfers immediately update the balances of both accounts. Deleting **either** side automatically deletes **both** and reverses the balance changes.
+**Settled transfer:** Check the **Settled** checkbox when creating a transfer to immediately update both account balances. Alternatively, you can mark it settled later by clicking **☐ / ✅** (desktop) or tapping the ↔️ transaction row (mobile) — the action applies to **both sides** simultaneously.
+
+> ⚠️ Deleting **either** side automatically deletes **both** and reverses the balance changes.
 
 ---
 
@@ -508,4 +515,4 @@ Calculates for the **current month**:
 
 ---
 
-*Family FiN — Version 0.500 Beta | Last updated: March 2026*
+*Family FiN — Version 0.600 Beta | Last updated: March 2026*

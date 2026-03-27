@@ -67,6 +67,25 @@ function migrateState(data) {
   // Ensure required arrays exist
   if (!data.deletedSubKeys) data.deletedSubKeys = [];
   if (!data.cardTransactions) data.cardTransactions = [];
+  // Migration: move sub transactions that landed in state.transactions but belong to a custom card
+  if (data.transactions && data.cards && data.cardTransactions) {
+    const cardIds = new Set((data.cards || []).map(c => c.id));
+    cardIds.add('visa'); cardIds.add('mastercard');
+    const misplaced = data.transactions.filter(t => t.subId && cardIds.has(t.account));
+    if (misplaced.length > 0) {
+      const misplacedIds = new Set(misplaced.map(t => t.id));
+      misplaced.forEach(t => {
+        if (!data.cardTransactions.some(ct => ct.subId === t.subId && ct.subMonth === t.subMonth)) {
+          data.cardTransactions.push({
+            id: t.id, card: t.account, date: t.date, amount: t.amount,
+            desc: t.desc, category: t.category,
+            subId: t.subId, subMonth: t.subMonth,
+          });
+        }
+      });
+      data.transactions = data.transactions.filter(t => !misplacedIds.has(t.id));
+    }
+  }
   return data;
 }
 
@@ -922,7 +941,7 @@ function filterAndRenderTransactions() {
   empty.classList.add('hidden');
 
   tbody.innerHTML = txs.map(tx => `
-    <tr onclick="${tx.transferId ? `showTransferActions('${tx.id}')` : `editTransaction('${tx.id}')`}" style="cursor:pointer">
+    <tr onclick="${tx.transferId ? `showTransferActions('${tx.id}')` : `showTransactionActions('${tx.id}')`}" style="cursor:pointer">
       <td>${fmtDate(tx.date)}</td>
       <td>
         <div style="font-weight:600">${esc(tx.desc)}${tx.subId ? ` <span title="${t('auto_sub_note')}" style="font-size:.85em">🔄</span>` : ''}${tx.transferId ? ' <span style="font-size:.85em" title="${t(\'transfer_label\')}">↔️</span>' : ''}${tx.settled ? ' <span style="font-size:.8em" title="${t(\'label_settled\')}">✅</span>' : ''}</div>
@@ -1223,6 +1242,34 @@ function copyIncomeToNextMonth(id) {
   renderPage(currentPage());
 }
 
+// ── Transaction action sheet (mobile row tap — regular rows) ──
+let _txActionId = null;
+
+function showTransactionActions(id) {
+  const tx = state.transactions.find(x => x.id === id);
+  if (!tx) return;
+  _txActionId = id;
+  document.getElementById('txActionDesc').textContent = tx.desc;
+  document.getElementById('txActionSettledBtn').textContent = tx.settled ? t('action_unmark_settled') : t('action_mark_settled');
+  const editBtn = document.getElementById('txActionEditBtn');
+  editBtn.style.display = tx.subId ? 'none' : '';
+  document.getElementById('txActionSheet').classList.add('open');
+}
+
+function closeTxActionSheet() {
+  document.getElementById('txActionSheet').classList.remove('open');
+  _txActionId = null;
+}
+
+function doTxAction(action) {
+  if (!_txActionId) return;
+  const id = _txActionId;
+  closeTxActionSheet();
+  if (action === 'settled') toggleTransactionSettled(id);
+  if (action === 'edit')    editTransaction(id);
+  if (action === 'delete')  deleteTransaction(id);
+}
+
 // ── Transfer action sheet (mobile row tap) ───────────────────
 let _transferActionId = null;
 
@@ -1231,6 +1278,7 @@ function showTransferActions(id) {
   if (!tx) return;
   _transferActionId = id;
   document.getElementById('transferActionDesc').textContent = tx.desc;
+  document.getElementById('transferActionSettledBtn').textContent = tx.settled ? t('action_unmark_settled') : t('action_mark_settled');
   document.getElementById('transferActionSheet').classList.add('open');
 }
 
@@ -1243,10 +1291,11 @@ function doTransferAction(action) {
   if (!_transferActionId) return;
   const id = _transferActionId;
   closeTransferActionSheet();
-  if (action === 'delete') deleteTransaction(id);
+  if (action === 'settled') toggleTransactionSettled(id);
+  if (action === 'delete')  deleteTransaction(id);
 }
 
-// ── Income action sheet (mobile row tap) ─────────────────────
+// ── Income action sheet (mobile row tap — Έσοδα page) ────────
 let _incomeActionId = null;
 
 function showIncomeActions(id) {
@@ -1254,6 +1303,7 @@ function showIncomeActions(id) {
   if (!tx) return;
   _incomeActionId = id;
   document.getElementById('incomeActionDesc').textContent = tx.desc;
+  document.getElementById('incomeActionSettledBtn').textContent = tx.settled ? t('action_unmark_settled') : t('action_mark_settled');
   document.getElementById('incomeActionSheet').classList.add('open');
 }
 
@@ -1266,8 +1316,9 @@ function doIncomeAction(action) {
   if (!_incomeActionId) return;
   const id = _incomeActionId;
   closeIncomeActionSheet();
-  if (action === 'copy')   copyIncomeToNextMonth(id);
-  if (action === 'delete') deleteTransaction(id);
+  if (action === 'settled') toggleTransactionSettled(id);
+  if (action === 'copy')    copyIncomeToNextMonth(id);
+  if (action === 'delete')  deleteTransaction(id);
 }
 
 function saveIncome() {
@@ -1541,7 +1592,8 @@ function syncSubscriptionTransactions() {
   for (const sub of state.subscriptions) {
     if (!sub.amount || sub.amount <= 0) continue;
 
-    const isCard = sub.card === 'visa' || sub.card === 'mastercard';
+    const isCard = sub.card === 'visa' || sub.card === 'mastercard' ||
+                   (state.cards || []).some(c => c.id === sub.card);
     const start  = sub.startMonth || current;
     let months   = [];
 
@@ -1602,7 +1654,8 @@ function generateNextMonthForSub(id) {
   if (!sub) return;
 
   const month  = nextMonth();
-  const isCard = sub.card === 'visa' || sub.card === 'mastercard';
+  const isCard = sub.card === 'visa' || sub.card === 'mastercard' ||
+                 (state.cards || []).some(c => c.id === sub.card);
 
   const exists = isCard
     ? state.cardTransactions.some(t => t.subId === sub.id && t.subMonth === month)

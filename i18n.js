@@ -21,7 +21,7 @@ const TRANSLATIONS = {
     // Dashboard
     dash_account_balances: 'Υπόλοιπα Λογαριασμών',
     dash_today:            'Σήμερα',
-    dash_future_col:       'Μέλλον',
+    dash_future_col:       'Πρόβλεψη',
     dash_balance_chart:    'Γράφημα Υπολοίπων',
     dash_monthly_stats:    'Στατιστικά Μήνα',
     stat_income:           'Έσοδα',
@@ -38,7 +38,7 @@ const TRANSLATIONS = {
     dash_total_colon:      'Σύνολο:',
     dash_subtotal:         'σύνολο',
     dash_today_label:      'σήμερα',
-    dash_future_label:     'μέλλον',
+    dash_future_label:     'μέγιστη ημ/νία',
 
     // Transactions page
     filter_all_accounts:   'Όλοι οι λογαριασμοί',
@@ -240,6 +240,9 @@ const TRANSLATIONS = {
     label_settled:           'Ολοκληρωμένη',
     label_settled_hint:      'Επηρεάζει το υπόλοιπο του λογαριασμού',
     btn_toggle_settled:      'Εναλλαγή κατάστασης ολοκλήρωσης',
+    action_mark_settled:     '✅ Ολοκλήρωση',
+    action_unmark_settled:   '☐ Αναίρεση Ολοκλήρωσης',
+    action_edit_tx:          '✏️ Επεξεργασία',
     transfer_label:          'Μεταφορά',
     btn_transfer:            '↕ Μεταφορά',
     modal_transfer:          'Μεταφορά Χρημάτων',
@@ -268,7 +271,7 @@ const TRANSLATIONS = {
     // Dashboard
     dash_account_balances: 'Account Balances',
     dash_today:            'Today',
-    dash_future_col:       'Future',
+    dash_future_col:       'Forecast',
     dash_balance_chart:    'Balance Chart',
     dash_monthly_stats:    'Monthly Stats',
     stat_income:           'Income',
@@ -285,7 +288,7 @@ const TRANSLATIONS = {
     dash_total_colon:      'Total:',
     dash_subtotal:         'total',
     dash_today_label:      'today',
-    dash_future_label:     'future',
+    dash_future_label:     'max date',
 
     // Transactions page
     filter_all_accounts:   'All accounts',
@@ -487,6 +490,9 @@ const TRANSLATIONS = {
     label_settled:           'Settled',
     label_settled_hint:      'Affects account balance',
     btn_toggle_settled:      'Toggle settled status',
+    action_mark_settled:     '✅ Mark as Settled',
+    action_unmark_settled:   '☐ Unmark Settled',
+    action_edit_tx:          '✏️ Edit',
     transfer_label:          'Transfer',
     btn_transfer:            '↕ Transfer',
     modal_transfer:          'Transfer Funds',
