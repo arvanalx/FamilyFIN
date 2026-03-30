@@ -1423,6 +1423,9 @@ function renderCard(cardId) {
         <div class="cc-stat">
           <div class="cc-stat-label">${t('card_current_balance')}</div>
           <div class="cc-stat-value">${fmtEuro(totalBalance)}</div>
+          <button class="btn btn-primary btn-sm" style="margin-top:8px" onclick="openCardPaymentModal('${cardId}')">
+            ${t('btn_card_payment')}
+          </button>
         </div>
         <div class="cc-stat">
           <div class="cc-stat-label">${t('card_monthly_inst')}</div>
@@ -1432,11 +1435,6 @@ function renderCard(cardId) {
           <div class="cc-stat-label">${t('card_monthly_tx')}</div>
           <div class="cc-stat-value">${fmtEuro(monthlyTx)}</div>
         </div>
-      </div>
-      <div style="padding:8px 16px 12px;text-align:right">
-        <button class="btn btn-primary" onclick="openCardPaymentModal('${cardId}')">
-          ${t('btn_card_payment')}
-        </button>
       </div>
     </div>
 
