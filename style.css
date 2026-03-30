@@ -77,7 +77,7 @@ body {
   white-space: nowrap;
 }
 
-.logo-icon { font-size: 1.4rem; }
+.logo-icon { width: 28px; height: 28px; object-fit: contain; flex-shrink: 0; }
 .logo-text strong { color: #60a5fa; }
 
 .sidebar-toggle {
@@ -1532,6 +1532,14 @@ button, a, select, input {
   #incomeTable tbody tr { cursor: pointer; }
   #incomeTable tbody tr:active { background: var(--success-light); }
   #page-income .card { padding: 0; }
+
+  /* Card transactions table: hide Category + Actions on mobile */
+  #cardTransactionsTable th:nth-child(3),
+  #cardTransactionsTable td:nth-child(3),
+  #cardTransactionsTable th:nth-child(5),
+  #cardTransactionsTable td:nth-child(5) {
+    display: none;
+  }
 
   /* Force table to fit container width */
   #transactionsTable {

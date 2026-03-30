@@ -1,4 +1,4 @@
-# 💰 Family FiN — User Guide
+# Family FiN — User Guide
 
 > **Family FiN** is a personal family finance management app. It tracks accounts, transactions, income, credit cards, installments, and subscriptions — all in one place.
 
@@ -515,4 +515,4 @@ Calculates for the **current month**:
 
 ---
 
-*Family FiN — Version 0.600 Beta | Last updated: March 2026*
+*Family FiN — Version 0.700 Beta | Last updated: March 2026*

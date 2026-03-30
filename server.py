@@ -92,6 +92,10 @@ class FamilyFinHandler(SimpleHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(body)
 
+    def end_headers(self):
+        self.send_header('Cache-Control', 'no-cache')
+        super().end_headers()
+
     def log_message(self, fmt, *args):
         # Suppress noisy static-file logs; keep API calls visible
         if args and '/api/' in str(args[0]):

@@ -1321,6 +1321,29 @@ function doIncomeAction(action) {
   if (action === 'delete')  deleteTransaction(id);
 }
 
+// ── Card transaction action sheet (mobile row tap) ────────────
+let _cardTxActionId = null;
+
+function showCardTxActions(id) {
+  const tx = state.cardTransactions.find(x => x.id === id);
+  if (!tx) return;
+  _cardTxActionId = id;
+  document.getElementById('cardTxActionDesc').textContent = tx.desc;
+  document.getElementById('cardTxActionSheet').classList.add('open');
+}
+
+function closeCardTxActionSheet() {
+  document.getElementById('cardTxActionSheet').classList.remove('open');
+  _cardTxActionId = null;
+}
+
+function doCardTxAction(action) {
+  if (!_cardTxActionId) return;
+  const id = _cardTxActionId;
+  closeCardTxActionSheet();
+  if (action === 'delete') deleteCardTx(id);
+}
+
 function saveIncome() {
   const date    = document.getElementById('incDate').value;
   const amount  = parseFloat(document.getElementById('incAmount').value);
@@ -1410,6 +1433,11 @@ function renderCard(cardId) {
           <div class="cc-stat-value">${fmtEuro(monthlyTx)}</div>
         </div>
       </div>
+      <div style="padding:8px 16px 12px;text-align:right">
+        <button class="btn btn-primary" onclick="openCardPaymentModal('${cardId}')">
+          ${t('btn_card_payment')}
+        </button>
+      </div>
     </div>
 
     <div class="card card-wide">
@@ -1423,9 +1451,14 @@ function renderCard(cardId) {
     <div class="card card-wide">
       <div class="card-header">
         <h2>${t('card_tx_hdr')} ${esc(name)}</h2>
-        <button class="btn btn-sm btn-primary" onclick="openCardTransactionModal('${cardId}')">${t('btn_add_card_tx')}</button>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input type="month" id="cardTxMonthFilter" class="form-control"
+                 value="${thisMonth()}"
+                 onchange="filterAndRenderCardTransactions('${cardId}')">
+          <button class="btn btn-sm btn-primary" onclick="openCardTransactionModal('${cardId}')">${t('btn_add_card_tx')}</button>
+        </div>
       </div>
-      <table class="data-table">
+      <table class="data-table" id="cardTransactionsTable">
         <thead>
           <tr><th>${t('col_date')}</th><th>${t('col_desc')}</th><th>${t('col_category')}</th><th>${t('col_amount')}</th><th>${t('col_actions')}</th></tr>
         </thead>
@@ -1435,7 +1468,40 @@ function renderCard(cardId) {
   `;
 
   renderInstallmentCards('cardInstallmentsList', inst);
+  filterAndRenderCardTransactions(cardId);
+}
+
+function filterAndRenderCardTransactions(cardId) {
+  const month = document.getElementById('cardTxMonthFilter')?.value || thisMonth();
+  const txs = state.cardTransactions
+    .filter(t => t.card === cardId && t.date.startsWith(month));
   renderCardTransactions('cardTransactionsTbody', txs);
+}
+
+function openCardPaymentModal(cardId) {
+  const cardData     = (state.cards || []).find(c => c.id === cardId);
+  const inst         = state.installments.filter(i => i.card === cardId && i.active);
+  const txs          = state.cardTransactions.filter(t => t.card === cardId);
+  const totalInst    = inst.filter(i => i.monthlyAmount).reduce((s, i) => s + i.monthlyAmount, 0);
+  const totalBalance = txs.reduce((s, t) => s + t.amount, 0) + totalInst;
+  const name         = cardData?.name || cardId.toUpperCase();
+
+  document.getElementById('transactionModalTitle').textContent = t('modal_card_payment');
+  document.getElementById('editTransactionId').value = '';
+  document.querySelector('input[name="txType"][value="expense"]').checked = true;
+  document.getElementById('txDate').value    = today();
+  document.getElementById('txAmount').value  = totalBalance.toFixed(2);
+  document.getElementById('txDesc').value    = t('card_payment_prefix') + ' ' + name;
+  document.getElementById('txNotes').value   = '';
+  document.getElementById('txSettled').checked = false;
+  document.getElementById('txDeleteBtn').style.display = 'none';
+  populateTxCategorySelect();
+  const catEl = document.getElementById('txCategory');
+  const match = Array.from(catEl.options).find(o =>
+    o.value.toLowerCase() === 'κάρτες' || o.value.toLowerCase() === 'cards'
+  );
+  if (match) catEl.value = match.value;
+  openModal('addTransactionModal');
 }
 
 function renderInstallmentCards(containerId, list) {
@@ -1476,7 +1542,7 @@ function renderCardTransactions(tbodyId, txs) {
   txs.sort((a,b) => b.date.localeCompare(a.date));
   tbody.innerHTML = txs.length
     ? txs.map(tx => `
-        <tr>
+        <tr onclick="showCardTxActions('${tx.id}')" style="cursor:pointer">
           <td>${fmtDate(tx.date)}</td>
           <td>${esc(tx.desc)}${tx.subId ? ` <span title="${t('auto_sub_note')}" style="font-size:.85em">🔄</span>` : ''}</td>
           <td>${tx.category ? `<span class="badge badge-blue">${esc(tx.category)}</span>` : '—'}</td>
