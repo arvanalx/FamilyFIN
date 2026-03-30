@@ -91,7 +91,7 @@ On **all pages**, the following blur automatically:
 
 | Section | Hidden elements |
 |---------|----------------|
-| **Dashboard** | Account balances (Today/Future), monthly Income/Expenses/Balance, card totals, charts |
+| **Dashboard** | Account balances (Today/Forecast), monthly Income/Expenses/Balance, card totals, charts |
 | **Transactions** | Row amounts in the table, Income/Expenses/Balance summary |
 | **Income** | Monthly & annual summary, row amounts |
 | **Credit Cards** | Current balance, installments/month, monthly transactions, transaction amounts |
@@ -113,9 +113,9 @@ The home page provides a comprehensive view of your financial situation.
 A table with two columns for each account:
 
 - **Today:** The current balance as entered in Settings (includes all settled transactions)
-- **Future:** Calculated balance that takes into account **only unsettled transactions** (up to the end of next month)
+- **Forecast:** Calculated balance that takes into account **only unsettled transactions** (up to the end of next month)
 
-> 💡 The "Future" date is calculated automatically as the latest transaction date, capped at the end of next month.
+> 💡 The max date for "Forecast" is calculated automatically as the latest transaction date, capped at the end of next month.
 
 Bank accounts show the bank name in parentheses in smaller text (e.g. *Payroll (Alpha Bank)*).
 
@@ -191,7 +191,7 @@ Each account transaction can be marked as **Settled**, meaning the money has act
 **Effect:**
 - **Expense ✅** → The amount is deducted from the account balance
 - **Income ✅** → The amount is added to the account balance
-- The transaction is **excluded** from the "Future" balance calculation in the Dashboard (it is already reflected in the stored balance)
+- The transaction is **excluded** from the "Forecast" balance calculation in the Dashboard (it is already reflected in the stored balance)
 
 Clicking ✅ again → ☐ reverses the effect on the balance.
 
@@ -267,9 +267,13 @@ Click **"+ New Income"**. The fields are the same as the transaction form (witho
 
 ### 6.3 Income row actions
 
+**Desktop** (Actions column):
 - **✏️** — Edit
 - **📋** — Copy to next month
 - **🗑️** — Delete
+
+**Mobile** (tap on an income row):
+- Opens an action menu with options: **Mark as Settled / Unmark Settled**, **Copy to next month**, **Edit**, **Delete**
 
 ---
 
@@ -290,6 +294,15 @@ For the selected card:
 - **Monthly Installments:** Total active installments (/month)
 - **Monthly Transactions:** Transactions for the current month
 
+**Payment button:** Below the Current Balance a **💳 Payment** button is shown. Clicking it opens the new transaction form pre-filled with:
+- Type: Expense
+- Date: Today
+- Amount: Current card balance (transactions + installments)
+- Description: "Payment [Card Name]"
+- Category: "Cards" (if it exists in your categories)
+
+Simply select the account and save.
+
 ### 7.3 Card installments
 
 Active installments for the selected card are shown with:
@@ -302,14 +315,19 @@ Active installments for the selected card are shown with:
 
 ### 7.4 Card transactions
 
-A list of all card transactions (sorted by date, most recent first).
+A list of card transactions, sorted by date (most recent first).
+
+**Month filter:** A month selector above the list (default: current month) lets you view transactions for any specific month.
 
 **Add card transaction:** Click **"+ Transaction"** and fill in:
 - Date, amount, description, category
 
 > 📌 Transactions created automatically by **Subscriptions** are shown with the 🔄 icon.
 
-**Delete transaction:** Click **🗑️** — if the transaction belongs to a subscription, deleting it **prevents** it from being automatically recreated.
+**Desktop — Delete transaction:** Click **🗑️** — if the transaction belongs to a subscription, deleting it **prevents** it from being automatically recreated.
+
+**Mobile** (tap on a card transaction row):
+- Opens an action menu with a **Delete** option.
 
 ---
 
@@ -489,10 +507,10 @@ Deletes **all** data and restores factory defaults. Asks for confirmation before
 
 ## Appendix — Calculation Logic
 
-### Future Account Balance
+### Forecast Account Balance
 
 ```
-Future Balance = Current Balance
+Forecast Balance = Current Balance
                + Total Income (all future transactions)
                − Total Expenses (all future transactions)
 ```
