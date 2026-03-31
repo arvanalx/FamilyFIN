@@ -501,7 +501,7 @@ body.privacy-mode .pv {
 
 .cc-info { flex: 1; }
 .cc-bank { font-size: .75rem; color: var(--text-muted); }
-.cc-balance { font-size: 1.35rem; font-weight: 700; color: var(--danger); }
+.cc-balance { font-size: 1rem; font-weight: 700; color: var(--danger); }
 .cc-due { font-size: .75rem; color: var(--text-muted); text-align: right; }
 
 /* ============================================================
