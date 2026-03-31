@@ -370,8 +370,6 @@ function renderDashboard() {
         <div class="cc-logo ${logoClass}">${esc(logoText)}</div>
         <div class="cc-info">
           <div class="cc-bank">${esc(card.bank)}</div>
-        </div>
-        <div class="cc-extra">
           <div class="cc-balance">${fmtEuro(total)}</div>
           <div class="cc-inst">${fmtEuro(txAmt)} ${t('dash_tx_pm')}</div>
           ${instAmt > 0 ? `<div class="cc-inst">${fmtEuro(instAmt)} ${t('dash_installments_pm')}</div>` : ''}
