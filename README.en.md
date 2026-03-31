@@ -119,29 +119,39 @@ A table with two columns for each account:
 
 Bank accounts show the bank name in parentheses in smaller text (e.g. *Payroll (Alpha Bank)*).
 
-### 4.2 Balance Chart
+### 4.2 Account Changes
 
 A bar chart that visually shows the balances of all accounts:
 - **Solid colour** = current balance (today)
 - **Light colour** = future balance
 
-Each account uses the same colour pair (e.g. dark blue / light blue) for easy identification.
+Each account uses the same colour pair (e.g. dark blue / light blue) for easy identification. Available views: **Comparison** (Today vs Forecast) and **Change** (percentage difference).
 
-### 4.3 Monthly Stats
+### 4.3 Daily Balances
 
-A summary for the **current month**:
+A line chart showing how each account balance evolves day by day from today to the last forecast date:
+
+- Starts from the **current balance** (Settings) for each account
+- Only includes **unsettled transactions** from today to the forecast end
+- A **dot** at each date where a transaction occurs (hover for amount)
+- Dashed **"Today"** vertical marker as the starting point
+- Ends at exactly the **Forecast** amount shown in ACCOUNT BALANCES
+
+### 4.4 Monthly Transaction Balance
+
+A summary for the **current month** (transfers between accounts excluded):
 - **Income:** Total income from transactions of type "Income"
 - **Expenses:** Total expenses from transactions of type "Expense"
 - **Balance:** Income − Expenses (green if positive, red if negative)
 
-### 4.4 Credit Cards (summary)
+### 4.5 Credit Card Balances (summary)
 
 For each card:
-- Current total transaction amount
-- Monthly amount of active installments
-- Total (transactions + installments)
+- **Monthly total** (bold red) = current month transactions + monthly installments
+- **xxx.xx € transactions/mo** — transactions for the current month
+- **xxx.xx € installments/mo** — monthly amount of active installments (shown only if > 0)
 
-### 4.5 Expenses by Category
+### 4.6 Expenses by Category
 
 A **donut chart** showing the distribution of expenses for the current month from:
 - Account transactions (excluding transactions with category "Cards")
@@ -150,7 +160,7 @@ A **donut chart** showing the distribution of expenses for the current month fro
 
 Each segment shows: category, percentage (%) and amount in €. The **total expenses amount** appears in the centre.
 
-### 4.6 Recent Transactions
+### 4.7 Recent Transactions
 
 The 6 most recent transactions. Click **"All →"** to go to the Transactions page.
 
@@ -261,6 +271,8 @@ A dedicated view showing **only income** (without expenses).
 - **Monthly Income:** Total income for the selected month
 - **Annual (estimate):** Multiplies monthly income × 12
 
+> ℹ️ **Transfers** between accounts do **not appear** in the income list, even though they are stored internally as incoming transactions.
+
 ### 6.2 Adding new income
 
 Click **"+ New Income"**. The fields are the same as the transaction form (without a type selector — it is always Income).
@@ -290,14 +302,14 @@ At the top of the page **tabs** appear for each card defined in Settings. Click 
 ### 7.2 Card summary
 
 For the selected card:
-- **Current Balance:** Sum of transactions + monthly installments
-- **Monthly Installments:** Total active installments (/month)
-- **Monthly Transactions:** Transactions for the current month
+- **Current Balance:** Transactions of the **selected month** (filter) + monthly installments — updates automatically when you change the month
+- **Monthly Installments:** Total active & non-completed installments (/month)
+- **Monthly Transactions:** Transactions of the selected month (same as the table below)
 
 **Payment button:** Below the Current Balance a **💳 Payment** button is shown. Clicking it opens the new transaction form pre-filled with:
 - Type: Expense
 - Date: Today
-- Amount: Current card balance (transactions + installments)
+- Amount: Current card balance (selected month transactions + installments)
 - Description: "Payment [Card Name]"
 - Category: "Cards" (if it exists in your categories)
 
@@ -310,6 +322,8 @@ Active installments for the selected card are shown with:
 - Number of paid installments / total
 - Remaining installments
 - Monthly amount
+
+When an installment is **completed** (all payments made), it remains visible in the list with a green style and "**0 remaining**" — the "+1 Installment" button disappears. It is **no longer included** in balance calculations. To remove it entirely, click 🗑️.
 
 **Add installment:** Click **"+ Add"** (see Section 8).
 
@@ -520,8 +534,8 @@ All recorded transactions are taken into account regardless of date, capped at t
 ### Card Total (Dashboard)
 
 ```
-Card Total = Sum of card transactions
-           + Sum of monthly installments (active)
+Card Total (month) = Current month transactions
+                   + Monthly installments (active & non-completed)
 ```
 
 ### Expenses by Category Chart
@@ -533,4 +547,4 @@ Calculates for the **current month**:
 
 ---
 
-*Family FiN — Version 0.800 Beta | Last updated: March 2026*
+*Family FiN — Version 0.900 Beta | Last updated: March 2026*
