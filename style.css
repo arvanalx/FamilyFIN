@@ -676,6 +676,22 @@ body.privacy-mode .pv {
   transition: width .5s ease;
 }
 
+.progress-fill.progress-done {
+  background: #22c55e;
+}
+
+.installment-card.inst-completed {
+  border-color: #bbf7d0;
+  background: #f0fdf4;
+  opacity: .85;
+}
+
+.dark-mode .installment-card.inst-completed {
+  border-color: #166534;
+  background: #052e16;
+  opacity: .85;
+}
+
 .inst-footer {
   display: flex;
   justify-content: space-between;

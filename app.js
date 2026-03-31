@@ -240,7 +240,7 @@ function cardMonthlyDebt(cardId) {
     .filter(t => t.card === cardId)
     .reduce((s, t) => s + t.amount, 0);
   const instAmt = state.installments
-    .filter(i => i.card === cardId && i.active && i.monthlyAmount)
+    .filter(i => i.card === cardId && i.active && i.monthlyAmount && (!i.totalCount || i.paidCount < i.totalCount))
     .reduce((s, i) => s + i.monthlyAmount, 0);
   return txAmt + instAmt;
 }
@@ -294,7 +294,7 @@ function renderExpChartForOffset() {
     .forEach(tx => addCat(tx.category, tx.amount));
   if (_expChartOffset === 0) {
     state.installments
-      .filter(i => i.active && i.monthlyAmount)
+      .filter(i => i.active && i.monthlyAmount && (!i.totalCount || i.paidCount < i.totalCount))
       .forEach(i => addCat(i.category || t('installments_cat'), i.monthlyAmount));
   }
   const catData = Object.entries(catMap)
@@ -359,7 +359,7 @@ function renderDashboard() {
       .filter(t => t.card === card.id)
       .reduce((s, t) => s + t.amount, 0);
     const instAmt = state.installments
-      .filter(i => i.card === card.id && i.active && i.monthlyAmount)
+      .filter(i => i.card === card.id && i.active && i.monthlyAmount && (!i.totalCount || i.paidCount < i.totalCount))
       .reduce((s, i) => s + i.monthlyAmount, 0);
     const total     = txAmt + instAmt;
     const logoClass = card.id === 'mastercard' ? 'mc-logo' : 'visa-logo';
@@ -396,7 +396,7 @@ function renderDashboard() {
 
 function monthlyInstallmentTotal() {
   return state.installments
-    .filter(i => i.active && i.monthlyAmount)
+    .filter(i => i.active && i.monthlyAmount && (!i.totalCount || i.paidCount < i.totalCount))
     .reduce((s,i) => s + i.monthlyAmount, 0);
 }
 
@@ -1507,10 +1507,11 @@ function renderInstallmentCards(containerId, list) {
   if (!list.length) { el.innerHTML = `<div class="empty-state">${t('inst_none')}</div>`; return; }
 
   el.innerHTML = list.map(i => {
-    const pct = i.totalCount ? Math.round((i.paidCount / i.totalCount) * 100) : 0;
-    const remaining = i.totalCount ? i.totalCount - i.paidCount : '?';
+    const done = i.totalCount && i.paidCount >= i.totalCount;
+    const pct = i.totalCount ? Math.min(100, Math.round((i.paidCount / i.totalCount) * 100)) : 0;
+    const remaining = i.totalCount ? Math.max(0, i.totalCount - i.paidCount) : '?';
     return `
-    <div class="installment-card">
+    <div class="installment-card${done ? ' inst-completed' : ''}">
       <div class="inst-header">
         <div>
           <div class="inst-name">${esc(i.desc)}</div>
@@ -1519,15 +1520,15 @@ function renderInstallmentCards(containerId, list) {
         <span class="inst-badge ${i.card}">${i.card.toUpperCase()}</span>
       </div>
       <div class="progress-bar">
-        <div class="progress-fill" style="width:${pct}%"></div>
+        <div class="progress-fill${done ? ' progress-done' : ''}" style="width:${pct}%"></div>
       </div>
       <div class="inst-footer">
         <span>${i.paidCount}/${i.totalCount || '?'} ${t('inst_installments')} (${pct}%)</span>
         <span>${remaining} ${t('inst_remaining')}</span>
-        ${i.monthlyAmount ? `<span><strong class="pv">${fmtEuro(i.monthlyAmount)}</strong>${t('per_month')}</span>` : ''}
+        ${!done && i.monthlyAmount ? `<span><strong class="pv">${fmtEuro(i.monthlyAmount)}</strong>${t('per_month')}</span>` : ''}
       </div>
       <div class="inst-actions">
-        <button class="btn btn-sm btn-secondary" onclick="payInstallment('${i.id}')">${t('btn_pay_inst')}</button>
+        ${!done ? `<button class="btn btn-sm btn-secondary" onclick="payInstallment('${i.id}')">${t('btn_pay_inst')}</button>` : ''}
         <button class="btn btn-sm btn-secondary" onclick="editInstallment('${i.id}')">✏️</button>
         <button class="btn btn-sm btn-danger" onclick="deleteInstallment('${i.id}')">🗑️</button>
       </div>
@@ -1553,8 +1554,9 @@ function renderCardTransactions(tbodyId, txs) {
 // ── INSTALLMENTS PAGE ────────────────────────────────────────
 function renderInstallments() {
   const active = state.installments.filter(i => i.active);
-  const monthly = active.filter(i=>i.monthlyAmount).reduce((s,i)=>s+i.monthlyAmount,0);
-  const totalRem = active.filter(i=>i.monthlyAmount && i.totalCount)
+  const incomplete = active.filter(i => !i.totalCount || i.paidCount < i.totalCount);
+  const monthly = incomplete.filter(i=>i.monthlyAmount).reduce((s,i)=>s+i.monthlyAmount,0);
+  const totalRem = incomplete.filter(i=>i.monthlyAmount && i.totalCount)
     .reduce((s,i) => s + i.monthlyAmount * (i.totalCount - i.paidCount), 0);
 
   document.getElementById('installmentMonthly').textContent   = fmtEuro(monthly) + t('per_month');
@@ -1628,8 +1630,8 @@ function saveInstallment() {
 function payInstallment(id) {
   const i = state.installments.find(x => x.id === id);
   if (!i) return;
+  if (i.totalCount && i.paidCount >= i.totalCount) return; // already complete
   i.paidCount = Math.min(i.paidCount + 1, i.totalCount || Infinity);
-  if (i.totalCount && i.paidCount >= i.totalCount) i.active = false;
   saveState();
   renderPage(currentPage());
   showToast(t('toast_inst_paid'), 'success');
