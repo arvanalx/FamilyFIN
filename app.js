@@ -352,11 +352,12 @@ function renderDashboard() {
   balEl.textContent = fmtEuro(income - expenses);
   balEl.className = 'stat-value ' + (income - expenses >= 0 ? 'positive' : 'negative');
 
-  // Credit cards summary — dynamic with installments info (Fix 6)
-  const ccDiv = document.getElementById('creditCardsSummary');
+  // Credit cards summary
+  const ccDiv  = document.getElementById('creditCardsSummary');
+  const curMon = thisMonth();
   ccDiv.innerHTML = (state.cards || []).map(card => {
     const txAmt   = state.cardTransactions
-      .filter(t => t.card === card.id)
+      .filter(t => t.card === card.id && t.date.startsWith(curMon))
       .reduce((s, t) => s + t.amount, 0);
     const instAmt = state.installments
       .filter(i => i.card === card.id && i.active && i.monthlyAmount && (!i.totalCount || i.paidCount < i.totalCount))
@@ -369,11 +370,11 @@ function renderDashboard() {
         <div class="cc-logo ${logoClass}">${esc(logoText)}</div>
         <div class="cc-info">
           <div class="cc-bank">${esc(card.bank)}</div>
-          <div class="cc-balance">${fmtEuro(txAmt)}</div>
         </div>
         <div class="cc-extra">
-          ${instAmt > 0 ? `<div class="cc-inst">+${fmtEuro(instAmt)} ${t('dash_installments_pm')}</div>` : ''}
-          <div class="cc-total-debt">${t('dash_total_colon')} <strong>${fmtEuro(total)}</strong></div>
+          <div class="cc-balance">${fmtEuro(total)}</div>
+          <div class="cc-inst">${fmtEuro(txAmt)} ${t('dash_tx_pm')}</div>
+          ${instAmt > 0 ? `<div class="cc-inst">${fmtEuro(instAmt)} ${t('dash_installments_pm')}</div>` : ''}
         </div>
       </div>`;
   }).join('');

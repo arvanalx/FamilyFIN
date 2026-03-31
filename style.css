@@ -884,14 +884,14 @@ body.privacy-mode .pv {
   justify-content: flex-end;
 }
 
-/* Credit card extra info (installments + total) */
+/* Credit card extra info (total + breakdown) */
 .cc-extra {
   text-align: right;
   font-size: .78rem;
   color: var(--text-muted);
-  min-width: 120px;
+  min-width: 140px;
 }
-.cc-inst { color: var(--warning); font-weight: 600; margin-bottom: 2px; }
+.cc-inst { color: var(--warning); font-weight: 600; margin-top: 2px; }
 .cc-total-debt { font-size: .82rem; color: var(--text); }
 .cc-total-debt strong { color: var(--danger); }
 
