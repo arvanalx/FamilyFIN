@@ -1397,15 +1397,7 @@ function selectCard(cardId) {
 }
 
 function renderCard(cardId) {
-  const cardData   = (state.cards || []).find(c => c.id === cardId);
-  const inst       = state.installments.filter(i => i.card === cardId && i.active);
-  const txs        = state.cardTransactions.filter(t => t.card === cardId);
-  const totalInst  = inst.filter(i => i.monthlyAmount).reduce((s, i) => s + i.monthlyAmount, 0);
-  const totalTx    = txs.reduce((s, t) => s + t.amount, 0);
-  const totalBalance = totalTx + totalInst;
-  const month      = thisMonth();
-  const monthlyTx  = txs.filter(t => t.date.startsWith(month)).reduce((s, t) => s + t.amount, 0);
-
+  const cardData = (state.cards || []).find(c => c.id === cardId);
   const name = cardData?.name || cardId.toUpperCase();
   const bank = cardData?.bank || '';
   const n    = (cardId + ' ' + name).toLowerCase();
@@ -1422,18 +1414,18 @@ function renderCard(cardId) {
       <div class="cc-summary">
         <div class="cc-stat">
           <div class="cc-stat-label">${t('card_current_balance')}</div>
-          <div class="cc-stat-value">${fmtEuro(totalBalance)}</div>
+          <div class="cc-stat-value" id="ccStatBalance">—</div>
           <button class="btn btn-primary btn-sm" style="margin-top:8px" onclick="openCardPaymentModal('${cardId}')">
             ${t('btn_card_payment')}
           </button>
         </div>
         <div class="cc-stat">
           <div class="cc-stat-label">${t('card_monthly_inst')}</div>
-          <div class="cc-stat-value">${fmtEuro(totalInst)}</div>
+          <div class="cc-stat-value" id="ccStatInst">—</div>
         </div>
         <div class="cc-stat">
           <div class="cc-stat-label">${t('card_monthly_tx')}</div>
-          <div class="cc-stat-value">${fmtEuro(monthlyTx)}</div>
+          <div class="cc-stat-value" id="ccStatTx">—</div>
         </div>
       </div>
     </div>
@@ -1465,8 +1457,26 @@ function renderCard(cardId) {
     </div>
   `;
 
+  const inst = state.installments.filter(i => i.card === cardId && i.active);
   renderInstallmentCards('cardInstallmentsList', inst);
   filterAndRenderCardTransactions(cardId);
+}
+
+function updateCardSummary(cardId) {
+  const month     = document.getElementById('cardTxMonthFilter')?.value || thisMonth();
+  const inst      = state.installments.filter(i => i.card === cardId && i.active && i.monthlyAmount && (!i.totalCount || i.paidCount < i.totalCount));
+  const totalInst = inst.reduce((s, i) => s + i.monthlyAmount, 0);
+  const monthlyTx = state.cardTransactions
+    .filter(t => t.card === cardId && t.date.startsWith(month))
+    .reduce((s, t) => s + t.amount, 0);
+  const totalBalance = monthlyTx + totalInst;
+
+  const elBal  = document.getElementById('ccStatBalance');
+  const elInst = document.getElementById('ccStatInst');
+  const elTx   = document.getElementById('ccStatTx');
+  if (elBal)  elBal.textContent  = fmtEuro(totalBalance);
+  if (elInst) elInst.textContent = fmtEuro(totalInst);
+  if (elTx)   elTx.textContent   = fmtEuro(monthlyTx);
 }
 
 function filterAndRenderCardTransactions(cardId) {
@@ -1474,14 +1484,16 @@ function filterAndRenderCardTransactions(cardId) {
   const txs = state.cardTransactions
     .filter(t => t.card === cardId && t.date.startsWith(month));
   renderCardTransactions('cardTransactionsTbody', txs);
+  updateCardSummary(cardId);
 }
 
 function openCardPaymentModal(cardId) {
   const cardData     = (state.cards || []).find(c => c.id === cardId);
-  const inst         = state.installments.filter(i => i.card === cardId && i.active);
-  const txs          = state.cardTransactions.filter(t => t.card === cardId);
-  const totalInst    = inst.filter(i => i.monthlyAmount).reduce((s, i) => s + i.monthlyAmount, 0);
-  const totalBalance = txs.reduce((s, t) => s + t.amount, 0) + totalInst;
+  const month        = document.getElementById('cardTxMonthFilter')?.value || thisMonth();
+  const inst         = state.installments.filter(i => i.card === cardId && i.active && i.monthlyAmount && (!i.totalCount || i.paidCount < i.totalCount));
+  const totalInst    = inst.reduce((s, i) => s + i.monthlyAmount, 0);
+  const monthlyTx    = state.cardTransactions.filter(t => t.card === cardId && t.date.startsWith(month)).reduce((s, t) => s + t.amount, 0);
+  const totalBalance = monthlyTx + totalInst;
   const name         = cardData?.name || cardId.toUpperCase();
 
   document.getElementById('transactionModalTitle').textContent = t('modal_card_payment');
