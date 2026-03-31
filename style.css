@@ -501,7 +501,7 @@ body.privacy-mode .pv {
 
 .cc-info { flex: 1; }
 .cc-bank { font-size: .75rem; color: var(--text-muted); }
-.cc-balance { font-size: 1rem; font-weight: 700; color: var(--danger); }
+.cc-balance { font-size: 1.35rem; font-weight: 700; color: var(--danger); }
 .cc-due { font-size: .75rem; color: var(--text-muted); text-align: right; }
 
 /* ============================================================
@@ -891,7 +891,7 @@ body.privacy-mode .pv {
   color: var(--text-muted);
   min-width: 140px;
 }
-.cc-inst { color: var(--warning); font-weight: 600; margin-top: 2px; }
+.cc-inst { color: var(--warning); font-weight: 600; font-size: .88rem; margin-top: 3px; }
 .cc-total-debt { font-size: .82rem; color: var(--text); }
 .cc-total-debt strong { color: var(--danger); }
 
