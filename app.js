@@ -1203,7 +1203,7 @@ function renderIncome() {
 
 function filterAndRenderIncome() {
   const month = document.getElementById('incomeMonthFilter').value;
-  let txs = state.transactions.filter(tx => tx.type === 'income');
+  let txs = state.transactions.filter(tx => tx.type === 'income' && !tx.subId);
   if (month) txs = txs.filter(tx => tx.date.startsWith(month));
   txs.sort((a,b) => b.date.localeCompare(a.date));
 
