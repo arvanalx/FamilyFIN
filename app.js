@@ -393,6 +393,9 @@ function renderDashboard() {
   renderBalanceChart(state.accounts.map(a => ({
     label: a.name, now: a.balance || 0, future: futureMap[a.id],
   })));
+
+  // Daily balance line chart
+  renderDailyBalanceChart();
 }
 
 function monthlyInstallmentTotal() {
@@ -756,6 +759,160 @@ function _renderExpBarsChart(catData) {
   ctx.font = '10px system-ui';
   ctx.textAlign = 'left';
   ctx.fillText('Σύνολο: ' + fmtEuro(total), LW, H - 5);
+}
+
+// ── DAILY BALANCE LINE CHART ─────────────────────────────────
+
+function renderDailyBalanceChart() {
+  const wrap = document.getElementById('dailyBalanceWrapper');
+  if (!wrap) return;
+  if (!state.accounts.length) {
+    wrap.innerHTML = '<p style="padding:20px;text-align:center;color:#94a3b8">—</p>';
+    return;
+  }
+
+  const todayStr = today();
+  const fd       = calcFutureDate();
+
+  // Build a data series per account
+  const series = state.accounts.map((acc, idx) => {
+    // Group unsettled transactions from today→fd by date
+    const byDate = {};
+    state.transactions
+      .filter(t => t.account === acc.id && !t.settled && t.date >= todayStr && t.date <= fd)
+      .forEach(t => {
+        byDate[t.date] = (byDate[t.date] || 0) + (t.type === 'income' ? 1 : -1) * t.amount;
+      });
+
+    // Build cumulative points starting at today = acc.balance
+    let bal = acc.balance || 0;
+    const points = [{ date: todayStr, value: bal }];
+    Object.keys(byDate).sort().forEach(d => {
+      bal += byDate[d];
+      if (d === todayStr) {
+        points[0].value = acc.balance || 0; // keep original start; today's delta folds into next point
+      } else {
+        points.push({ date: d, value: bal });
+      }
+    });
+
+    return { label: acc.name, color: _BAL_PAL[idx % _BAL_PAL.length][0], points };
+  });
+
+  // All "breakpoint" dates (transaction dates + today + fd) for X axis
+  const breakDates = [...new Set([
+    todayStr, fd,
+    ...series.flatMap(s => s.points.map(p => p.date))
+  ])].sort();
+
+  // Layout constants
+  const W  = Math.max(wrap.clientWidth || 0, 300);
+  const H  = 230;
+  const ML = 72;   // left margin for Y labels
+  const MR = 16;
+  const MT = 20;
+  const MB = 50;   // bottom margin for X labels + legend
+  const CW = W - ML - MR;
+  const CH = H - MT - MB;
+
+  // X scale: proportional to real calendar days
+  const t0     = new Date(todayStr).getTime();
+  const t1     = new Date(fd).getTime();
+  const totMs  = Math.max(t1 - t0, 86400000); // minimum 1 day
+  const xOf    = d => ML + ((new Date(d).getTime() - t0) / totMs) * CW;
+
+  // Y scale
+  const allVals = series.flatMap(s => s.points.map(p => p.value));
+  let yMin = Math.min(...allVals);
+  let yMax = Math.max(...allVals);
+  if (yMin === yMax) { yMin -= 200; yMax += 200; }
+  const yPad = (yMax - yMin) * 0.12;
+  yMin -= yPad; yMax += yPad;
+  const yOf = v => MT + CH - ((v - yMin) / (yMax - yMin)) * CH;
+
+  // Compact Y axis formatter
+  const fmtAx = v => {
+    const sign = v < 0 ? '-' : '';
+    const abs  = Math.abs(v);
+    if (abs >= 1000) return sign + (abs / 1000).toFixed(1).replace('.0', '').replace('.', ',') + 'k €';
+    return sign + Math.round(abs) + ' €';
+  };
+
+  // Y gridlines + labels
+  let gridSvg = '', yLabels = '';
+  for (let i = 0; i <= 4; i++) {
+    const v = yMin + (yMax - yMin) * (i / 4);
+    const y = yOf(v).toFixed(1);
+    gridSvg  += `<line x1="${ML}" y1="${y}" x2="${ML + CW}" y2="${y}" stroke="#e2e8f0" stroke-width="1"/>`;
+    yLabels  += `<text x="${ML - 6}" y="${(parseFloat(y) + 4).toFixed(1)}" text-anchor="end" font-size="10" fill="#94a3b8" font-family="system-ui,sans-serif">${fmtAx(v)}</text>`;
+  }
+
+  // X axis labels (max 6, evenly spaced)
+  let xLabels = '';
+  const nLbl  = Math.min(breakDates.length, 6);
+  const step  = (breakDates.length - 1) / Math.max(nLbl - 1, 1);
+  for (let i = 0; i < nLbl; i++) {
+    const bd = breakDates[Math.min(Math.round(i * step), breakDates.length - 1)];
+    const x  = xOf(bd).toFixed(1);
+    const [, mm, dd] = bd.split('-');
+    xLabels += `<text x="${x}" y="${(MT + CH + 15).toFixed(1)}" text-anchor="middle" font-size="10" fill="#94a3b8" font-family="system-ui,sans-serif">${dd}/${mm}</text>`;
+  }
+
+  // "Σήμερα" vertical dashed marker
+  const tx = xOf(todayStr).toFixed(1);
+  const todayMarker = `<line x1="${tx}" y1="${MT}" x2="${tx}" y2="${MT + CH}" stroke="#cbd5e1" stroke-width="1.5" stroke-dasharray="4,3"/>
+    <text x="${tx}" y="${MT - 5}" text-anchor="middle" font-size="9" fill="#94a3b8" font-family="system-ui,sans-serif">Σήμερα</text>`;
+
+  // Series: polylines (carry-forward step) + dots at real data points
+  let seriesSvg = '';
+  series.forEach(s => {
+    // Carry-forward value at each breakpoint
+    const coords = breakDates.map(d => {
+      let val = null;
+      for (const p of s.points) {
+        if (p.date <= d) val = p.value;
+        else break;
+      }
+      return val !== null ? { x: xOf(d), y: yOf(val), v: val } : null;
+    });
+
+    // Polyline
+    let path = '';
+    coords.forEach(c => {
+      if (!c) return;
+      path += (path ? ` L${c.x.toFixed(1)},${c.y.toFixed(1)}` : `M${c.x.toFixed(1)},${c.y.toFixed(1)}`);
+    });
+    if (path) seriesSvg += `<path d="${path}" fill="none" stroke="${s.color}" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>`;
+
+    // Dots at actual transaction change points
+    s.points.forEach(p => {
+      const cx = xOf(p.date).toFixed(1);
+      const cy = yOf(p.value).toFixed(1);
+      const [, mm, dd] = p.date.split('-');
+      seriesSvg += `<circle cx="${cx}" cy="${cy}" r="5" fill="${s.color}" stroke="#fff" stroke-width="2"><title>${esc(s.label)}: ${dd}/${mm} → ${fmtEuro(p.value)}</title></circle>`;
+    });
+  });
+
+  // Legend (centered below chart)
+  const legY      = H - 14;
+  const legItemW  = Math.min(150, Math.floor(CW / series.length));
+  const legStartX = ML + (CW - series.length * legItemW) / 2;
+  let legSvg = '';
+  series.forEach((s, i) => {
+    const lx  = (legStartX + i * legItemW).toFixed(1);
+    const lbl = s.label.length > 14 ? s.label.slice(0, 13) + '…' : s.label;
+    legSvg += `<line x1="${lx}" y1="${legY - 4}" x2="${(parseFloat(lx) + 18).toFixed(1)}" y2="${legY - 4}" stroke="${s.color}" stroke-width="2.5" stroke-linecap="round"/>
+      <circle cx="${(parseFloat(lx) + 9).toFixed(1)}" cy="${legY - 4}" r="3" fill="${s.color}"/>
+      <text x="${(parseFloat(lx) + 24).toFixed(1)}" y="${legY}" font-size="10" fill="#475569" font-family="system-ui,sans-serif">${esc(lbl)}</text>`;
+  });
+
+  // Axes border
+  const axes = `<line x1="${ML}" y1="${MT}" x2="${ML}" y2="${MT + CH}" stroke="#cbd5e1" stroke-width="1.5"/>
+    <line x1="${ML}" y1="${MT + CH}" x2="${ML + CW}" y2="${MT + CH}" stroke="#cbd5e1" stroke-width="1.5"/>`;
+
+  wrap.innerHTML = `<svg width="100%" height="${H}" viewBox="0 0 ${W} ${H}" style="display:block;overflow:visible">
+    ${gridSvg}${axes}${todayMarker}${seriesSvg}${yLabels}${xLabels}${legSvg}
+  </svg>`;
 }
 
 // ── HELP / MANUAL PAGE ───────────────────────────────────────
