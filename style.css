@@ -285,6 +285,13 @@ body.privacy-mode .pv {
 
 .card-wide { grid-column: 1 / -1; }
 
+.dash-two-col {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
 .card-header {
   display: flex;
   align-items: center;
@@ -1201,6 +1208,7 @@ body.privacy-mode .pv {
   .mobile-menu-btn { display: flex; }
   .dashboard-grid { grid-template-columns: 1fr; }
   .card-wide { grid-column: 1; }
+  .dash-two-col { grid-template-columns: 1fr; }
   .form-row { grid-template-columns: 1fr; }
   .cc-summary { grid-template-columns: 1fr; }
   .stats-grid { grid-template-columns: 1fr; }
