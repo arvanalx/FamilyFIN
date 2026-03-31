@@ -469,7 +469,7 @@ body.privacy-mode .pv {
 
 .credit-card-item {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 16px;
   padding: 14px 20px;
   border-bottom: 1px solid var(--border);
