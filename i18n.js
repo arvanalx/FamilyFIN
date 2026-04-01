@@ -174,6 +174,24 @@ const TRANSLATIONS = {
     modal_card_payment:   'Πληρωμή Κάρτας',
     card_payment_prefix:  'Πληρωμή',
 
+    // Notifications
+    settings_notifications: 'Ειδοποιήσεις',
+    notif_status_label:     'Κατάσταση',
+    notif_status_granted:   'Ενεργοποιημένες ✓',
+    notif_status_denied:    'Απενεργοποιημένες ✗',
+    notif_status_default:   'Δεν έχουν ρυθμιστεί',
+    notif_enable_btn:       'Ενεργοποίηση',
+    notif_test_btn:         'Δοκιμαστική Ειδοποίηση',
+    notif_banner_text:      'Ενεργοποιήστε τις ειδοποιήσεις για να σας υπενθυμίζουμε τα εκκρεμή έξοδα',
+    notif_banner_allow:     'Ενεργοποίηση',
+    notif_banner_dismiss:   'Αργότερα',
+    notif_title:            'Family FiN — Εκκρεμή Έξοδα',
+    notif_body_single:      'Εκκρεμεί 1 έξοδο σήμερα',
+    notif_body_many:        'Εκκρεμούν {n} έξοδα σήμερα',
+    notif_test_title:       'Δοκιμαστική Ειδοποίηση',
+    notif_test_body:        'Οι ειδοποιήσεις λειτουργούν κανονικά! 🔔',
+    notif_denied_hint:      'Ο browser έχει αποκλείσει τις ειδοποιήσεις. Για να τις ενεργοποιήσετε, ανοίξτε τις Ρυθμίσεις του browser → Απόρρητο / Ειδοποιήσεις και επιτρέψτε τις για αυτή τη σελίδα.',
+
     // Privacy toggle
     privacy_show: 'Εμφάνιση ποσών',
     privacy_hide: 'Απόκρυψη ποσών',
@@ -428,6 +446,24 @@ const TRANSLATIONS = {
     btn_card_payment:     '💳 Payment',
     modal_card_payment:   'Card Payment',
     card_payment_prefix:  'Payment',
+
+    // Notifications
+    settings_notifications: 'Notifications',
+    notif_status_label:     'Status',
+    notif_status_granted:   'Enabled ✓',
+    notif_status_denied:    'Blocked ✗',
+    notif_status_default:   'Not configured',
+    notif_enable_btn:       'Enable',
+    notif_test_btn:         'Send Test',
+    notif_banner_text:      'Enable notifications to get daily reminders about pending expenses',
+    notif_banner_allow:     'Enable',
+    notif_banner_dismiss:   'Later',
+    notif_title:            'Family FiN — Pending Expenses',
+    notif_body_single:      '1 expense is due today',
+    notif_body_many:        '{n} expenses are due today',
+    notif_test_title:       'Test Notification',
+    notif_test_body:        'Notifications are working! 🔔',
+    notif_denied_hint:      'The browser has blocked notifications. To enable them, open your browser Settings → Privacy / Notifications and allow them for this site.',
 
     // Privacy toggle
     privacy_show: 'Show amounts',

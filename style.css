@@ -1164,6 +1164,47 @@ body.privacy-mode .pv {
 .toast.error { background: var(--danger); }
 
 /* ============================================================
+   NOTIFICATION BANNER & NAV BADGE
+   ============================================================ */
+.notif-banner {
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: var(--accent);
+  color: #fff;
+  padding: 10px 20px;
+  font-size: .88rem;
+  flex-wrap: wrap;
+}
+.notif-banner.visible { display: flex; }
+.notif-banner-actions { display: flex; gap: 8px; flex-shrink: 0; }
+
+.nav-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  border-radius: 9px;
+  background: var(--danger);
+  color: #fff;
+  font-size: .7rem;
+  font-weight: 700;
+  margin-left: 6px;
+  line-height: 1;
+  vertical-align: middle;
+}
+
+.notif-settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 0;
+}
+
+/* ============================================================
    BADGES & TAGS
    ============================================================ */
 .badge {

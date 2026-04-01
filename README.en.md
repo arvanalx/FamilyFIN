@@ -486,6 +486,27 @@ Works exactly like Expense Categories.
 
 > ℹ️ Defaults: Salary, Freelance, Pension, Rent (received), Allowance, Other.
 
+### 10.5 Notifications
+
+Manage browser notifications for pending expenses.
+
+**Status:** Shows the current browser permission:
+- 🟢 **Enabled** — Notifications are working normally
+- 🔴 **Blocked** — Browser has blocked them (requires change in browser settings)
+- 🟡 **Not configured** — No decision has been made yet
+
+**Enable:** Click **"Enable"** — the browser will ask for permission.
+
+**Test:** Once enabled, a **"Send Test"** button appears to verify notifications work.
+
+#### How it works
+
+- **Each time you open the app**, if there are pending expenses (unsettled, with date ≤ today), **one** notification is sent per day
+- A **red badge** appears next to the **Transactions** section in the menu, showing the count of pending expenses
+- If there are no pending expenses, no notification is sent and the badge is not shown
+
+> ℹ️ If you closed the enable banner with **"Later"**, you can still enable notifications here at any time.
+
 ---
 
 ## 11. Data Management
@@ -547,4 +568,4 @@ Calculates for the **current month**:
 
 ---
 
-*Family FiN — Version 0.900 Beta | Last updated: March 2026*
+*Family FiN — Version 0.910 Beta | Last updated: April 2026*

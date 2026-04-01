@@ -1201,6 +1201,7 @@ function deleteTransaction(id) {
     }
     saveState();
     renderPage(currentPage());
+    updateDueBadge();
   });
 }
 
@@ -1295,6 +1296,7 @@ function toggleTransactionSettled(id) {
 
   saveState();
   filterAndRenderTransactions();
+  updateDueBadge();
 }
 
 function saveTransaction() {
@@ -1349,6 +1351,7 @@ function saveTransaction() {
   closeModal('addTransactionModal');
   showToast(editId ? t('toast_tx_updated') : t('toast_tx_saved'), 'success');
   renderPage(currentPage());
+  updateDueBadge();
 }
 
 // ── INCOME ───────────────────────────────────────────────────
@@ -2079,6 +2082,7 @@ function renderSettings() {
   renderCardsSettings();
   renderCategoriesList();
   renderIncomeCategoriesList();
+  renderNotificationSettings();
 }
 
 function renderAccountsSettings() {
@@ -2458,6 +2462,98 @@ function showToast(msg, type = '') {
   toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
 }
 
+// ── NOTIFICATIONS ────────────────────────────────────────────
+function getDueTransactions() {
+  const todayStr = today();
+  return state.transactions.filter(tx =>
+    tx.type === 'expense' &&
+    !tx.settled &&
+    !tx.transferId &&
+    tx.date <= todayStr
+  );
+}
+
+function updateDueBadge() {
+  const badge = document.getElementById('dueBadge');
+  if (!badge) return;
+  const due = getDueTransactions();
+  if (due.length > 0) {
+    badge.textContent = due.length > 99 ? '99+' : due.length;
+    badge.style.display = 'inline-flex';
+  } else {
+    badge.style.display = 'none';
+  }
+}
+
+function checkDailyNotifications() {
+  if (!('Notification' in window) || Notification.permission !== 'granted') return;
+  const key = 'familyfin_notified_date';
+  if (localStorage.getItem(key) === today()) return;
+  const due = getDueTransactions();
+  if (due.length === 0) return;
+  localStorage.setItem(key, today());
+  const body = due.length === 1
+    ? t('notif_body_single')
+    : t('notif_body_many').replace('{n}', due.length);
+  new Notification(t('notif_title'), { body, icon: 'icon-192.png', badge: 'icon-192.png' });
+}
+
+function showNotificationBanner() {
+  if (!('Notification' in window)) return;
+  if (Notification.permission !== 'default') return;
+  if (localStorage.getItem('familyfin_notif_banner_dismissed')) return;
+  document.getElementById('notifBanner')?.classList.add('visible');
+}
+
+function dismissNotificationBanner() {
+  localStorage.setItem('familyfin_notif_banner_dismissed', '1');
+  document.getElementById('notifBanner')?.classList.remove('visible');
+}
+
+async function enableNotifications() {
+  if (!('Notification' in window)) return;
+  const perm = await Notification.requestPermission();
+  dismissNotificationBanner();
+  if (perm === 'granted') checkDailyNotifications();
+  if (currentPage() === 'settings') renderNotificationSettings();
+}
+
+function testNotification() {
+  if (!('Notification' in window) || Notification.permission !== 'granted') return;
+  new Notification(t('notif_test_title'), { body: t('notif_test_body'), icon: 'icon-192.png' });
+}
+
+function renderNotificationSettings() {
+  const container = document.getElementById('notifSettingsContainer');
+  if (!container) return;
+  const supported = 'Notification' in window;
+  const perm = supported ? Notification.permission : 'unsupported';
+  let statusText, statusClass;
+  if (!supported)        { statusText = '—';                           statusClass = ''; }
+  else if (perm === 'granted') { statusText = t('notif_status_granted'); statusClass = 'badge-green'; }
+  else if (perm === 'denied')  { statusText = t('notif_status_denied');  statusClass = 'badge-red'; }
+  else                         { statusText = t('notif_status_default'); statusClass = 'badge-yellow'; }
+
+  container.innerHTML = `
+    <div class="notif-settings-row">
+      <span>${t('notif_status_label')}</span>
+      <span class="badge ${statusClass}">${statusText}</span>
+    </div>
+    ${perm === 'default' && supported ? `
+    <div class="notif-settings-row" style="margin-top:8px">
+      <button class="btn btn-primary btn-sm" onclick="enableNotifications()">${t('notif_enable_btn')}</button>
+    </div>` : ''}
+    ${perm === 'denied' ? `
+    <div style="margin-top:10px;font-size:.83rem;color:var(--text-muted);line-height:1.5">
+      ${t('notif_denied_hint')}
+    </div>` : ''}
+    ${perm === 'granted' ? `
+    <div class="notif-settings-row" style="margin-top:8px">
+      <button class="btn btn-secondary btn-sm" onclick="testNotification()">${t('notif_test_btn')}</button>
+    </div>` : ''}
+  `;
+}
+
 // ── CONFIRM DIALOG ───────────────────────────────────────────
 function showConfirm(title, msg, onConfirm) {
   document.getElementById('confirmTitle').textContent   = title;
@@ -2617,6 +2713,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Apply translations (static elements with data-i18n)
   applyTranslations();
+
+  // Notifications: show banner if permission not yet decided, fire daily check if granted
+  showNotificationBanner();
+  checkDailyNotifications();
+  updateDueBadge();
 
   // Initial render
   showPage('dashboard');

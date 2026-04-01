@@ -13,7 +13,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Family FiN">
   <link rel="apple-touch-icon" href="icon-192.png">
-  <link rel="stylesheet" href="style.css?v=0.513">
+  <link rel="stylesheet" href="style.css?v=0.517">
 </head>
 <body>
 
@@ -31,7 +31,7 @@
       <span class="nav-icon">📊</span><span class="nav-label" data-i18n="nav_dashboard">Γρήγορη ματιά</span>
     </a></li>
     <li><a href="#" class="nav-link" data-page="transactions">
-      <span class="nav-icon">📋</span><span class="nav-label" data-i18n="nav_transactions">Κινήσεις</span>
+      <span class="nav-icon">📋</span><span class="nav-label" data-i18n="nav_transactions">Κινήσεις</span><span class="nav-badge" id="dueBadge" style="display:none">0</span>
     </a></li>
     <li><a href="#" class="nav-link" data-page="income">
       <span class="nav-icon">💵</span><span class="nav-label" data-i18n="nav_income">Έσοδα</span>
@@ -54,12 +54,20 @@
   </ul>
   <div class="sidebar-footer">
     <button id="langToggle" class="lang-toggle" onclick="toggleLang()">EN</button>
-    <span class="version">v0.900 Beta</span>
+    <span class="version">v0.910 Beta</span>
   </div>
 </nav>
 
 <!-- Main Content -->
 <main class="main-content" id="mainContent">
+  <!-- Notification Permission Banner -->
+  <div class="notif-banner" id="notifBanner">
+    <span data-i18n="notif_banner_text">Ενεργοποιήστε τις ειδοποιήσεις για να σας υπενθυμίζουμε τα εκκρεμή έξοδα</span>
+    <div class="notif-banner-actions">
+      <button class="btn btn-sm btn-primary" onclick="enableNotifications()" data-i18n="notif_banner_allow">Ενεργοποίηση</button>
+      <button class="btn btn-sm btn-secondary" onclick="dismissNotificationBanner()" data-i18n="notif_banner_dismiss">Αργότερα</button>
+    </div>
+  </div>
   <header class="top-bar">
     <button class="mobile-menu-btn" id="mobileMenuBtn">☰</button>
     <h1 class="page-title" id="pageTitle">Γρήγορη ματιά</h1>
@@ -388,6 +396,11 @@
             <button class="btn btn-sm btn-primary" onclick="addIncomeCategory()" data-i18n="btn_add">Προσθήκη</button>
           </div>
         </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><h2 data-i18n="settings_notifications">Ειδοποιήσεις</h2></div>
+        <div class="settings-section" id="notifSettingsContainer"></div>
       </div>
 
       <div class="card">
@@ -810,7 +823,7 @@
   </div>
 </div>
 
-<script src="i18n.js?v=0.513"></script>
-<script src="app.js?v=0.513"></script>
+<script src="i18n.js?v=0.517"></script>
+<script src="app.js?v=0.517"></script>
 </body>
 </html>
