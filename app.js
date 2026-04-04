@@ -1080,8 +1080,8 @@ function filterAndRenderTransactions() {
     return txSort.asc ? (av > bv ? 1 : -1) : (av < bv ? 1 : -1);
   });
 
-  const income   = txs.filter(t => t.type === 'income').reduce((s,t) => s + t.amount, 0);
-  const expenses = txs.filter(t => t.type === 'expense').reduce((s,t) => s + t.amount, 0);
+  const income   = txs.filter(t => t.type === 'income'  && !t.transferId).reduce((s,t) => s + t.amount, 0);
+  const expenses = txs.filter(t => t.type === 'expense' && !t.transferId).reduce((s,t) => s + t.amount, 0);
   document.getElementById('txTotalIncome').textContent   = fmtEuro(income);
   document.getElementById('txTotalExpense').textContent  = fmtEuro(expenses);
   const balEl = document.getElementById('txBalance');
