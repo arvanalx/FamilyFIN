@@ -287,7 +287,7 @@ function renderExpChartForOffset() {
     catMap[k] = (catMap[k] || 0) + amt;
   };
   state.transactions
-    .filter(tx => tx.type === 'expense' && tx.date.startsWith(month) && tx.category !== 'Κάρτες')
+    .filter(tx => tx.type === 'expense' && tx.date.startsWith(month) && tx.category !== 'Κάρτες' && !tx.transferId)
     .forEach(tx => addCat(tx.category, tx.amount));
   state.cardTransactions
     .filter(tx => tx.date.startsWith(month))
@@ -343,7 +343,7 @@ function renderDashboard() {
 
   // Monthly stats (Fix 5: Δόσεις Καρτών removed)
   const month = thisMonth();
-  const mtx = state.transactions.filter(t => t.date.startsWith(month));
+  const mtx = state.transactions.filter(t => t.date.startsWith(month) && !t.transferId);
   const income   = mtx.filter(t => t.type === 'income').reduce((s,t) => s + t.amount, 0);
   const expenses = mtx.filter(t => t.type === 'expense').reduce((s,t) => s + t.amount, 0);
   document.getElementById('monthlyIncome').textContent = fmtEuro(income);
