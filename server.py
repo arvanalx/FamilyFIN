@@ -9,7 +9,6 @@ into the SQLite database and then deleted so it is never read again.
 """
 
 import json
-import os
 import sqlite3
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 from pathlib import Path
@@ -24,19 +23,14 @@ DATA_FILE = BASE_DIR / 'data.json'   # legacy — used only for one-time migrati
 
 def check_db_path():
     """
-    Verify that BASE_DIR is writable before trying to create the database.
-    Prints a helpful message and exits if it is not.
+    Verify that BASE_DIR exists and is writable before trying to create the database.
+    Uses an actual write test instead of os.access() which can give false negatives
+    on ACL-based or mergerfs/NAS filesystems.
     """
     if not BASE_DIR.exists():
         print(f'\n  ERROR: Directory not found: {BASE_DIR}')
         print('  Make sure the app folder exists and try again.\n')
         raise SystemExit(1)
-    if not os.access(BASE_DIR, os.W_OK):
-        print(f'\n  ERROR: No write permission for directory: {BASE_DIR}')
-        print('  Fix with:  chmod u+w "' + str(BASE_DIR) + '"')
-        print('  Or run the server as a user who owns that directory.\n')
-        raise SystemExit(1)
-    # Quick test: try creating a temp file to catch filesystem-level issues
     test_file = BASE_DIR / '.write_test'
     try:
         test_file.write_text('ok')
@@ -44,7 +38,8 @@ def check_db_path():
     except OSError as exc:
         print(f'\n  ERROR: Cannot write to {BASE_DIR}')
         print(f'  Details: {exc}')
-        print('  The filesystem may be read-only or have restrictions (e.g. NAS mount).\n')
+        print(f'  Fix with:  chmod u+w "{BASE_DIR}"')
+        print('  Or run the server as a user who owns that directory.\n')
         raise SystemExit(1)
 
 
