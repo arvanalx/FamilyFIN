@@ -41,8 +41,12 @@ http://localhost:8765
 ### Data storage
 
 Data is saved **automatically** on every change:
-- **Primary storage:** `data.json` file in the app folder (via the server)
+- **Primary storage:** SQLite database (`familyfin.db`) in the app folder — reliable, crash-safe
 - **Fallback storage:** browser `localStorage` (used if the server is not running)
+
+#### Automatic migration from data.json
+
+If a `data.json` file exists from an older version, the server automatically imports it into the SQLite database on **first startup** and then deletes it. This happens once with no action required from the user.
 
 > ⚠️ If you open `index.html` directly (without the server), data is stored only in localStorage and may be lost if you clear your browser data.
 
@@ -568,4 +572,4 @@ Calculates for the **current month**:
 
 ---
 
-*Family FiN — Version 0.921 Beta | Last updated: April 2026*
+*Family FiN — Version 0.925 Beta | Last updated: April 2026*

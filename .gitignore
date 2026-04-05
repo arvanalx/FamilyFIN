@@ -7,3 +7,9 @@ __pycache__/
 
 # macOS
 .DS_Store
+
+# App data files (local only — never commit user data)
+familyfin.db
+familyfin.db-shm
+familyfin.db-wal
+data.json
