@@ -51,7 +51,27 @@ def check_db_path():
 # ── SQLite helpers ────────────────────────────────────────────────────────────
 
 def _connect() -> sqlite3.Connection:
-    conn = sqlite3.connect(str(DB_FILE))
+    """
+    Open SQLite connection.
+    On filesystems that don't support POSIX file locking (e.g. mergerfs, NFS,
+    some NAS/ZimaOS mounts), the default connect() raises OperationalError.
+    In that case we retry with URI mode + nolock=1, which is safe for a
+    single-user local application.
+    """
+    try:
+        conn = sqlite3.connect(str(DB_FILE))
+    except sqlite3.OperationalError:
+        try:
+            uri  = f'file:{DB_FILE}?nolock=1'
+            conn = sqlite3.connect(uri, uri=True)
+            # Use WAL journal so reads don't block writes on nolock filesystems
+            conn.execute('PRAGMA journal_mode=MEMORY')
+        except sqlite3.OperationalError as exc:
+            print(f'\n  ERROR: Cannot open SQLite database at {DB_FILE}')
+            print(f'  Details: {exc}')
+            print(f'  Filesystem may not support file locking (NFS/mergerfs/SMB).')
+            print(f'  Workaround: move the app folder to a local ext4/NTFS filesystem.\n')
+            raise
     conn.row_factory = sqlite3.Row
     return conn
 
