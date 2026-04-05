@@ -9,14 +9,43 @@ into the SQLite database and then deleted so it is never read again.
 """
 
 import json
+import os
 import sqlite3
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 from pathlib import Path
 
-PORT     = 8765
-BASE_DIR = Path(__file__).parent.resolve()
-DB_FILE  = BASE_DIR / 'familyfin.db'
+PORT      = 8765
+BASE_DIR  = Path(__file__).parent.resolve()
+DB_FILE   = BASE_DIR / 'familyfin.db'
 DATA_FILE = BASE_DIR / 'data.json'   # legacy — used only for one-time migration
+
+
+# ── Pre-flight check ──────────────────────────────────────────────────────────
+
+def check_db_path():
+    """
+    Verify that BASE_DIR is writable before trying to create the database.
+    Prints a helpful message and exits if it is not.
+    """
+    if not BASE_DIR.exists():
+        print(f'\n  ERROR: Directory not found: {BASE_DIR}')
+        print('  Make sure the app folder exists and try again.\n')
+        raise SystemExit(1)
+    if not os.access(BASE_DIR, os.W_OK):
+        print(f'\n  ERROR: No write permission for directory: {BASE_DIR}')
+        print('  Fix with:  chmod u+w "' + str(BASE_DIR) + '"')
+        print('  Or run the server as a user who owns that directory.\n')
+        raise SystemExit(1)
+    # Quick test: try creating a temp file to catch filesystem-level issues
+    test_file = BASE_DIR / '.write_test'
+    try:
+        test_file.write_text('ok')
+        test_file.unlink()
+    except OSError as exc:
+        print(f'\n  ERROR: Cannot write to {BASE_DIR}')
+        print(f'  Details: {exc}')
+        print('  The filesystem may be read-only or have restrictions (e.g. NAS mount).\n')
+        raise SystemExit(1)
 
 
 # ── SQLite helpers ────────────────────────────────────────────────────────────
@@ -172,6 +201,7 @@ class ReusableHTTPServer(HTTPServer):
 # ── Entry point ───────────────────────────────────────────────────────────────
 
 if __name__ == '__main__':
+    check_db_path()
     init_db()
     migrate_from_json()
 
