@@ -23,13 +23,12 @@
 
 ## 1. Starting the App
 
-The app runs locally via a Python web server.
+The app runs via a Python web server.
 
 ### Starting the server
 
 ```bash
-cd /Users/alex/Documents/Claude/FamilyFIN
-python3 server.py
+python3 FamilyFIN/server.py
 ```
 
 Then open your browser at:

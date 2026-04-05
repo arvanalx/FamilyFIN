@@ -23,13 +23,12 @@
 
 ## 1. Εκκίνηση της Εφαρμογής
 
-Η εφαρμογή τρέχει τοπικά μέσω Python web server.
+Η εφαρμογή τρέχει μέσω Python web server.
 
 ### Εκκίνηση server
 
 ```bash
-cd /Users/alex/Documents/Claude/FamilyFIN
-python3 server.py
+python3 FamilyFIN/server.py
 ```
 
 Στη συνέχεια ανοίξτε τον browser στη διεύθυνση:
