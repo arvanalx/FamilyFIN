@@ -407,6 +407,7 @@ Click **"+ New Subscription"** and fill in:
 | **Card/Account** | Where it is charged |
 | **Billing day** | Day of the month (1–31) |
 | **Expense Category** | Category applied to generated transactions |
+| **Paused** | When checked, automatic transaction generation is suspended |
 
 ### 9.3 Automatic transaction creation
 
@@ -425,7 +426,16 @@ Each subscription card shows a **📅 +1** button (appears on hover on desktop, 
 - If the transaction already exists, a message is shown without creating a duplicate
 - Useful for getting a **complete view of future balances** before the month ends
 
-### 9.5 Subscription actions
+### 9.5 Pausing a Subscription
+
+In the subscription edit form there is a **"Paused"** option:
+- While active, **no automatic transactions** are generated for future months
+- The subscription remains in the list with a visual **⏸ Paused** indicator (dimmed appearance)
+- When unchecked, automatic transaction generation resumes normally
+
+> ℹ️ Useful for subscriptions that are temporarily suspended (e.g. a streaming service on pause).
+
+### 9.6 Subscription actions
 
 - **✏️** — Edit
 - **🗑️** — Delete the subscription. Transactions already recorded are **kept** and converted to regular independent transactions
@@ -571,4 +581,4 @@ Calculates for the **current month**:
 
 ---
 
-*Family FiN — Version 0.926 Beta | Last updated: April 2026*
+*Family FiN — Version 0.927 Beta | Last updated: April 2026*

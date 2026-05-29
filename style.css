@@ -742,6 +742,22 @@ body.privacy-mode .pv {
 .sub-freq { font-size: .72rem; color: var(--text-muted); }
 .sub-card-type { font-size: .72rem; color: var(--text-muted); margin-top: 4px; }
 
+.sub-card.sub-paused { opacity: .55; }
+.sub-paused-badge {
+  display: inline-block;
+  font-size: .68rem; font-weight: 700;
+  color: var(--warning);
+  background: var(--warning-light);
+  padding: 1px 6px; border-radius: 8px;
+  margin-top: 5px;
+}
+.sub-paused-row { margin-top: 6px; }
+.sub-paused-label {
+  display: flex; align-items: center; gap: 8px;
+  cursor: pointer; font-size: .88rem; color: var(--text-muted);
+}
+.sub-paused-label input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; flex-shrink: 0; }
+
 .sub-delete {
   position: absolute;
   top: 6px; right: 8px;

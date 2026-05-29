@@ -1830,6 +1830,7 @@ function syncSubscriptionTransactions() {
 
   for (const sub of state.subscriptions) {
     if (!sub.amount || sub.amount <= 0) continue;
+    if (sub.paused) continue; // skip paused subscriptions
 
     const isCard = sub.card === 'visa' || sub.card === 'mastercard' ||
                    (state.cards || []).some(c => c.id === sub.card);
@@ -1944,7 +1945,7 @@ function renderSubscriptions() {
   if (!subs.length) { grid.innerHTML = `<div class="empty-state">${t('sub_none')}</div>`; return; }
 
   grid.innerHTML = subs.map(s => `
-    <div class="sub-card" onclick="editSubscription('${s.id}')">
+    <div class="sub-card${s.paused ? ' sub-paused' : ''}" onclick="editSubscription('${s.id}')">
       <button class="sub-delete" onclick="event.stopPropagation();deleteSubscription('${s.id}')" title="✕">✕</button>
       <button class="sub-gen-next" onclick="event.stopPropagation();generateNextMonthForSub('${s.id}')" title="${t('btn_gen_next_month')}">📅 +1</button>
       <div class="sub-icon">${s.icon || '📱'}</div>
@@ -1952,6 +1953,7 @@ function renderSubscriptions() {
       <div class="sub-amount">${fmtEuro(s.amount)}</div>
       <div class="sub-freq">${s.frequency === 'monthly' ? t('freq_monthly') : t('freq_yearly')}</div>
       <div class="sub-card-type">${accountLabel(s.card)}</div>
+      ${s.paused ? `<div class="sub-paused-badge">${t('sub_paused_badge')}</div>` : ''}
     </div>
   `).join('');
 }
@@ -1964,6 +1966,7 @@ function openSubscriptionModal() {
   document.getElementById('subFrequency').value = 'monthly';
   document.getElementById('subDay').value       = '';
   document.getElementById('subIcon').value      = '';
+  document.getElementById('subPaused').checked  = false;
   populateCategorySelect('subCategory');
   openModal('addSubscriptionModal');
 }
@@ -1979,6 +1982,7 @@ function editSubscription(id) {
   document.getElementById('subCard').value      = s.card;
   document.getElementById('subDay').value       = s.day || '';
   document.getElementById('subIcon').value      = s.icon || '';
+  document.getElementById('subPaused').checked  = !!s.paused;
   populateCategorySelect('subCategory');
   document.getElementById('subCategory').value  = s.category || '';
   openModal('addSubscriptionModal');
@@ -1992,11 +1996,12 @@ function saveSubscription() {
   const day      = parseInt(document.getElementById('subDay').value) || 1;
   const icon     = document.getElementById('subIcon').value.trim() || '📱';
   const category = document.getElementById('subCategory').value;
+  const paused   = document.getElementById('subPaused').checked;
   const editId   = document.getElementById('editSubscriptionId').value;
 
   if (!name || isNaN(amount)) { showToast(t('toast_fill_required'), 'error'); return; }
 
-  const obj = { name, amount, frequency: freq, card, day, icon, category };
+  const obj = { name, amount, frequency: freq, card, day, icon, category, paused };
   if (editId) {
     const idx = state.subscriptions.findIndex(s => s.id === editId);
     if (idx >= 0) {
