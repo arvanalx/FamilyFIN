@@ -2020,9 +2020,14 @@ function saveSubscription() {
 
 function deleteSubscription(id) {
   showConfirm(t('confirm_del_sub'), t('confirm_del_sub_msg'), () => {
-    // Remove all auto-generated transactions for this subscription
-    state.cardTransactions = state.cardTransactions.filter(t => t.subId !== id);
-    state.transactions     = state.transactions.filter(t => t.subId !== id);
+    // Detach auto-generated transactions: remove subId/subMonth so they
+    // become regular independent transactions and are no longer re-generated.
+    state.cardTransactions.forEach(tx => {
+      if (tx.subId === id) { delete tx.subId; delete tx.subMonth; }
+    });
+    state.transactions.forEach(tx => {
+      if (tx.subId === id) { delete tx.subId; delete tx.subMonth; }
+    });
     // Clean up any tracked deletions for this sub
     state.deletedSubKeys = (state.deletedSubKeys || []).filter(k => !k.startsWith(id + '|'));
     state.subscriptions  = state.subscriptions.filter(s => s.id !== id);

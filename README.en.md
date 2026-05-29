@@ -428,7 +428,7 @@ Each subscription card shows a **📅 +1** button (appears on hover on desktop, 
 ### 9.5 Subscription actions
 
 - **✏️** — Edit
-- **🗑️** — Delete the subscription **and** all its automatic transactions
+- **🗑️** — Delete the subscription. Transactions already recorded are **kept** and converted to regular independent transactions
 
 ---
 
@@ -571,4 +571,4 @@ Calculates for the **current month**:
 
 ---
 
-*Family FiN — Version 0.925 Beta | Last updated: April 2026*
+*Family FiN — Version 0.926 Beta | Last updated: April 2026*
