@@ -141,6 +141,52 @@ const nextMonth = () => {
   return `${ny}-${String(nm).padStart(2,'0')}`;
 };
 
+// ── MONTH PICKER HELPERS (Safari compat — replaces type="month") ──
+const MP_MONTH_NAMES = [
+  ['01','Ιανουάριος'],['02','Φεβρουάριος'],['03','Μάρτιος'],['04','Απρίλιος'],
+  ['05','Μάιος'],['06','Ιούνιος'],['07','Ιούλιος'],['08','Αύγουστος'],
+  ['09','Σεπτέμβριος'],['10','Οκτώβριος'],['11','Νοέμβριος'],['12','Δεκέμβριος']
+];
+
+function getMonthValue(id) {
+  const w = document.getElementById(id);
+  if (!w) return thisMonth();
+  const m = w.querySelector('.mp-month')?.value || '';
+  const y = w.querySelector('.mp-year')?.value || '';
+  return (y && m) ? `${y}-${m}` : thisMonth();
+}
+
+function setMonthValue(id, val) {
+  const w = document.getElementById(id);
+  if (!w) return;
+  const [y, m] = (val || thisMonth()).split('-');
+  const ms = w.querySelector('.mp-month');
+  const ys = w.querySelector('.mp-year');
+  if (ms && m) ms.value = m;
+  if (ys && y) ys.value = y;
+}
+
+function addMonthPickerListener(id, callback) {
+  const w = document.getElementById(id);
+  if (!w) return;
+  w.querySelectorAll('select').forEach(s => s.addEventListener('change', callback));
+}
+
+function buildMonthPickerHTML(id, val, onchangeFn) {
+  const [y, m] = (val || thisMonth()).split('-');
+  const cy = new Date().getFullYear();
+  const mOpts = MP_MONTH_NAMES.map(([v, l]) =>
+    `<option value="${v}"${v === m ? ' selected' : ''}>${l}</option>`).join('');
+  let yOpts = '';
+  for (let yr = cy - 5; yr <= cy + 3; yr++)
+    yOpts += `<option value="${yr}"${String(yr) === y ? ' selected' : ''}>${yr}</option>`;
+  const oc = onchangeFn ? ` onchange="${onchangeFn}"` : '';
+  return `<div class="month-picker-wrap" id="${id}">` +
+    `<select class="form-control mp-month"${oc}>${mOpts}</select>` +
+    `<select class="form-control mp-year"${oc}>${yOpts}</select>` +
+    `</div>`;
+}
+
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,6);
 
 // Returns the number of days in a given "YYYY-MM" month
@@ -1051,14 +1097,17 @@ let txSort = { field: 'date', asc: false };
 function renderTransactions() {
   populateCategorySelect('txCategoryFilter');
 
-  const monthEl  = document.getElementById('txMonthFilter');
-  if (!monthEl.value) monthEl.value = thisMonth();
+  if (!document.getElementById('txMonthFilter')?.dataset.init) {
+    setMonthValue('txMonthFilter', thisMonth());
+    const w = document.getElementById('txMonthFilter');
+    if (w) w.dataset.init = '1';
+  }
 
   filterAndRenderTransactions();
 }
 
 function filterAndRenderTransactions() {
-  const month   = document.getElementById('txMonthFilter').value;
+  const month   = getMonthValue('txMonthFilter');
   const account = document.getElementById('txAccountFilter').value;
   const cat     = document.getElementById('txCategoryFilter').value;
   const search  = document.getElementById('txSearch').value.trim().toLowerCase();
@@ -1356,13 +1405,16 @@ function saveTransaction() {
 
 // ── INCOME ───────────────────────────────────────────────────
 function renderIncome() {
-  const monthEl = document.getElementById('incomeMonthFilter');
-  if (!monthEl.value) monthEl.value = thisMonth();
+  if (!document.getElementById('incomeMonthFilter')?.dataset.init) {
+    setMonthValue('incomeMonthFilter', thisMonth());
+    const w = document.getElementById('incomeMonthFilter');
+    if (w) w.dataset.init = '1';
+  }
   filterAndRenderIncome();
 }
 
 function filterAndRenderIncome() {
-  const month = document.getElementById('incomeMonthFilter').value;
+  const month = getMonthValue('incomeMonthFilter');
   let txs = state.transactions.filter(tx => tx.type === 'income' && !tx.transferId);
   if (month) txs = txs.filter(tx => tx.date.startsWith(month));
   txs.sort((a,b) => b.date.localeCompare(a.date));
@@ -1603,9 +1655,7 @@ function renderCard(cardId) {
       <div class="card-header">
         <h2>${t('card_tx_hdr')} ${esc(name)}</h2>
         <div style="display:flex;gap:8px;align-items:center">
-          <input type="month" id="cardTxMonthFilter" class="form-control"
-                 value="${thisMonth()}"
-                 onchange="filterAndRenderCardTransactions('${cardId}')">
+          ${buildMonthPickerHTML('cardTxMonthFilter', thisMonth(), `filterAndRenderCardTransactions('${cardId}')`)}
           <button class="btn btn-sm btn-primary" onclick="openCardTransactionModal('${cardId}')">${t('btn_add_card_tx')}</button>
         </div>
       </div>
@@ -1624,7 +1674,7 @@ function renderCard(cardId) {
 }
 
 function updateCardSummary(cardId) {
-  const month     = document.getElementById('cardTxMonthFilter')?.value || thisMonth();
+  const month     = getMonthValue('cardTxMonthFilter');
   const inst      = state.installments.filter(i => i.card === cardId && i.active && i.monthlyAmount && (!i.totalCount || i.paidCount < i.totalCount));
   const totalInst = inst.reduce((s, i) => s + i.monthlyAmount, 0);
   const monthlyTx = state.cardTransactions
@@ -1641,7 +1691,7 @@ function updateCardSummary(cardId) {
 }
 
 function filterAndRenderCardTransactions(cardId) {
-  const month = document.getElementById('cardTxMonthFilter')?.value || thisMonth();
+  const month = getMonthValue('cardTxMonthFilter');
   const txs = state.cardTransactions
     .filter(t => t.card === cardId && t.date.startsWith(month));
   renderCardTransactions('cardTransactionsTbody', txs);
@@ -1650,7 +1700,7 @@ function filterAndRenderCardTransactions(cardId) {
 
 function openCardPaymentModal(cardId) {
   const cardData     = (state.cards || []).find(c => c.id === cardId);
-  const month        = document.getElementById('cardTxMonthFilter')?.value || thisMonth();
+  const month        = getMonthValue('cardTxMonthFilter');
   const inst         = state.installments.filter(i => i.card === cardId && i.active && i.monthlyAmount && (!i.totalCount || i.paidCount < i.totalCount));
   const totalInst    = inst.reduce((s, i) => s + i.monthlyAmount, 0);
   const monthlyTx    = state.cardTransactions.filter(t => t.card === cardId && t.date.startsWith(month)).reduce((s, t) => s + t.amount, 0);
@@ -1746,7 +1796,7 @@ function openInstallmentModal(card) {
   document.getElementById('instPaid').value  = '0';
   document.getElementById('instTotalCount').value = '';
   document.getElementById('instStore').value = '';
-  document.getElementById('instStart').value = thisMonth();
+  setMonthValue('instStart', thisMonth());
   populateCategorySelect('instCategory');
   if (card) document.getElementById('instCard').value = card;
   openModal('addInstallmentModal');
@@ -1763,7 +1813,7 @@ function editInstallment(id) {
   document.getElementById('instPaid').value  = i.paidCount;
   document.getElementById('instTotalCount').value = i.totalCount || '';
   document.getElementById('instStore').value = i.store || '';
-  document.getElementById('instStart').value = i.startMonth || thisMonth();
+  setMonthValue('instStart', i.startMonth || thisMonth());
   document.getElementById('instCard').value  = i.card;
   populateCategorySelect('instCategory');
   document.getElementById('instCategory').value = i.category || '';
@@ -1778,7 +1828,7 @@ function saveInstallment() {
   const totalCount = parseInt(document.getElementById('instTotalCount').value) || null;
   const card     = document.getElementById('instCard').value;
   const store    = document.getElementById('instStore').value.trim();
-  const start    = document.getElementById('instStart').value;
+  const start    = getMonthValue('instStart');
   const category = document.getElementById('instCategory').value;
   const editId   = document.getElementById('editInstallmentId').value;
 
@@ -2624,11 +2674,12 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   // Filter events
-  ['txMonthFilter','txAccountFilter','txCategoryFilter'].forEach(id => {
+  addMonthPickerListener('txMonthFilter', filterAndRenderTransactions);
+  ['txAccountFilter','txCategoryFilter'].forEach(id => {
     document.getElementById(id)?.addEventListener('change', filterAndRenderTransactions);
   });
   document.getElementById('txSearch')?.addEventListener('input', filterAndRenderTransactions);
-  document.getElementById('incomeMonthFilter')?.addEventListener('change', filterAndRenderIncome);
+  addMonthPickerListener('incomeMonthFilter', filterAndRenderIncome);
 
   // Αλλαγή τύπου στο modal κινήσεων → ανανέωση κατηγοριών
   document.querySelectorAll('input[name="txType"]').forEach(r => {

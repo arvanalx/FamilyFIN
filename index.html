@@ -13,7 +13,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Family FiN">
   <link rel="apple-touch-icon" href="icon-192.png">
-  <link rel="stylesheet" href="style.css?v=0.927">
+  <link rel="stylesheet" href="style.css?v=0.928">
 </head>
 <body>
 
@@ -54,7 +54,7 @@
   </ul>
   <div class="sidebar-footer">
     <button id="langToggle" class="lang-toggle" onclick="toggleLang()">EN</button>
-    <span class="version">v0.927 Beta</span>
+    <span class="version">v0.928 Beta</span>
   </div>
 </nav>
 
@@ -193,7 +193,21 @@
   <section class="page" id="page-transactions">
     <div class="page-toolbar">
       <div class="filter-group">
-        <input type="month" id="txMonthFilter" class="form-control">
+        <div class="month-picker-wrap" id="txMonthFilter">
+          <select class="form-control mp-month">
+            <option value="01">Ιανουάριος</option><option value="02">Φεβρουάριος</option>
+            <option value="03">Μάρτιος</option><option value="04">Απρίλιος</option>
+            <option value="05">Μάιος</option><option value="06">Ιούνιος</option>
+            <option value="07">Ιούλιος</option><option value="08">Αύγουστος</option>
+            <option value="09">Σεπτέμβριος</option><option value="10">Οκτώβριος</option>
+            <option value="11">Νοέμβριος</option><option value="12">Δεκέμβριος</option>
+          </select>
+          <select class="form-control mp-year">
+            <option>2020</option><option>2021</option><option>2022</option><option>2023</option>
+            <option>2024</option><option>2025</option><option>2026</option><option>2027</option>
+            <option>2028</option><option>2029</option><option>2030</option><option>2031</option><option>2032</option>
+          </select>
+        </div>
         <select id="txAccountFilter" class="form-control" autocomplete="off">
           <option value="" data-i18n="filter_all_accounts">Όλοι οι λογαριασμοί</option>
         </select>
@@ -234,7 +248,21 @@
   <!-- INCOME PAGE -->
   <section class="page" id="page-income">
     <div class="page-toolbar">
-      <input type="month" id="incomeMonthFilter" class="form-control">
+      <div class="month-picker-wrap" id="incomeMonthFilter">
+        <select class="form-control mp-month">
+          <option value="01">Ιανουάριος</option><option value="02">Φεβρουάριος</option>
+          <option value="03">Μάρτιος</option><option value="04">Απρίλιος</option>
+          <option value="05">Μάιος</option><option value="06">Ιούνιος</option>
+          <option value="07">Ιούλιος</option><option value="08">Αύγουστος</option>
+          <option value="09">Σεπτέμβριος</option><option value="10">Οκτώβριος</option>
+          <option value="11">Νοέμβριος</option><option value="12">Δεκέμβριος</option>
+        </select>
+        <select class="form-control mp-year">
+          <option>2020</option><option>2021</option><option>2022</option><option>2023</option>
+          <option>2024</option><option>2025</option><option>2026</option><option>2027</option>
+          <option>2028</option><option>2029</option><option>2030</option><option>2031</option><option>2032</option>
+        </select>
+      </div>
       <button class="btn btn-primary" onclick="openIncomeModal()" data-i18n="btn_new_income">+ Νέο Έσοδο</button>
     </div>
     <div class="dashboard-grid">
@@ -620,7 +648,21 @@
         </div>
         <div class="form-group">
           <label data-i18n="label_start_month">Ημερομηνία έναρξης</label>
-          <input type="month" id="instStart" class="form-control">
+          <div class="month-picker-wrap" id="instStart">
+            <select class="form-control mp-month">
+              <option value="01">Ιανουάριος</option><option value="02">Φεβρουάριος</option>
+              <option value="03">Μάρτιος</option><option value="04">Απρίλιος</option>
+              <option value="05">Μάιος</option><option value="06">Ιούνιος</option>
+              <option value="07">Ιούλιος</option><option value="08">Αύγουστος</option>
+              <option value="09">Σεπτέμβριος</option><option value="10">Οκτώβριος</option>
+              <option value="11">Νοέμβριος</option><option value="12">Δεκέμβριος</option>
+            </select>
+            <select class="form-control mp-year">
+              <option>2020</option><option>2021</option><option>2022</option><option>2023</option>
+              <option>2024</option><option>2025</option><option>2026</option><option>2027</option>
+              <option>2028</option><option>2029</option><option>2030</option><option>2031</option><option>2032</option>
+            </select>
+          </div>
         </div>
       </div>
     </div>
@@ -830,7 +872,7 @@
   </div>
 </div>
 
-<script src="i18n.js?v=0.927"></script>
-<script src="app.js?v=0.927"></script>
+<script src="i18n.js?v=0.928"></script>
+<script src="app.js?v=0.928"></script>
 </body>
 </html>

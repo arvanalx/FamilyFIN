@@ -944,6 +944,10 @@ body.privacy-mode .pv {
 
 .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 
+.month-picker-wrap { display: flex; gap: 6px; }
+.month-picker-wrap .mp-month { flex: 2; }
+.month-picker-wrap .mp-year  { flex: 1; min-width: 74px; }
+
 .input-group { display: flex; gap: 8px; }
 .input-group .form-control { flex: 1; }
 
