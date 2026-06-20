@@ -163,7 +163,25 @@ A **donut chart** showing the distribution of expenses for the current month fro
 
 Each segment shows: category, percentage (%) and amount in €. The **total expenses amount** appears in the centre.
 
-### 4.7 Recent Transactions
+### 4.7 Monthly Expenses
+
+A **vertical bar chart** displaying total expenses for each month of the selected year.
+
+**Year selector:** Dropdown at the top right of the card — defaults to the current year. Available years are populated automatically from your data.
+
+**Calculation logic** (same as §4.6):
+- Account transactions of type Expense, excluding transfers and the "Cards" category
+- Credit card transactions
+- Active monthly installments — only for the **current month**
+
+**Colour coding:**
+- **Blue** (accent): current month
+- **Light blue**: past months
+- **Grey**: future months
+
+The amount is displayed above each bar (where space allows). Hover over a bar to see a tooltip with the exact amount.
+
+### 4.8 Recent Transactions
 
 The 6 most recent transactions. Click **"All →"** to go to the Transactions page.
 
