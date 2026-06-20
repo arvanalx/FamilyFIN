@@ -581,4 +581,4 @@ Calculates for the **current month**:
 
 ---
 
-*Family FiN — Version 0.927 Beta | Last updated: April 2026*
+*Family FiN — Version 0.929 Beta | Last updated: June 2026*
