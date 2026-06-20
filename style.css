@@ -948,6 +948,9 @@ body.privacy-mode .pv {
 .month-picker-wrap .mp-month { flex: 2; }
 .month-picker-wrap .mp-year  { flex: 1; min-width: 74px; }
 
+.monthly-exp-wrap { overflow-x: auto; padding: 8px 0 4px; }
+.monthly-exp-year-sel { width: auto; padding: 5px 10px; font-size: .85rem; }
+
 .input-group { display: flex; gap: 8px; }
 .input-group .form-control { flex: 1; }
 

@@ -435,6 +435,10 @@ function renderDashboard() {
   _expChartOffset = 0;
   renderExpChartForOffset();
 
+  // Monthly expenses bar chart — init year selector once, then render
+  initMonthlyExpYearSel();
+  renderMonthlyExpenseChart();
+
   // Balance chart (SVG)
   renderBalanceChart(state.accounts.map(a => ({
     label: a.name, now: a.balance || 0, future: futureMap[a.id],
@@ -442,6 +446,105 @@ function renderDashboard() {
 
   // Daily balance line chart
   renderDailyBalanceChart();
+}
+
+// ── MONTHLY EXPENSES BAR CHART ────────────────────────────────
+const _ME_MONTHS = ['Ιαν','Φεβ','Μαρ','Απρ','Μαΐ','Ιουν','Ιουλ','Αυγ','Σεπ','Οκτ','Νοε','Δεκ'];
+
+function fmtAxisVal(v) {
+  if (v >= 1000) return (v / 1000).toFixed(v % 1000 === 0 ? 0 : 1) + 'k';
+  return v.toFixed(0);
+}
+
+function initMonthlyExpYearSel() {
+  const sel = document.getElementById('monthlyExpYearSel');
+  if (!sel || sel.dataset.init) return;
+  const curYear = new Date().getFullYear();
+  const years = new Set([curYear]);
+  state.transactions.forEach(tx => years.add(parseInt(tx.date.slice(0, 4))));
+  state.cardTransactions.forEach(tx => years.add(parseInt(tx.date.slice(0, 4))));
+  const sorted = [...years].filter(y => y >= 2020 && y <= curYear + 1).sort();
+  sel.innerHTML = sorted.map(y =>
+    `<option value="${y}"${y === curYear ? ' selected' : ''}>${y}</option>`).join('');
+  sel.dataset.init = '1';
+}
+
+function renderMonthlyExpenseChart() {
+  const wrap = document.getElementById('monthlyExpWrapper');
+  if (!wrap) return;
+  const sel  = document.getElementById('monthlyExpYearSel');
+  const year = sel ? parseInt(sel.value) : new Date().getFullYear();
+  const curYear = new Date().getFullYear();
+  const curMon  = new Date().getMonth() + 1; // 1-12
+  const curMonStr = thisMonth();
+
+  // Compute total expenses per month (same logic as expense category chart)
+  const totals = _ME_MONTHS.map((_, i) => {
+    const m = `${year}-${String(i + 1).padStart(2, '0')}`;
+    let sum = 0;
+    state.transactions
+      .filter(tx => tx.type === 'expense' && tx.date.startsWith(m) && tx.category !== 'Κάρτες' && !tx.transferId)
+      .forEach(tx => sum += tx.amount);
+    state.cardTransactions
+      .filter(tx => tx.date.startsWith(m))
+      .forEach(tx => sum += tx.amount);
+    if (m === curMonStr) {
+      state.installments
+        .filter(i => i.active && i.monthlyAmount && (!i.totalCount || i.paidCount < i.totalCount))
+        .forEach(i => sum += i.monthlyAmount);
+    }
+    return sum;
+  });
+
+  const W      = Math.max(wrap.clientWidth || 300, 300);
+  const H      = 220;
+  const padL   = 48, padR = 10, padT = 26, padB = 36;
+  const cW     = W - padL - padR;
+  const cH     = H - padT - padB;
+  const maxVal = Math.max(...totals, 1);
+  const slotW  = cW / 12;
+  const barW   = Math.max(6, slotW * 0.68);
+  const gap    = (slotW - barW) / 2;
+
+  // Gridlines (4 levels)
+  let svg = '';
+  for (let g = 1; g <= 4; g++) {
+    const v  = (maxVal / 4) * g;
+    const yg = (padT + cH - (v / maxVal) * cH).toFixed(1);
+    svg += `<line x1="${padL}" y1="${yg}" x2="${W - padR}" y2="${yg}" stroke="#e2e8f0" stroke-width="1"/>`;
+    svg += `<text x="${(padL - 5).toFixed(1)}" y="${(parseFloat(yg) + 4).toFixed(1)}" text-anchor="end" font-size="9" fill="#94a3b8" font-family="system-ui,sans-serif">${esc(fmtAxisVal(v))}</text>`;
+  }
+  // Baseline
+  svg += `<line x1="${padL}" y1="${(padT + cH).toFixed(1)}" x2="${W - padR}" y2="${(padT + cH).toFixed(1)}" stroke="#cbd5e1" stroke-width="1.5"/>`;
+
+  // Bars
+  totals.forEach((val, i) => {
+    const monthNum = i + 1;
+    const isCurrent = year === curYear && monthNum === curMon;
+    const isFuture  = year > curYear || (year === curYear && monthNum > curMon);
+    const barH  = val > 0 ? Math.max(2, (val / maxVal) * cH) : 0;
+    const x     = (padL + i * slotW + gap).toFixed(1);
+    const y     = (padT + cH - barH).toFixed(1);
+    const fill  = isCurrent ? '#3b82f6' : isFuture ? '#e2e8f0' : '#93c5fd';
+    const opacity = isFuture ? '0.6' : '1';
+    const lblCol  = isCurrent ? '#2563eb' : '#94a3b8';
+    const lblW    = isCurrent ? '700' : '400';
+
+    svg += `<rect x="${x}" y="${y}" width="${barW.toFixed(1)}" height="${barH.toFixed(1)}" rx="3" fill="${fill}" opacity="${opacity}"><title>${_ME_MONTHS[i]}: ${esc(fmtEuro(val))}</title></rect>`;
+
+    // Amount label above bar (only when bar tall enough)
+    if (val > 0 && barH > 22) {
+      const lbl = fmtEuro(val).replace(' €', '');
+      svg += `<text x="${(parseFloat(x) + barW / 2).toFixed(1)}" y="${(parseFloat(y) - 4).toFixed(1)}" text-anchor="middle" font-size="9" fill="#475569" font-family="system-ui,sans-serif">${esc(lbl)}</text>`;
+    }
+
+    // Month label below bar
+    const lx = (parseFloat(x) + barW / 2).toFixed(1);
+    const ly = (padT + cH + 15).toFixed(1);
+    svg += `<text x="${lx}" y="${ly}" text-anchor="middle" font-size="10" fill="${lblCol}" font-weight="${lblW}" font-family="system-ui,sans-serif">${_ME_MONTHS[i]}</text>`;
+  });
+
+  wrap.innerHTML = `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:${H}px">${svg}</svg>`;
 }
 
 function monthlyInstallmentTotal() {
