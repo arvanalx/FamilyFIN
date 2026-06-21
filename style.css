@@ -576,7 +576,7 @@ body.privacy-mode .pv {
 
 .tx-btn-group { display: flex; flex-direction: column; gap: 6px; }
 .tx-btn-row   { display: flex; gap: 8px; }
-.btn-report   { width: 100%; }
+.btn-report   { width: 100%; text-align: center; justify-content: center; }
 
 /* ============================================================
    SUMMARY BAR
