@@ -13,7 +13,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Family FiN">
   <link rel="apple-touch-icon" href="icon-192.png">
-  <link rel="stylesheet" href="style.css?v=0.930">
+  <link rel="stylesheet" href="style.css?v=0.931">
 </head>
 <body>
 
@@ -54,7 +54,7 @@
   </ul>
   <div class="sidebar-footer">
     <button id="langToggle" class="lang-toggle" onclick="toggleLang()">EN</button>
-    <span class="version">v0.930 Beta</span>
+    <span class="version">v0.931 Beta</span>
   </div>
 </nav>
 
@@ -227,6 +227,7 @@
         </select>
         <input type="text" id="txSearch" class="form-control" data-i18n-placeholder="search_placeholder" placeholder="🔍 Αναζήτηση...">
       </div>
+      <button class="btn btn-secondary" onclick="generateTransactionReport()" data-i18n="btn_pdf_report">📄 PDF</button>
       <button class="btn btn-secondary" onclick="openTransferModal()" data-i18n="btn_transfer">↕ Μεταφορά</button>
       <button class="btn btn-primary" onclick="openNewTransactionModal()" data-i18n="btn_new_tx">+ Νέα Κίνηση</button>
     </div>
@@ -882,7 +883,7 @@
   </div>
 </div>
 
-<script src="i18n.js?v=0.930"></script>
-<script src="app.js?v=0.930"></script>
+<script src="i18n.js?v=0.931"></script>
+<script src="app.js?v=0.931"></script>
 </body>
 </html>
