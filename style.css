@@ -574,6 +574,10 @@ body.privacy-mode .pv {
 
 .page-subtitle { color: var(--text-muted); font-size: .9rem; flex: 1; }
 
+.tx-btn-group { display: flex; flex-direction: column; gap: 6px; }
+.tx-btn-row   { display: flex; gap: 8px; }
+.btn-report   { width: 100%; }
+
 /* ============================================================
    SUMMARY BAR
    ============================================================ */

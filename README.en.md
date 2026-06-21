@@ -281,6 +281,29 @@ Click **↕ Transfer** (next to "+ New Transaction") to open the transfer form. 
 
 > ⚠️ Deleting **either** side automatically deletes **both** and reverses the balance changes.
 
+### 5.8 PDF Report
+
+Click **📄 Report** (below the Transfer / New Transaction buttons) to generate a report of the transactions **currently displayed** in the table (i.e. with the active filters applied).
+
+A new window opens with the report and the print dialog appears automatically.
+
+**Report contents:**
+
+| Section | Description |
+|---------|-------------|
+| **Header** | Title "Family FiN — Transaction Report", generation date & time, transaction count |
+| **Filters** | Chips showing month, account, category and search term |
+| **Summary** | Income / Expenses / Balance (same logic as the page summary bar) |
+| **Table** | Date, Description, Category, Account, Amount (colour-coded), Settled status |
+| **Footer** | App version and totals |
+
+**How to use:**
+- **Print on paper:** Click "🖨️ Print / Save as PDF" in the report window
+- **Save as PDF:** In the print dialog choose "Save as PDF" (Chrome) or "PDF → Save as PDF" (Safari)
+- **Send by email:** macOS → Share → Mail (from the preview window)
+
+> ℹ️ If the browser blocks the new window, allow pop-ups for the app's address.
+
 ---
 
 ## 6. Income
@@ -599,4 +622,4 @@ Calculates for the **current month**:
 
 ---
 
-*Family FiN — Version 0.930 Beta | Last updated: June 2026*
+*Family FiN — Version 0.932 Beta | Last updated: June 2026*
