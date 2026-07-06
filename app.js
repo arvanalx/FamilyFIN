@@ -2040,7 +2040,7 @@ function renderCardTransactions(tbodyId, txs) {
           <td>${tx.category ? `<span class="badge badge-blue">${esc(tx.category)}</span>` : '—'}</td>
           <td class="amount-cell negative">-${fmtEuro(tx.amount)}</td>
           <td style="white-space:nowrap">
-            ${!tx.subId ? `<button class="btn-icon" onclick="event.stopPropagation();editCardTransaction('${tx.id}')">✏️</button>` : ''}
+            <button class="btn-icon" onclick="event.stopPropagation();editCardTransaction('${tx.id}')">✏️</button>
             <button class="btn-icon danger" onclick="event.stopPropagation();deleteCardTx('${tx.id}')">🗑️</button>
           </td>
         </tr>`).join('')
