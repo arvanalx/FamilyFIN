@@ -226,13 +226,13 @@ Each account transaction can be marked as **Settled**, meaning the money has act
 
 Clicking ✅ again → ☐ reverses the effect on the balance.
 
-> ℹ️ Transactions created automatically by Subscriptions (🔄) can also be marked as settled, but have no edit button.
+> ℹ️ Transactions created automatically by Subscriptions (🔄) can also be marked as settled and edited normally.
 
 ### 5.3 Editing / Deleting a transaction
 
 **Desktop** (Actions column):
 - **☐ / ✅** — Toggle "Settled" status (affects the balance immediately)
-- **✏️** — Opens the edit form (not shown for subscription transactions 🔄)
+- **✏️** — Opens the edit form (available for all transactions except transfers ↔️)
 - **🗑️** — Asks for confirmation and deletes the transaction (if it was settled, the balance effect is automatically reversed)
 
 **Mobile** (tap on a transaction row):
@@ -382,10 +382,12 @@ A list of card transactions, sorted by date (most recent first).
 
 > 📌 Transactions created automatically by **Subscriptions** are shown with the 🔄 icon.
 
-**Desktop — Delete transaction:** Click **🗑️** — if the transaction belongs to a subscription, deleting it **prevents** it from being automatically recreated.
+**Desktop — Transaction actions:**
+- **✏️** — Opens the edit form (date, amount, description, category)
+- **🗑️** — Asks for confirmation and deletes — if the transaction belongs to a subscription, it **prevents** automatic recreation
 
 **Mobile** (tap on a card transaction row):
-- Opens an action menu with a **Delete** option.
+- Opens an action menu with **Edit** and **Delete** options.
 
 ---
 
@@ -622,4 +624,4 @@ Calculates for the **current month**:
 
 ---
 
-*Family FiN — Version 0.933 Beta | Last updated: June 2026*
+*Family FiN — Version 0.934 Beta | Last updated: June 2026*
