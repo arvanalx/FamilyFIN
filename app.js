@@ -1824,6 +1824,7 @@ function doCardTxAction(action) {
   const id = _cardTxActionId;
   closeCardTxActionSheet();
   if (action === 'delete') deleteCardTx(id);
+  else if (action === 'edit') editCardTransaction(id);
 }
 
 function saveIncome() {
@@ -2038,7 +2039,10 @@ function renderCardTransactions(tbodyId, txs) {
           <td>${esc(tx.desc)}${tx.subId ? ` <span title="${t('auto_sub_note')}" style="font-size:.85em">🔄</span>` : ''}</td>
           <td>${tx.category ? `<span class="badge badge-blue">${esc(tx.category)}</span>` : '—'}</td>
           <td class="amount-cell negative">-${fmtEuro(tx.amount)}</td>
-          <td><button class="btn-icon danger" onclick="deleteCardTx('${tx.id}')">🗑️</button></td>
+          <td style="white-space:nowrap">
+            ${!tx.subId ? `<button class="btn-icon" onclick="event.stopPropagation();editCardTransaction('${tx.id}')">✏️</button>` : ''}
+            <button class="btn-icon danger" onclick="event.stopPropagation();deleteCardTx('${tx.id}')">🗑️</button>
+          </td>
         </tr>`).join('')
     : `<tr><td colspan="5" class="empty-state">${t('tx_empty')}</td></tr>`;
 }
@@ -2364,6 +2368,7 @@ function deleteSubscription(id) {
 // ── CARD TRANSACTIONS ────────────────────────────────────────
 function openCardTransactionModal(card) {
   document.getElementById('cardTxCard').value = card;
+  document.getElementById('editCardTransactionId').value = '';
   document.getElementById('cardTxModalTitle').textContent = t('modal_card_tx') + ' ' + card.toUpperCase();
   document.getElementById('cardTxDate').value = today();
   document.getElementById('cardTxAmount').value = '';
@@ -2372,19 +2377,42 @@ function openCardTransactionModal(card) {
   openModal('cardTransactionModal');
 }
 
+function editCardTransaction(id) {
+  const tx = state.cardTransactions.find(x => x.id === id);
+  if (!tx) return;
+  document.getElementById('cardTxCard').value = tx.card;
+  document.getElementById('editCardTransactionId').value = id;
+  document.getElementById('cardTxModalTitle').textContent = t('modal_edit_card_tx');
+  document.getElementById('cardTxDate').value = tx.date;
+  document.getElementById('cardTxAmount').value = tx.amount;
+  document.getElementById('cardTxDesc').value = tx.desc;
+  populateCategorySelect('cardTxCategory');
+  document.getElementById('cardTxCategory').value = tx.category || '';
+  openModal('cardTransactionModal');
+}
+
 function saveCardTransaction() {
-  const card   = document.getElementById('cardTxCard').value;
-  const date   = document.getElementById('cardTxDate').value;
-  const amount = parseFloat(document.getElementById('cardTxAmount').value);
-  const desc   = document.getElementById('cardTxDesc').value.trim();
-  const cat    = document.getElementById('cardTxCategory').value;
+  const card    = document.getElementById('cardTxCard').value;
+  const editId  = document.getElementById('editCardTransactionId').value;
+  const date    = document.getElementById('cardTxDate').value;
+  const amount  = parseFloat(document.getElementById('cardTxAmount').value);
+  const desc    = document.getElementById('cardTxDesc').value.trim();
+  const cat     = document.getElementById('cardTxCategory').value;
 
   if (!date || !desc || isNaN(amount) || amount <= 0) { showToast(t('toast_fill_fields'), 'error'); return; }
 
-  state.cardTransactions.push({ id: uid(), card, date, amount, desc, category: cat });
+  if (editId) {
+    const idx = state.cardTransactions.findIndex(x => x.id === editId);
+    if (idx !== -1) {
+      state.cardTransactions[idx] = { ...state.cardTransactions[idx], date, amount, desc, category: cat };
+    }
+    showToast(t('toast_tx_updated'), 'success');
+  } else {
+    state.cardTransactions.push({ id: uid(), card, date, amount, desc, category: cat });
+    showToast(t('toast_tx_saved'), 'success');
+  }
   saveState();
   closeModal('cardTransactionModal');
-  showToast(t('toast_tx_saved'), 'success');
   renderPage(currentPage());
 }
 

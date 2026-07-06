@@ -13,7 +13,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Family FiN">
   <link rel="apple-touch-icon" href="icon-192.png">
-  <link rel="stylesheet" href="style.css?v=0.932">
+  <link rel="stylesheet" href="style.css?v=0.933">
 </head>
 <body>
 
@@ -54,7 +54,7 @@
   </ul>
   <div class="sidebar-footer">
     <button id="langToggle" class="lang-toggle" onclick="toggleLang()">EN</button>
-    <span class="version">v0.932 Beta</span>
+    <span class="version">v0.933 Beta</span>
   </div>
 </nav>
 
@@ -764,6 +764,7 @@
     </div>
     <div class="modal-body">
       <input type="hidden" id="cardTxCard">
+      <input type="hidden" id="editCardTransactionId">
       <div class="form-row">
         <div class="form-group">
           <label data-i18n="label_date">Ημερομηνία *</label>
@@ -882,12 +883,13 @@
 <div id="cardTxActionSheet" class="action-sheet-overlay" onclick="closeCardTxActionSheet()">
   <div class="action-sheet" onclick="event.stopPropagation()">
     <p class="action-sheet-title" id="cardTxActionDesc"></p>
+    <button class="action-sheet-btn" onclick="doCardTxAction('edit')" data-i18n="btn_edit_tx">✏️ Επεξεργασία</button>
     <button class="action-sheet-btn danger" onclick="doCardTxAction('delete')" data-i18n="btn_delete_tx">🗑️ Διαγραφή</button>
     <button class="action-sheet-cancel" onclick="closeCardTxActionSheet()" data-i18n="btn_cancel">Άκυρο</button>
   </div>
 </div>
 
-<script src="i18n.js?v=0.932"></script>
-<script src="app.js?v=0.932"></script>
+<script src="i18n.js?v=0.933"></script>
+<script src="app.js?v=0.933"></script>
 </body>
 </html>

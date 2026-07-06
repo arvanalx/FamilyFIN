@@ -123,6 +123,7 @@ const TRANSLATIONS = {
     card_none_linked:      '— Κανένας —',
     btn_delete_card:       '🗑️ Διαγραφή',
     btn_delete_tx:         '🗑️ Διαγραφή',
+    btn_edit_tx:           '✏️ Επεξεργασία',
 
     // Modals
     modal_new_tx:       'Νέα Κίνηση',
@@ -133,6 +134,7 @@ const TRANSLATIONS = {
     modal_new_sub:      'Νέα Συνδρομή',
     modal_edit_sub:     'Επεξεργασία Συνδρομής',
     modal_card_tx:      'Κίνηση Κάρτας',
+    modal_edit_card_tx: 'Επεξεργασία Κίνησης Κάρτας',
     label_type:         'Τύπος',
     label_expense:      'Έξοδο',
     label_income_type:  'Έσοδο',
@@ -400,6 +402,7 @@ const TRANSLATIONS = {
     card_none_linked:      '— None —',
     btn_delete_card:       '🗑️ Delete',
     btn_delete_tx:         '🗑️ Delete',
+    btn_edit_tx:           '✏️ Edit',
 
     // Modals
     modal_new_tx:       'New Transaction',
@@ -410,6 +413,7 @@ const TRANSLATIONS = {
     modal_new_sub:      'New Subscription',
     modal_edit_sub:     'Edit Subscription',
     modal_card_tx:      'Card Transaction',
+    modal_edit_card_tx: 'Edit Card Transaction',
     label_type:         'Type',
     label_expense:      'Expense',
     label_income_type:  'Income',
