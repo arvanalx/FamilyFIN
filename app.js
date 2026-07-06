@@ -1265,7 +1265,7 @@ function filterAndRenderTransactions() {
       <td>
         <div class="tx-actions">
           <button class="btn-icon${tx.settled ? ' settled' : ''}" onclick="event.stopPropagation();toggleTransactionSettled('${tx.id}')" title="${t('btn_toggle_settled')}">${tx.settled ? '✅' : '☐'}</button>
-          ${(!tx.subId && !tx.transferId) ? `<button class="btn-icon" onclick="event.stopPropagation();editTransaction('${tx.id}')">✏️</button>` : '<span class="btn-icon-spacer"></span>'}
+          ${!tx.transferId ? `<button class="btn-icon" onclick="event.stopPropagation();editTransaction('${tx.id}')">✏️</button>` : '<span class="btn-icon-spacer"></span>'}
           <button class="btn-icon danger" onclick="event.stopPropagation();deleteTransaction('${tx.id}')">🗑️</button>
         </div>
       </td>
@@ -1734,7 +1734,7 @@ function showTransactionActions(id) {
   document.getElementById('txActionDesc').textContent = tx.desc;
   document.getElementById('txActionSettledBtn').textContent = tx.settled ? t('action_unmark_settled') : t('action_mark_settled');
   const editBtn = document.getElementById('txActionEditBtn');
-  editBtn.style.display = tx.subId ? 'none' : '';
+  editBtn.style.display = tx.transferId ? 'none' : '';
   document.getElementById('txActionSheet').classList.add('open');
 }
 
