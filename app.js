@@ -222,7 +222,28 @@ const fmtEuro = n => {
   return (n < 0 ? '-' : '') + str + ' €';
 };
 
-const today = () => new Date().toISOString().split('T')[0];
+// Local calendar date (toISOString would give the UTC date — wrong after midnight in Greece)
+const ymd   = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+const today = () => ymd(new Date());
+
+const round2     = n => Math.round((n + Number.EPSILON) * 100) / 100;
+const readAmount = id => round2(parseFloat(document.getElementById(id).value));
+const txDelta    = tx => tx.type === 'income' ? tx.amount : -tx.amount;
+
+function adjustBalance(accId, delta) {
+  const acc = state.accounts.find(a => a.id === accId);
+  if (acc) acc.balance = round2((acc.balance || 0) + delta);
+}
+
+// An installment is charged in a month once it has started and until it is fully paid
+function installmentDue(i, month = thisMonth()) {
+  return i.active && i.monthlyAmount > 0
+    && (!i.totalCount || i.paidCount < i.totalCount)
+    && (!i.startMonth || i.startMonth <= month);
+}
+
+// Card payments from an account are excluded from expense stats (the card spending is counted instead)
+const isCardPaymentCat = c => ['κάρτες', 'cards'].includes(String(c || '').trim().toLowerCase());
 
 const thisMonth = () => {
   const d = new Date();
@@ -320,9 +341,10 @@ function accountLabel(id) {
     const card = (state.cards || []).find(c => c.id === id);
     if (card) return card.name;
   }
-  // Fallback for pre-init or unknown ids
-  return { cash: 'Μετρητά', alpha: 'AlphaBank', winbank: 'WinBank',
-           visa: 'VISA', mastercard: 'MASTERCARD' }[id] || id;
+  // Fallback for pre-init or legacy ids
+  const legacy = { cash: 'Μετρητά', alpha: 'AlphaBank', winbank: 'WinBank',
+                   visa: 'VISA', mastercard: 'MASTERCARD' }[id];
+  return legacy || (state ? t('account_deleted') : id);
 }
 
 // ── NAVIGATION ───────────────────────────────────────────────
@@ -369,7 +391,7 @@ function calcFutureDate() {
   // Cap = last day of next month
   const now = new Date();
   const capD = new Date(now.getFullYear(), now.getMonth() + 2, 0);
-  const cap  = capD.toISOString().split('T')[0];
+  const cap  = ymd(capD);
   if (!allDates.length) return cap;
   const max = allDates.reduce((a, b) => a > b ? a : b);
   return max > cap ? cap : max;
@@ -381,7 +403,7 @@ function cardMonthlyDebt(cardId) {
     .filter(t => t.card === cardId)
     .reduce((s, t) => s + t.amount, 0);
   const instAmt = state.installments
-    .filter(i => i.card === cardId && i.active && i.monthlyAmount && (!i.totalCount || i.paidCount < i.totalCount))
+    .filter(i => i.card === cardId && installmentDue(i))
     .reduce((s, i) => s + i.monthlyAmount, 0);
   return txAmt + instAmt;
 }
@@ -428,14 +450,14 @@ function renderExpChartForOffset() {
     catMap[k] = (catMap[k] || 0) + amt;
   };
   state.transactions
-    .filter(tx => tx.type === 'expense' && tx.date.startsWith(month) && tx.category !== 'Κάρτες' && !tx.transferId)
+    .filter(tx => tx.type === 'expense' && tx.date.startsWith(month) && !isCardPaymentCat(tx.category) && !tx.transferId)
     .forEach(tx => addCat(tx.category, tx.amount));
   state.cardTransactions
     .filter(tx => tx.date.startsWith(month))
     .forEach(tx => addCat(tx.category, tx.amount));
   if (_expChartOffset === 0) {
     state.installments
-      .filter(i => i.active && i.monthlyAmount && (!i.totalCount || i.paidCount < i.totalCount))
+      .filter(i => installmentDue(i, month))
       .forEach(i => addCat(i.category || t('installments_cat'), i.monthlyAmount));
   }
   const catData = Object.entries(catMap)
@@ -501,7 +523,7 @@ function renderDashboard() {
       .filter(t => t.card === card.id && t.date.startsWith(curMon))
       .reduce((s, t) => s + t.amount, 0);
     const instAmt = state.installments
-      .filter(i => i.card === card.id && i.active && i.monthlyAmount && (!i.totalCount || i.paidCount < i.totalCount))
+      .filter(i => i.card === card.id && installmentDue(i, curMon))
       .reduce((s, i) => s + i.monthlyAmount, 0);
     const total     = txAmt + instAmt;
     const logoClass = card.id === 'mastercard' ? 'mc-logo' : 'visa-logo';
@@ -578,14 +600,14 @@ function renderMonthlyExpenseChart() {
     const m = `${year}-${String(i + 1).padStart(2, '0')}`;
     let sum = 0;
     state.transactions
-      .filter(tx => tx.type === 'expense' && tx.date.startsWith(m) && tx.category !== 'Κάρτες' && !tx.transferId)
+      .filter(tx => tx.type === 'expense' && tx.date.startsWith(m) && !isCardPaymentCat(tx.category) && !tx.transferId)
       .forEach(tx => sum += tx.amount);
     state.cardTransactions
       .filter(tx => tx.date.startsWith(m))
       .forEach(tx => sum += tx.amount);
     if (m === curMonStr) {
       state.installments
-        .filter(i => i.active && i.monthlyAmount && (!i.totalCount || i.paidCount < i.totalCount))
+        .filter(i => installmentDue(i, m))
         .forEach(i => sum += i.monthlyAmount);
     }
     return sum;
@@ -644,7 +666,7 @@ function renderMonthlyExpenseChart() {
 
 function monthlyInstallmentTotal() {
   return state.installments
-    .filter(i => i.active && i.monthlyAmount && (!i.totalCount || i.paidCount < i.totalCount))
+    .filter(i => installmentDue(i))
     .reduce((s,i) => s + i.monthlyAmount, 0);
 }
 
@@ -659,7 +681,7 @@ function renderRecentTransactions(txs) {
         <div class="tx-meta">
           <span>${fmtDate(t.date)}</span>
           <span>${esc(t.category || '—')}</span>
-          <span>${accountLabel(t.account)}</span>
+          <span>${esc(accountLabel(t.account))}</span>
         </div>
       </div>
       <div class="tx-amount ${t.type}">${t.type === 'income' ? '+' : '-'}${fmtEuro(t.amount)}</div>
@@ -1020,24 +1042,21 @@ function renderDailyBalanceChart() {
 
   // Build a data series per account
   const series = state.accounts.map((acc, idx) => {
-    // Group unsettled transactions from today→fd by date
+    // Same inputs as the Forecast column: every unsettled transaction up to fd.
+    // Overdue/today ones fold into today's starting point; later ones become steps.
     const byDate = {};
+    let bal = acc.balance || 0;
     state.transactions
-      .filter(t => t.account === acc.id && !t.settled && t.date >= todayStr && t.date <= fd)
+      .filter(t => t.account === acc.id && !t.settled && t.date <= fd)
       .forEach(t => {
-        byDate[t.date] = (byDate[t.date] || 0) + (t.type === 'income' ? 1 : -1) * t.amount;
+        if (t.date <= todayStr) bal += txDelta(t);
+        else byDate[t.date] = (byDate[t.date] || 0) + txDelta(t);
       });
 
-    // Build cumulative points starting at today = acc.balance
-    let bal = acc.balance || 0;
-    const points = [{ date: todayStr, value: bal }];
+    const points = [{ date: todayStr, value: round2(bal) }];
     Object.keys(byDate).sort().forEach(d => {
       bal += byDate[d];
-      if (d === todayStr) {
-        points[0].value = acc.balance || 0; // keep original start; today's delta folds into next point
-      } else {
-        points.push({ date: d, value: bal });
-      }
+      points.push({ date: d, value: round2(bal) });
     });
 
     return { label: acc.name, color: _BAL_PAL[idx % _BAL_PAL.length][0], points };
@@ -1349,11 +1368,11 @@ function filterAndRenderTransactions() {
     <tr onclick="${tx.transferId ? `showTransferActions('${tx.id}')` : `showTransactionActions('${tx.id}')`}" style="cursor:pointer">
       <td>${fmtDate(tx.date)}</td>
       <td>
-        <div style="font-weight:600">${esc(tx.desc)}${tx.subId ? ` <span title="${t('auto_sub_note')}" style="font-size:.85em">🔄</span>` : ''}${tx.transferId ? ' <span style="font-size:.85em" title="${t(\'transfer_label\')}">↔️</span>' : ''}${tx.settled ? ' <span style="font-size:.8em" title="${t(\'label_settled\')}">✅</span>' : ''}</div>
+        <div style="font-weight:600">${esc(tx.desc)}${tx.subId ? ` <span title="${t('auto_sub_note')}" style="font-size:.85em">🔄</span>` : ''}${tx.transferId ? ` <span style="font-size:.85em" title="${t('transfer_label')}">↔️</span>` : ''}${tx.settled ? ` <span style="font-size:.8em" title="${t('label_settled')}">✅</span>` : ''}</div>
         ${tx.notes && !tx.subId && !tx.transferId ? `<div style="font-size:.75rem;color:#64748b">${esc(tx.notes)}</div>` : ''}
       </td>
       <td>${tx.category ? `<span class="badge ${tx.transferId ? 'badge-purple' : 'badge-blue'}">${esc(tx.category)}</span>` : '<span class="muted">—</span>'}</td>
-      <td><span class="badge badge-gray">${accountLabel(tx.account)}</span></td>
+      <td><span class="badge badge-gray">${esc(accountLabel(tx.account))}</span></td>
       <td class="amount-cell ${tx.type === 'income' ? 'positive' : 'negative'}">
         ${tx.type === 'income' ? '+' : '-'}${fmtEuro(tx.amount)}
       </td>
@@ -1588,13 +1607,7 @@ function deleteTransaction(id) {
       // Delete both sides and reverse both balances
       state.transactions
         .filter(t => t.transferId === tx.transferId)
-        .forEach(t => {
-          const acc = state.accounts.find(a => a.id === t.account);
-          if (acc && t.settled) {
-            const delta = t.type === 'income' ? t.amount : -t.amount;
-            acc.balance = (acc.balance || 0) - delta;
-          }
-        });
+        .forEach(t => { if (t.settled) adjustBalance(t.account, -txDelta(t)); });
       state.transactions = state.transactions.filter(t => t.transferId !== tx.transferId);
       showToast(t('toast_transfer_deleted'), 'success');
     } else {
@@ -1602,13 +1615,7 @@ function deleteTransaction(id) {
         if (!state.deletedSubKeys) state.deletedSubKeys = [];
         state.deletedSubKeys.push(`${tx.subId}|${tx.subMonth}`);
       }
-      if (tx.settled) {
-        const acc = state.accounts.find(a => a.id === tx.account);
-        if (acc) {
-          const delta = tx.type === 'income' ? tx.amount : -tx.amount;
-          acc.balance = (acc.balance || 0) - delta;
-        }
-      }
+      if (tx.settled) adjustBalance(tx.account, -txDelta(tx));
       state.transactions = state.transactions.filter(t => t.id !== id);
       showToast(t('toast_tx_deleted'), 'success');
     }
@@ -1636,7 +1643,7 @@ function openTransferModal() {
 
 function saveTransfer() {
   const date   = document.getElementById('transferDate').value;
-  const amount = parseFloat(document.getElementById('transferAmount').value);
+  const amount = readAmount('transferAmount');
   const fromId  = document.getElementById('transferFrom').value;
   const toId    = document.getElementById('transferTo').value;
   const notes   = document.getElementById('transferNotes').value.trim();
@@ -1670,8 +1677,8 @@ function saveTransfer() {
   });
 
   if (settled) {
-    fromAcc.balance = (fromAcc.balance || 0) - amount;
-    toAcc.balance   = (toAcc.balance   || 0) + amount;
+    adjustBalance(fromId, -amount);
+    adjustBalance(toId, amount);
   }
 
   saveState();
@@ -1692,18 +1699,12 @@ function toggleTransactionSettled(id) {
     state.transactions
       .filter(t => t.transferId === tx.transferId)
       .forEach(t => {
-        const acc = state.accounts.find(a => a.id === t.account);
-        if (acc) {
-          const delta = t.type === 'income' ? t.amount : -t.amount;
-          acc.balance = (acc.balance || 0) + (wasSettled ? -delta : delta);
-        }
+        adjustBalance(t.account, wasSettled ? -txDelta(t) : txDelta(t));
         t.settled = newSettled;
       });
   } else {
-    const acc = state.accounts.find(a => a.id === tx.account);
-    if (!acc) return;
-    const delta = tx.type === 'income' ? tx.amount : -tx.amount;
-    acc.balance = (acc.balance || 0) + (wasSettled ? -delta : delta);
+    if (!state.accounts.some(a => a.id === tx.account)) return;
+    adjustBalance(tx.account, wasSettled ? -txDelta(tx) : txDelta(tx));
     tx.settled = newSettled;
   }
 
@@ -1715,7 +1716,7 @@ function toggleTransactionSettled(id) {
 function saveTransaction() {
   const type    = document.querySelector('input[name="txType"]:checked').value;
   const date    = document.getElementById('txDate').value;
-  const amount  = parseFloat(document.getElementById('txAmount').value);
+  const amount  = readAmount('txAmount');
   const desc    = document.getElementById('txDesc').value.trim();
   const cat     = document.getElementById('txCategory').value;
   const account = document.getElementById('txAccount').value;
@@ -1731,33 +1732,15 @@ function saveTransaction() {
     const idx = state.transactions.findIndex(tx => tx.id === editId);
     if (idx >= 0) {
       const oldTx = state.transactions[idx];
-      // Reverse old settled effect on old account
-      if (oldTx.settled) {
-        const oldAcc = state.accounts.find(a => a.id === oldTx.account);
-        if (oldAcc) {
-          const d = oldTx.type === 'income' ? oldTx.amount : -oldTx.amount;
-          oldAcc.balance = (oldAcc.balance || 0) - d;
-        }
-      }
-      state.transactions[idx] = { ...oldTx, type, date, amount, desc, category: cat, account, notes, settled };
-      // Apply new settled effect on (possibly new) account
-      if (settled) {
-        const newAcc = state.accounts.find(a => a.id === account);
-        if (newAcc) {
-          const d = type === 'income' ? amount : -amount;
-          newAcc.balance = (newAcc.balance || 0) + d;
-        }
-      }
+      if (oldTx.settled) adjustBalance(oldTx.account, -txDelta(oldTx));
+      const newTx = { ...oldTx, type, date, amount, desc, category: cat, account, notes, settled };
+      state.transactions[idx] = newTx;
+      if (settled) adjustBalance(account, txDelta(newTx));
     }
   } else {
-    state.transactions.push({ id: uid(), type, date, amount, desc, category: cat, account, notes, settled });
-    if (settled) {
-      const newAcc = state.accounts.find(a => a.id === account);
-      if (newAcc) {
-        const d = type === 'income' ? amount : -amount;
-        newAcc.balance = (newAcc.balance || 0) + d;
-      }
-    }
+    const newTx = { id: uid(), type, date, amount, desc, category: cat, account, notes, settled };
+    state.transactions.push(newTx);
+    if (settled) adjustBalance(account, txDelta(newTx));
   }
 
   saveState();
@@ -1794,7 +1777,7 @@ function filterAndRenderIncome() {
           <td>${fmtDate(tx.date)}</td>
           <td>${esc(tx.desc)}</td>
           <td>${tx.category ? `<span class="badge badge-green">${esc(tx.category)}</span>` : '—'}</td>
-          <td>${accountLabel(tx.account)}</td>
+          <td>${esc(accountLabel(tx.account))}</td>
           <td class="amount-cell positive">+${fmtEuro(tx.amount)}</td>
           <td>
             <button class="btn-icon" title="${copyTitle}" onclick="event.stopPropagation();copyIncomeToNextMonth('${tx.id}')">📋</button>
@@ -1808,10 +1791,10 @@ function copyIncomeToNextMonth(id) {
   const tx = state.transactions.find(t => t.id === id);
   if (!tx) return;
 
-  // Shift date by exactly 1 month (JS Date handles Dec→Jan & overflow like Jan 31→Feb 28 correctly)
+  // Same day next month, clamped to the month's last day (31/01 → 28/02, not 03/03)
   const [y, m, d] = tx.date.split('-').map(Number);
-  const next = new Date(y, m, d); // month m is 1-12; Date(y, m, d) treats m as 0-indexed → +1 month
-  const newDate = `${next.getFullYear()}-${String(next.getMonth() + 1).padStart(2, '0')}-${String(next.getDate()).padStart(2, '0')}`;
+  const nextYM  = m === 12 ? `${y + 1}-01` : `${y}-${String(m + 1).padStart(2, '0')}`;
+  const newDate = `${nextYM}-${String(Math.min(d, daysInMonth(nextYM))).padStart(2, '0')}`;
 
   state.transactions.push({ ...tx, id: uid(), date: newDate, settled: false });
   saveState();
@@ -1924,7 +1907,7 @@ function doCardTxAction(action) {
 
 function saveIncome() {
   const date    = document.getElementById('incDate').value;
-  const amount  = parseFloat(document.getElementById('incAmount').value);
+  const amount  = readAmount('incAmount');
   const desc    = document.getElementById('incDesc').value.trim();
   const cat     = document.getElementById('incCategory').value;
   const account = document.getElementById('incAccount').value;
@@ -2040,7 +2023,7 @@ function renderCard(cardId) {
 
 function updateCardSummary(cardId) {
   const month     = getMonthValue('cardTxMonthFilter');
-  const inst      = state.installments.filter(i => i.card === cardId && i.active && i.monthlyAmount && (!i.totalCount || i.paidCount < i.totalCount));
+  const inst      = state.installments.filter(i => i.card === cardId && installmentDue(i, month));
   const totalInst = inst.reduce((s, i) => s + i.monthlyAmount, 0);
   const monthlyTx = state.cardTransactions
     .filter(t => t.card === cardId && t.date.startsWith(month))
@@ -2066,7 +2049,7 @@ function filterAndRenderCardTransactions(cardId) {
 function openCardPaymentModal(cardId) {
   const cardData     = (state.cards || []).find(c => c.id === cardId);
   const month        = getMonthValue('cardTxMonthFilter');
-  const inst         = state.installments.filter(i => i.card === cardId && i.active && i.monthlyAmount && (!i.totalCount || i.paidCount < i.totalCount));
+  const inst         = state.installments.filter(i => i.card === cardId && installmentDue(i, month));
   const totalInst    = inst.reduce((s, i) => s + i.monthlyAmount, 0);
   const monthlyTx    = state.cardTransactions.filter(t => t.card === cardId && t.date.startsWith(month)).reduce((s, t) => s + t.amount, 0);
   const totalBalance = monthlyTx + totalInst;
@@ -2084,7 +2067,7 @@ function openCardPaymentModal(cardId) {
   populateTxCategorySelect();
   const catEl = document.getElementById('txCategory');
   const match = Array.from(catEl.options).find(o =>
-    o.value.toLowerCase() === 'κάρτες' || o.value.toLowerCase() === 'cards'
+    isCardPaymentCat(o.value)
   );
   if (match) catEl.value = match.value;
   openModal('addTransactionModal');
@@ -2146,7 +2129,7 @@ function renderCardTransactions(tbodyId, txs) {
 function renderInstallments() {
   const active = state.installments.filter(i => i.active);
   const incomplete = active.filter(i => !i.totalCount || i.paidCount < i.totalCount);
-  const monthly = incomplete.filter(i=>i.monthlyAmount).reduce((s,i)=>s+i.monthlyAmount,0);
+  const monthly = active.filter(i => installmentDue(i)).reduce((s,i)=>s+i.monthlyAmount,0);
   const totalRem = incomplete.filter(i=>i.monthlyAmount && i.totalCount)
     .reduce((s,i) => s + i.monthlyAmount * (i.totalCount - i.paidCount), 0);
 
@@ -2190,8 +2173,8 @@ function editInstallment(id) {
 
 function saveInstallment() {
   const desc     = document.getElementById('instDesc').value.trim();
-  const total    = parseFloat(document.getElementById('instTotal').value) || null;
-  const monthly  = parseFloat(document.getElementById('instMonthly').value) || null;
+  const total    = readAmount('instTotal') || null;
+  const monthly  = readAmount('instMonthly') || null;
   const paid     = parseInt(document.getElementById('instPaid').value) || 0;
   const totalCount = parseInt(document.getElementById('instTotalCount').value) || null;
   const card     = document.getElementById('instCard').value;
@@ -2353,9 +2336,10 @@ function generateNextMonthForSub(id) {
 
 // ── SUBSCRIPTIONS ────────────────────────────────────────────
 function renderSubscriptions() {
-  const subs = state.subscriptions;
-  const monthly = subs.reduce((s,x) => s + (x.frequency === 'monthly' ? x.amount : 0), 0);
-  const yearly  = subs.reduce((s,x) => s + (x.frequency === 'monthly' ? x.amount * 12 : x.amount), 0);
+  const subs    = state.subscriptions;
+  const running = subs.filter(x => !x.paused);
+  const monthly = running.reduce((s,x) => s + (x.frequency === 'monthly' ? x.amount : 0), 0);
+  const yearly  = running.reduce((s,x) => s + (x.frequency === 'monthly' ? x.amount * 12 : x.amount), 0);
   document.getElementById('subMonthly').textContent = fmtEuro(monthly);
   document.getElementById('subYearly').textContent  = fmtEuro(yearly);
 
@@ -2370,7 +2354,7 @@ function renderSubscriptions() {
       <div class="sub-name">${esc(s.name)}</div>
       <div class="sub-amount">${fmtEuro(s.amount)}</div>
       <div class="sub-freq">${s.frequency === 'monthly' ? t('freq_monthly') : t('freq_yearly')}</div>
-      <div class="sub-card-type">${accountLabel(s.card)}</div>
+      <div class="sub-card-type">${esc(accountLabel(s.card))}</div>
       ${s.paused ? `<div class="sub-paused-badge">${t('sub_paused_badge')}</div>` : ''}
     </div>
   `).join('');
@@ -2408,7 +2392,7 @@ function editSubscription(id) {
 
 function saveSubscription() {
   const name     = document.getElementById('subName').value.trim();
-  const amount   = parseFloat(document.getElementById('subAmount').value);
+  const amount   = readAmount('subAmount');
   const freq     = document.getElementById('subFrequency').value;
   const card     = document.getElementById('subCard').value;
   const day      = parseInt(document.getElementById('subDay').value) || 1;
@@ -2490,7 +2474,7 @@ function saveCardTransaction() {
   const card    = document.getElementById('cardTxCard').value;
   const editId  = document.getElementById('editCardTransactionId').value;
   const date    = document.getElementById('cardTxDate').value;
-  const amount  = parseFloat(document.getElementById('cardTxAmount').value);
+  const amount  = readAmount('cardTxAmount');
   const desc    = document.getElementById('cardTxDesc').value.trim();
   const cat     = document.getElementById('cardTxCategory').value;
 
@@ -2644,7 +2628,7 @@ function saveAccountSetting(id) {
   const name = document.getElementById(`accName_${id}`).value.trim();
   const type = document.getElementById(`accType_${id}`).value;
   const bank = type === 'bank' ? (document.getElementById(`accBank_${id}`).value.trim()) : '';
-  const bal  = parseFloat(document.getElementById(`accBalance_${id}`).value);
+  const bal  = readAmount(`accBalance_${id}`);
   if (!name) { showToast(t('toast_enter_acc_name'), 'error'); return; }
   if (isNaN(bal)) { showToast(t('toast_invalid_balance'), 'error'); return; }
   acc.name = name; acc.type = type; acc.bank = bank; acc.balance = bal;
@@ -2654,7 +2638,10 @@ function saveAccountSetting(id) {
 }
 
 function deleteAccount(id) {
-  showConfirm(t('confirm_del_acc'), t('confirm_del_acc_msg'), () => {
+  const linked = state.transactions.filter(tx => tx.account === id).length
+               + state.subscriptions.filter(s => s.card === id).length;
+  const msg = linked ? tf('confirm_del_acc_msg_linked', linked) : t('confirm_del_acc_msg');
+  showConfirm(t('confirm_del_acc'), msg, () => {
     state.accounts = state.accounts.filter(a => a.id !== id);
     saveState();
     renderAccountsSettings();
@@ -2697,7 +2684,7 @@ function renderCategoriesList() {
   document.getElementById('categoriesList').innerHTML = state.categories.map(c => `
     <span class="tag">
       ${esc(c)}
-      <button class="tag-remove" onclick="removeCategory('${esc(c)}')">✕</button>
+      <button class="tag-remove" onclick="removeCategory(${esc(JSON.stringify(c))})">✕</button>
     </span>
   `).join('');
 }
@@ -2724,7 +2711,7 @@ function renderIncomeCategoriesList() {
   document.getElementById('incomeCategoriesList').innerHTML = state.incomeCategories.map(c => `
     <span class="tag">
       ${esc(c)}
-      <button class="tag-remove" onclick="removeIncomeCategory('${esc(c)}')">✕</button>
+      <button class="tag-remove" onclick="removeIncomeCategory(${esc(JSON.stringify(c))})">✕</button>
     </span>
   `).join('');
 }

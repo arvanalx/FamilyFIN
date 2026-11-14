@@ -252,7 +252,7 @@ Clicking ✅ again → ☐ reverses the effect on the balance.
 
 ### 5.4 Copy income to next month
 
-For transactions of type **Income**, the **📋** icon appears. Clicking it automatically creates a copy of the transaction with a date **+1 month** from the original.
+For transactions of type **Income**, the **📋** icon appears. Clicking it automatically creates a copy of the transaction with a date **+1 month** from the original (if that day does not exist in the next month, e.g. 31/01, its last day is used — 28/02).
 
 > Useful for recurring income (salary, pension, etc.).
 
@@ -426,7 +426,7 @@ Click **"+ New Installment"**. Fill in:
 | **Card** | The card this installment belongs to |
 | **Store / Provider** | Optional |
 | **Expense Category** | Shown in the Dashboard expenses chart |
-| **Start Date** | Month of first installment |
+| **Start Date** | Month of first installment — the installment is charged to the card and the totals from this month on |
 
 ### 8.3 Installment actions
 
@@ -446,8 +446,10 @@ Manage **monthly and annual subscriptions** with automatic transaction creation.
 
 ### 9.1 Cost summary
 
-- **Monthly:** Total of monthly subscriptions (annual ÷ 12)
-- **Yearly:** Total annual cost of all subscriptions
+- **Monthly:** Total of monthly subscriptions
+- **Yearly:** Total annual cost (monthly × 12 + annual)
+
+> **Paused** subscriptions are not included.
 
 ### 9.2 Adding a new subscription
 
@@ -614,17 +616,17 @@ Deletes **all** data and restores factory defaults. Asks for confirmation before
 
 ```
 Forecast Balance = Current Balance
-               + Total Income (all future transactions)
-               − Total Expenses (all future transactions)
+               + Total unsettled Income
+               − Total unsettled Expenses
 ```
 
-All recorded transactions are taken into account regardless of date, capped at the end of next month.
+**All unsettled** transactions up to the forecast date are included — overdue ones too (older dates), because they have not affected the balance yet. The cap is the end of next month. The "Daily Balance" chart uses exactly the same transactions, so it ends at the same amount.
 
 ### Card Total (Dashboard)
 
 ```
 Card Total (month) = Current month transactions
-                   + Monthly installments (active & non-completed)
+                   + Monthly installments (active, non-completed, already started)
 ```
 
 ### Expenses by Category Chart
@@ -632,8 +634,10 @@ Card Total (month) = Current month transactions
 Calculates for the **current month**:
 1. Expense-type transactions (excluding category "Cards")
 2. Credit card transactions
-3. Monthly amount of active installments (with their category)
+3. Monthly amount of active installments that have started (with their category)
+
+Card payments from an account (category "Κάρτες" or "Cards") are excluded so the same spending is not counted twice.
 
 ---
 
-*Family FiN — Version 0.935 Beta | Last updated: June 2026*
+*Family FiN — Version 0.936 Beta | Last updated: June 2026*

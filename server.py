@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Family FiN — Local server with SQLite persistence (v0.935 Beta)
+Family FiN — Local server with SQLite persistence (v0.936 Beta)
 Serves the app's static files + provides /api/data for read/write via SQLite.
 No external dependencies (stdlib only).
 
@@ -12,6 +12,7 @@ import ipaddress
 import json
 import os
 import sqlite3
+import sys
 from datetime import datetime
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 from pathlib import Path
@@ -323,6 +324,7 @@ class ReusableHTTPServer(HTTPServer):
 # ── Entry point ───────────────────────────────────────────────────────────────
 
 if __name__ == '__main__':
+    sys.stdout.reconfigure(line_buffering=True)  # show startup lines in journalctl under systemd
     check_db_path()
     init_db()
     migrate_from_json()
