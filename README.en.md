@@ -87,7 +87,12 @@ At the top of each page a toolbar shows:
 
 ### Light / Dark theme
 
-The app automatically follows the device's appearance setting (light or dark — e.g. on macOS: System Settings → Appearance). All charts adapt, and switch immediately if you change the setting while the app is open.
+In **Settings → Appearance** choose:
+- **🖥️ Auto** (default) — follows the device setting (e.g. on macOS: System Settings → Appearance) and switches together with it
+- **☀️ Light** — always light
+- **🌙 Dark** — always dark
+
+The choice is saved **per device** (e.g. dark on your phone, light on your computer). All charts adapt.
 
 ### Language
 
@@ -654,4 +659,4 @@ Card payments from an account (category "Κάρτες" or "Cards") are excluded 
 
 ---
 
-*Family FiN — Version 0.938 Beta | Last updated: June 2026*
+*Family FiN — Version 0.939 Beta | Last updated: June 2026*

@@ -252,6 +252,11 @@ const TRANSLATIONS = {
     confirm_import:       'Εισαγωγή Δεδομένων',
     confirm_import_msg:   'Τα τρέχοντα δεδομένα θα αντικατασταθούν από το αρχείο. Ένα αντίγραφο ασφαλείας θα κρατηθεί στον φάκελο backups του server. Συνέχεια;',
 
+    settings_appearance: 'Εμφάνιση',
+    theme_auto:        '🖥️ Αυτόματο',
+    theme_light:       '☀️ Φωτεινό',
+    theme_dark:        '🌙 Σκοτεινό',
+    theme_hint:        'Το «Αυτόματο» ακολουθεί τη ρύθμιση της συσκευής. Η επιλογή αποθηκεύεται μόνο σε αυτή τη συσκευή.',
     btn_close:         'Κλείσιμο',
     btn_menu:          'Μενού',
     btn_edit:          'Επεξεργασία',
@@ -575,6 +580,11 @@ const TRANSLATIONS = {
     confirm_import:       'Import Data',
     confirm_import_msg:   'Your current data will be replaced by the file. A backup copy will be kept in the server\'s backups folder. Continue?',
 
+    settings_appearance: 'Appearance',
+    theme_auto:        '🖥️ Auto',
+    theme_light:       '☀️ Light',
+    theme_dark:        '🌙 Dark',
+    theme_hint:        '"Auto" follows the device setting. The choice is saved on this device only.',
     btn_close:         'Close',
     btn_menu:          'Menu',
     btn_edit:          'Edit',

@@ -1779,6 +1779,33 @@ function esc(s) {
   return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
+// ── THEME ────────────────────────────────────────────────────
+// 'auto' follows the OS; the choice is stored per device. index.html applies it before first paint.
+const THEME_KEY = 'familyfin_theme';
+const darkQuery = window.matchMedia('(prefers-color-scheme: dark)');
+
+function getThemePref() {
+  try { return localStorage.getItem(THEME_KEY) || 'auto'; } catch (_) { return 'auto'; }
+}
+
+function setThemePref(pref) {
+  try { localStorage.setItem(THEME_KEY, pref); } catch (_) {}
+  applyTheme();
+}
+
+function applyTheme(rerender = true) {
+  const pref = getThemePref();
+  const dark = pref === 'dark' || (pref === 'auto' && darkQuery.matches);
+  document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+  document.querySelectorAll('[data-theme-pref]').forEach(b => {
+    const on = b.dataset.themePref === pref;
+    b.classList.toggle('chart-tog-active', on);
+    b.setAttribute('aria-pressed', on);
+  });
+  refreshChartColors();
+  if (rerender && currentPage() === 'dashboard') renderDashboard();
+}
+
 function togglePrivacy() {
   const on  = document.body.classList.toggle('privacy-mode');
   const btn = document.getElementById('privacyToggle');
@@ -2051,11 +2078,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     clearTimeout(resizeTimer);
     resizeTimer = setTimeout(() => { if (currentPage() === 'dashboard') renderDashboard(); }, 150);
   });
-  refreshChartColors();
-  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
-    refreshChartColors();
-    if (currentPage() === 'dashboard') renderDashboard();
-  });
+  applyTheme(false);
+  darkQuery.addEventListener('change', () => { if (getThemePref() === 'auto') applyTheme(); });
 
   // Bottom nav links
   document.querySelectorAll('.bottom-nav-item').forEach(item => {
