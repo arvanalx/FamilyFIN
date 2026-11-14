@@ -145,6 +145,8 @@ On **all pages**, the following blur automatically:
 
 The home page provides a comprehensive view of your financial situation.
 
+> 💡 **Chart details:** On a computer, hover over a bar, segment or point; on a phone, **tap** it. A small popup shows the exact amounts. Tap anywhere else to close it. Popups are not shown in Privacy Mode.
+
 ### 4.1 Account Balances
 
 A table with two columns for each account:
@@ -166,12 +168,13 @@ Each account uses the same colour pair (e.g. dark blue / light blue) for easy id
 
 ### 4.3 Daily Balances
 
-A line chart showing how each account balance evolves day by day from today to the last forecast date:
+A chart showing how each account balance evolves day by day, from **today** (left) to the last forecast date:
 
 - Starts from the **current balance** (Settings) for each account
 - Only includes **unsettled transactions** from today to the forecast end
-- A **dot** at each date where a transaction occurs (hover for amount)
-- Dashed **"Today"** vertical marker as the starting point
+- The line is a **step line**: it stays flat while nothing happens and jumps on the day of each transaction, exactly like your account. A **dot** marks each change
+- When a balance gets close to or drops below zero, a **dashed red 0 € line** appears and the area below it is lightly shaded red — so you can see at a glance whether and when an account will go negative
+- Hover (or drag your finger) across the chart: a vertical line marks the date and the popup gives the balance of **every account** on that day
 - Ends at exactly the **Forecast** amount shown in ACCOUNT BALANCES
 
 ### 4.4 Monthly Transaction Balance
@@ -195,7 +198,9 @@ A **donut chart** showing the distribution of expenses for the current month fro
 - Credit card transactions
 - Monthly installments (active)
 
-Each segment shows: category, percentage (%) and amount in €. The **total expenses amount** appears in the centre.
+Next to the chart (or below it, on a phone) a list shows category, percentage (%) and amount in €. The **total expenses amount** appears in the centre. Use **‹ ›** to change month and the two buttons on the right to switch between the **donut** and **horizontal bars**.
+
+Up to 8 categories are shown; if there are more, the smallest are grouped into "Other".
 
 ### 4.7 Monthly Expenses
 
@@ -213,7 +218,7 @@ A **vertical bar chart** displaying total expenses for each month of the selecte
 - **Light blue**: past months
 - **Grey**: future months
 
-The amount is displayed above each bar (where space allows). Hover over a bar to see a tooltip with the exact amount.
+A shortened amount (e.g. "1.2k" = €1,200) appears above each bar where space allows. Tap or hover over a month for the exact amount. On narrow screens every other month is labelled so the names don't overlap.
 
 ### 4.8 Recent Transactions
 
@@ -670,4 +675,4 @@ Card payments from an account (category "Κάρτες" or "Cards") are excluded 
 
 ---
 
-*Family FiN — Version 0.946 Beta | Last updated: November 2026*
+*Family FiN — Version 0.947 Beta | Last updated: November 2026*

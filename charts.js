@@ -1,6 +1,6 @@
 /* ============================================================
    Family FiN — Dashboard charts
-   SVG/canvas rendering only; the numbers come from calc.js.
+   SVG rendering only; the numbers come from calc.js.
    ============================================================ */
 
 'use strict';
@@ -18,6 +18,7 @@ function refreshChartColors() {
   CHART.pos    = cs.getPropertyValue('--success').trim();
   CHART.neg    = cs.getPropertyValue('--danger').trim();
   CHART.font   = cs.getPropertyValue('--font-ui').trim() || 'system-ui, sans-serif';
+  CHART.num    = cs.getPropertyValue('--font-num').trim() || CHART.font;
   CHART.cats   = Array.from({ length: 8 }, (_, i) => cs.getPropertyValue(`--cat-${i + 1}`).trim());
 }
 
@@ -80,12 +81,106 @@ function renderExpChartForOffset() {
   renderExpenseCategoryChart(catData);
 }
 
-// ── MONTHLY EXPENSES BAR CHART ────────────────────────────────
 
-function fmtAxisVal(v) {
-  if (v >= 1000) return (v / 1000).toFixed(v % 1000 === 0 ? 0 : 1) + 'k';
-  return v.toFixed(0);
+// ── SHARED HELPERS ────────────────────────────────────────────
+
+// Compact axis label: 1250 → "1,3k", -800 → "-800"
+function fmtCompact(v, euro) {
+  const sign = v < 0 ? '-' : '';
+  const abs  = Math.abs(v);
+  let s;
+  if (abs >= 1000) {
+    s = (abs / 1000).toFixed(abs % 1000 === 0 ? 0 : 1).replace('.0', '') + 'k';
+  } else {
+    s = String(Math.round(abs));
+  }
+  if (getLang() !== 'en') s = s.replace('.', ',');
+  return sign + s + (euro ? ' €' : '');
 }
+function fmtAxisVal(v) { return fmtCompact(v, false); }
+
+// "Nice" axis domain so gridlines land on round numbers
+function niceDomain(min, max, count = 4) {
+  if (min === max) { min -= 100; max += 100; }
+  const raw  = (max - min) / count;
+  const mag  = 10 ** Math.floor(Math.log10(raw));
+  const n    = raw / mag;
+  const step = (n <= 1 ? 1 : n <= 2 ? 2 : n <= 2.5 ? 2.5 : n <= 5 ? 5 : 10) * mag;
+  return { min: Math.floor(min / step) * step, max: Math.ceil(max / step) * step, step };
+}
+
+function chartSvg(W, H, inner, label) {
+  return `<svg class="chart-svg" width="100%" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(label)}" style="display:block;overflow:visible">${inner}</svg>`;
+}
+
+// ── TOOLTIP (hover on desktop, tap on touch) ─────────────────
+// A tip is a list of lines: a string (first = title, others = note) or [colour, label, value].
+// Elements carry it as data-tip='[...]'; nothing is shown while privacy mode is on.
+const tipData = lines => esc(JSON.stringify(lines));
+let _tipEl = null;
+
+function hideChartTip() {
+  if (_tipEl) _tipEl.hidden = true;
+  document.querySelectorAll('.chart-cross').forEach(el => el.setAttribute('visibility', 'hidden'));
+}
+
+function showChartTip(lines, x, y) {
+  if (!lines || document.body.classList.contains('privacy-mode')) { hideChartTip(); return; }
+  if (!_tipEl) {
+    _tipEl = document.createElement('div');
+    _tipEl.className = 'chart-tip';
+    _tipEl.setAttribute('aria-hidden', 'true');
+    document.body.appendChild(_tipEl);
+    window.addEventListener('scroll', hideChartTip, { passive: true, capture: true });
+    document.addEventListener('pointerdown', e => { if (!e.target.closest?.('.chart-tips')) hideChartTip(); });
+  }
+  _tipEl.replaceChildren(...lines.map((l, i) => {
+    const row = document.createElement('div');
+    if (typeof l === 'string') {
+      row.className = i === 0 ? 'chart-tip-title' : 'chart-tip-note';
+      row.textContent = l;
+    } else {
+      row.className = 'chart-tip-row';
+      const sw = document.createElement('i'); sw.style.background = l[0];
+      const lb = document.createElement('span'); lb.textContent = l[1];
+      const v  = document.createElement('b'); v.textContent = l[2];
+      row.append(sw, lb, v);
+    }
+    return row;
+  }));
+  _tipEl.hidden = false;
+  const r  = _tipEl.getBoundingClientRect();
+  const vw = document.documentElement.clientWidth;
+  const left = Math.min(Math.max(8, x - r.width / 2), vw - r.width - 8);
+  let top = y - r.height - 10;
+  if (top < 8) top = y + 18;
+  _tipEl.style.left = left + 'px';
+  _tipEl.style.top  = top + 'px';
+}
+
+function defaultTipResolve(e) {
+  const el = e.target.closest?.('[data-tip]');
+  if (!el) return null;
+  const b = el.getBoundingClientRect();
+  return { lines: JSON.parse(el.dataset.tip), x: b.left + b.width / 2, y: b.top };
+}
+
+// Wire a chart wrapper once (its contents are re-rendered, the wrapper stays)
+function bindChartTips(wrap, resolve) {
+  wrap._tipResolve = resolve || defaultTipResolve;
+  if (wrap.dataset.tips) return;
+  wrap.dataset.tips = '1';
+  wrap.classList.add('chart-tips');
+  const handle = e => {
+    const r = wrap._tipResolve(e);
+    if (r) showChartTip(r.lines, r.x, r.y); else hideChartTip();
+  };
+  wrap.addEventListener('pointermove', handle);
+  wrap.addEventListener('pointerdown', handle);
+  wrap.addEventListener('pointerleave', e => { if (e.pointerType === 'mouse') hideChartTip(); });
+}
+
+// ── MONTHLY EXPENSES BAR CHART ────────────────────────────────
 
 function initMonthlyExpYearSel() {
   const sel = document.getElementById('monthlyExpYearSel');
@@ -111,54 +206,56 @@ function renderMonthlyExpenseChart() {
   const totals = Array.from({ length: 12 }, (_, i) => monthExpenseTotal(state, `${year}-${String(i + 1).padStart(2, '0')}`));
 
   const W      = Math.max(wrap.clientWidth || 300, 300);
-  const H      = 220;
-  const padL   = 48, padR = 10, padT = 26, padB = 36;
+  const H      = 230;
+  const padL   = 46, padR = 10, padT = 26, padB = 34;
   const cW     = W - padL - padR;
   const cH     = H - padT - padB;
-  const maxVal = Math.max(...totals, 1);
+  const dom    = niceDomain(0, Math.max(...totals, 1));
+  const maxVal = dom.max;
   const slotW  = cW / 12;
-  const barW   = Math.max(6, slotW * 0.68);
+  const barW   = Math.max(6, slotW * 0.64);
   const gap    = (slotW - barW) / 2;
+  const yOf    = v => padT + cH - (v / maxVal) * cH;
 
-  // Gridlines (4 levels)
+  // Gridlines on round values
   let svg = '';
-  for (let g = 1; g <= 4; g++) {
-    const v  = (maxVal / 4) * g;
-    const yg = (padT + cH - (v / maxVal) * cH).toFixed(1);
+  for (let v = dom.step; v <= maxVal + 1e-9; v += dom.step) {
+    const yg = yOf(v).toFixed(1);
     svg += `<line x1="${padL}" y1="${yg}" x2="${W - padR}" y2="${yg}" stroke="${CHART.grid}" stroke-width="1"/>`;
-    svg += `<text x="${(padL - 5).toFixed(1)}" y="${(parseFloat(yg) + 4).toFixed(1)}" text-anchor="end" font-size="9" fill="${CHART.muted}" font-family="${CHART.font}">${esc(fmtAxisVal(v))}</text>`;
+    svg += `<text x="${padL - 6}" y="${(+yg + 4).toFixed(1)}" text-anchor="end" font-size="11" fill="${CHART.muted}" font-family="${CHART.num}">${esc(fmtAxisVal(v))}</text>`;
   }
-  // Baseline
   svg += `<line x1="${padL}" y1="${(padT + cH).toFixed(1)}" x2="${W - padR}" y2="${(padT + cH).toFixed(1)}" stroke="${CHART.axis}" stroke-width="1.5"/>`;
 
-  // Bars
+  const months = t('months');
+  const full   = t('months_full');
   totals.forEach((val, i) => {
-    const monthNum = i + 1;
+    const monthNum  = i + 1;
     const isCurrent = year === curYear && monthNum === curMon;
     const isFuture  = year > curYear || (year === curYear && monthNum > curMon);
     const barH  = val > 0 ? Math.max(2, (val / maxVal) * cH) : 0;
-    const x     = (padL + i * slotW + gap).toFixed(1);
-    const y     = (padT + cH - barH).toFixed(1);
+    const x     = padL + i * slotW + gap;
+    const y     = padT + cH - barH;
     const fill  = isCurrent ? CHART.accent : mixHex(CHART.accent, CHART.bg, isFuture ? 0.22 : 0.5);
-    const opacity = isFuture ? '0.6' : '1';
-    const lblCol  = isCurrent ? CHART.strong : CHART.muted;
-    const lblW    = isCurrent ? '700' : '400';
+    const lblCol = isCurrent ? CHART.strong : CHART.muted;
 
-    svg += `<rect x="${x}" y="${y}" width="${barW.toFixed(1)}" height="${barH.toFixed(1)}" rx="3" fill="${fill}" opacity="${opacity}"><title>${t('months')[i]}: ${esc(fmtEuro(val))}</title></rect>`;
+    if (barH) svg += `<path d="M${x.toFixed(1)},${(padT + cH).toFixed(1)} V${(y + Math.min(4, barH)).toFixed(1)} q0,-4 4,-4 H${(x + barW - 4).toFixed(1)} q4,0 4,4 V${(padT + cH).toFixed(1)} Z" fill="${fill}"${isFuture ? ' opacity="0.6"' : ''}/>`;
 
-    // Amount label above bar (only when bar tall enough)
-    if (val > 0 && barH > 22) {
-      const lbl = fmtEuro(val).replace(' €', '');
-      svg += `<text x="${(parseFloat(x) + barW / 2).toFixed(1)}" y="${(parseFloat(y) - 4).toFixed(1)}" text-anchor="middle" font-size="9" fill="${CHART.text}" font-family="${CHART.font}">${esc(lbl)}</text>`;
+    // Compact value above the bar, only where there is room
+    if (val > 0 && barH > 18 && barW >= 26) {
+      svg += `<text x="${(x + barW / 2).toFixed(1)}" y="${(y - 5).toFixed(1)}" text-anchor="middle" font-size="11" fill="${isCurrent ? CHART.strong : CHART.text}" font-weight="${isCurrent ? 700 : 500}" font-family="${CHART.num}">${esc(fmtAxisVal(val))}</text>`;
+    }
+    // On narrow screens label every other month (and always the current one)
+    const curIdx = year === curYear ? curMon - 1 : -9;
+    if (slotW >= 32 || isCurrent || (i % 2 === 0 && Math.abs(i - curIdx) !== 1)) {
+      svg += `<text x="${(x + barW / 2).toFixed(1)}" y="${(padT + cH + 17).toFixed(1)}" text-anchor="middle" font-size="11" fill="${lblCol}" font-weight="${isCurrent ? 700 : 400}" font-family="${CHART.font}">${esc(months[i])}</text>`;
     }
 
-    // Month label below bar
-    const lx = (parseFloat(x) + barW / 2).toFixed(1);
-    const ly = (padT + cH + 15).toFixed(1);
-    svg += `<text x="${lx}" y="${ly}" text-anchor="middle" font-size="10" fill="${lblCol}" font-weight="${lblW}" font-family="${CHART.font}">${t('months')[i]}</text>`;
+    // Full-height hit area so small bars are easy to tap
+    svg += `<rect x="${(padL + i * slotW).toFixed(1)}" y="${padT}" width="${slotW.toFixed(1)}" height="${cH}" fill="transparent" data-tip="${tipData([`${full[i]} ${year}`, [fill, t('stat_expense'), fmtEuro(val)]])}"/>`;
   });
 
-  wrap.innerHTML = `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:${H}px">${svg}</svg>`;
+  wrap.innerHTML = chartSvg(W, H, svg, t('dash_expense_by_month'));
+  bindChartTips(wrap);
 }
 
 // ── SVG BALANCE CHART ─────────────────────────────────────────────────────────
@@ -184,8 +281,7 @@ function _renderBalanceCompare(accounts, wrap) {
   const BW  = Math.max(40, W - LW - RW - 20);        // bar area
   const RH  = 62;                                     // row height
   const PAD = 10;
-  const LEG = 24;
-  const H   = accounts.length * RH + PAD * 2 + LEG + 4;
+  const H   = accounts.length * RH + PAD * 2;
   const maxV = Math.max(...accounts.flatMap(a => [Math.abs(a.now), Math.abs(a.future)]), 1);
 
   let rows = '';
@@ -235,27 +331,26 @@ function _renderBalanceCompare(accounts, wrap) {
 
     // Right column
     const rx = LW + BW + 18;
-    const todayTxt  = `<text x="${rx}" y="${barY + 10}"  font-size="10" fill="${CHART.muted}" font-family="${CHART.font}">${t('chart_today')}: ${esc(fmtEuro(a.now))}</text>`;
+    const todayTxt  = `<text x="${rx}" y="${barY + 10}"  font-size="11" fill="${CHART.muted}" font-family="${CHART.font}">${t('chart_today')}: ${esc(fmtEuro(a.now))}</text>`;
     const futureTxt = `<text x="${rx}" y="${barY + barH - 2}" font-size="11" fill="${esc(acol)}" font-weight="600" font-family="${CHART.font}">${esc(arrow)} ${esc(fmtEuro(a.future))}${pct ? ' (' + (up ? '+' : '') + esc(pct) + '%)' : ''}</text>`;
 
-    const ttip = `<title>${esc(a.label)}: ${t('chart_today')} ${esc(fmtEuro(a.now))} → ${t('chart_forecast')} ${esc(fmtEuro(a.future))}${pct ? ' (' + (up ? '+' : '') + pct + '%)' : ''}</title>`;
+    const hit = `<rect x="0" y="${y0}" width="${W}" height="${RH}" fill="transparent" data-tip="${tipData([a.label,
+      [col, t('chart_today'), fmtEuro(a.now)],
+      [acol, t('chart_forecast'), fmtEuro(a.future) + (pct ? ' (' + (up ? '+' : '') + pct + '%)' : '')]])}"/>`;
 
-    rows += `<g>${ttip}${track}${todayBar}${futOver}${futLine}${nameEl}${todayTxt}${futureTxt}</g>\n`;
+    rows += `<g>${track}${todayBar}${futOver}${futLine}${nameEl}${todayTxt}${futureTxt}${hit}</g>\n`;
   });
 
-  // Legend
-  const legY = PAD + accounts.length * RH + 4;
-  const legend = `
-    <rect x="${LW + 8}" y="${legY + 4}" width="14" height="13" rx="3" fill="${CHART.cats[0]}" opacity="0.88"/>
-    <text x="${LW + 26}" y="${legY + 14}" font-size="10" fill="${CHART.muted}" font-family="${CHART.font}">${t('chart_today')}</text>
-    <rect x="${LW + 78}" y="${legY + 4}" width="14" height="13" rx="3" fill="${mixHex(CHART.cats[0], CHART.bg, 0.5)}" opacity="0.65" stroke="${CHART.cats[0]}" stroke-width="1" stroke-dasharray="4,2"/>
-    <text x="${LW + 96}" y="${legY + 14}" font-size="10" fill="${CHART.muted}" font-family="${CHART.font}">${t('chart_increase')}</text>
-    <rect x="${LW + 158}" y="${legY + 4}" width="14" height="13" rx="3" fill="${mixHex(CHART.neg, CHART.bg, 0.45)}" opacity="0.55"/>
-    <text x="${LW + 176}" y="${legY + 14}" font-size="10" fill="${CHART.muted}" font-family="${CHART.font}">${t('chart_decrease')}</text>
-    <line x1="${LW + 228}" y1="${legY + 10}" x2="${LW + 241}" y2="${legY + 10}" stroke="${CHART.pos}" stroke-width="2.5" stroke-linecap="round"/>
-    <text x="${LW + 245}" y="${legY + 14}" font-size="10" fill="${CHART.muted}" font-family="${CHART.font}">${t('chart_forecast')}</text>`;
+  // Legend (HTML, so it wraps instead of overflowing)
+  const legend = `<div class="chart-legend">
+    <span><i style="background:${CHART.cats[0]}"></i>${t('chart_today')}</span>
+    <span><i style="background:${mixHex(CHART.cats[0], CHART.bg, 0.5)};outline:1px dashed ${CHART.cats[0]};outline-offset:-1px"></i>${t('chart_increase')}</span>
+    <span><i style="background:${mixHex(CHART.neg, CHART.bg, 0.45)}"></i>${t('chart_decrease')}</span>
+    <span><i class="line" style="background:${CHART.pos}"></i>${t('chart_forecast')}</span>
+  </div>`;
 
-  wrap.innerHTML = `<svg width="100%" height="${H}" viewBox="0 0 ${W} ${H}" style="display:block;overflow:visible">${rows}${legend}</svg>`;
+  wrap.innerHTML = chartSvg(W, H, rows, t('dash_balance_chart')) + legend;
+  bindChartTips(wrap);
 }
 
 function _renderBalanceDelta(accounts, wrap) {
@@ -295,206 +390,86 @@ function _renderBalanceDelta(accounts, wrap) {
     const rx     = LW + BW + 18;
     const valTxt = `<text x="${rx}" y="${barY + barH / 2 - 2}" font-size="11" fill="${esc(col)}" font-weight="600" font-family="${CHART.font}">${esc(sign + fmtEuro(delta))}</text>`;
     const pctTxt = pct
-      ? `<text x="${rx}" y="${barY + barH / 2 + 13}" font-size="10" fill="${esc(col)}" font-family="${CHART.font}">${esc(sign + pct + '%')}</text>`
+      ? `<text x="${rx}" y="${barY + barH / 2 + 13}" font-size="11" fill="${esc(col)}" font-family="${CHART.font}">${esc(sign + pct + '%')}</text>`
       : '';
 
-    const ttip = `<title>${esc(a.label)}: ${esc(sign + fmtEuro(delta))}${pct ? ' (' + sign + pct + '%)' : ''}</title>`;
+    const hit = `<rect x="0" y="${y0}" width="${W}" height="${RH}" fill="transparent" data-tip="${tipData([a.label,
+      [col, t('chart_change'), sign + fmtEuro(delta) + (pct ? ' (' + sign + pct + '%)' : '')],
+      [CHART.muted, t('chart_today'), fmtEuro(a.now)],
+      [CHART.muted, t('chart_forecast'), fmtEuro(a.future)]])}"/>`;
 
-    rows += `<g>${ttip}${track}${zline}${bar}${nameEl}${valTxt}${pctTxt}</g>\n`;
+    rows += `<g>${track}${zline}${bar}${nameEl}${valTxt}${pctTxt}${hit}</g>\n`;
   });
 
-  const zeroLbl = `<text x="${midX}" y="${PAD - 4}" text-anchor="middle" font-size="10" fill="${CHART.axis}" font-family="${CHART.font}">${t('chart_change')}</text>`;
+  const zeroLbl = `<text x="${midX}" y="${PAD - 4}" text-anchor="middle" font-size="11" fill="${CHART.axis}" font-family="${CHART.font}">${t('chart_change')}</text>`;
 
-  wrap.innerHTML = `<svg width="100%" height="${H}" viewBox="0 0 ${W} ${H}" style="display:block;overflow:visible">${zeroLbl}${rows}</svg>`;
+  wrap.innerHTML = chartSvg(W, H, zeroLbl + rows, t('dash_balance_chart'));
+  bindChartTips(wrap);
 }
 
 function renderExpenseCategoryChart(catData) {
   catData = foldCategories(catData);
-  if (_expView === 'bars') { _renderExpBarsChart(catData); return; }
-  _renderExpDonutChart(catData);
-}
-
-function _renderExpDonutChart(catData) {
-  const canvas = document.getElementById('expenseCategoryChart');
-  if (!canvas) return;
-  const ctx = canvas.getContext('2d');
-  const W   = canvas.parentElement.clientWidth - 40;
-
-  // Palette
-  const COLORS = CHART.cats;
-
-  const items = catData.map((c, i) => ({ ...c, color: COLORS[i % COLORS.length] }));
-
-  // ── Empty state ──────────────────────────────────────────────
-  if (!items.length) {
-    canvas.width = W; canvas.height = 60;
-    ctx.clearRect(0, 0, W, 60);
-    ctx.fillStyle = CHART.muted; ctx.font = `13px ${CHART.font}`; ctx.textAlign = 'center';
-    ctx.fillText(t('dash_no_expenses'), W / 2, 34);
-    return;
-  }
-
-  const total = items.reduce((s, c) => s + c.amount, 0);
-
-  // ── Layout: side-by-side (≥440px) vs stacked (mobile) ───────
-  const LH       = 21;   // legend row height
-  const SIDE      = W >= 440;
-  const donutR    = SIDE ? Math.min(100, Math.floor(W * 0.27)) : Math.min(85, Math.floor(W / 2) - 16);
-  const innerR    = Math.round(donutR * 0.54);
-  const lgRows    = items.length;
-  const lgHeight  = lgRows * LH;
-
-  let H, cx, cy, lgX, lgY, lgW;
-  if (SIDE) {
-    H   = Math.max(donutR * 2 + 20, lgHeight + 16);
-    cx  = donutR + 10;
-    cy  = Math.round(H / 2);
-    lgX = donutR * 2 + 26;
-    lgY = Math.round((H - lgHeight) / 2);
-    lgW = W - lgX - 4;
-  } else {
-    H   = donutR * 2 + 24 + lgHeight + 10;
-    cx  = Math.round(W / 2);
-    cy  = donutR + 10;
-    lgX = 4;
-    lgY = donutR * 2 + 26;
-    lgW = W - 8;
-  }
-
-  canvas.width  = W;
-  canvas.height = H;
-  ctx.clearRect(0, 0, W, H);
-
-  // ── Donut segments ───────────────────────────────────────────
-  let angle = -Math.PI / 2;
-  items.forEach(c => {
-    const sweep = (c.amount / total) * 2 * Math.PI;
-    ctx.beginPath();
-    ctx.moveTo(cx + Math.cos(angle) * innerR, cy + Math.sin(angle) * innerR);
-    ctx.arc(cx, cy, donutR, angle, angle + sweep);
-    ctx.arc(cx, cy, innerR, angle + sweep, angle, true);
-    ctx.closePath();
-    ctx.fillStyle = c.color;
-    ctx.fill();
-    ctx.strokeStyle = CHART.bg;
-    ctx.lineWidth = 2;
-    ctx.stroke();
-    angle += sweep;
-  });
-
-  // ── Center label (total) ─────────────────────────────────────
-  ctx.textAlign = 'center';
-  ctx.fillStyle = CHART.strong;
-  ctx.font = `bold ${donutR >= 80 ? 13 : 11}px ${CHART.font}`;
-  ctx.fillText(fmtEuro(total).replace(' €', '€'), cx, cy + 5);
-  ctx.fillStyle = CHART.muted;
-  ctx.font = `9px ${CHART.font}`;
-  ctx.fillText(t('dash_subtotal'), cx, cy + 16);
-
-  // ── Legend ───────────────────────────────────────────────────
-  const maxLabelChars = SIDE ? Math.max(10, Math.floor((lgW * 0.62) / 6.2)) : 22;
-
-  items.forEach((c, i) => {
-    const y   = lgY + i * LH;
-    const pct = Math.round(c.amount / total * 100);
-
-    // Colored dot
-    ctx.fillStyle = c.color;
-    ctx.beginPath();
-    ctx.arc(lgX + 6, y + 9, 5, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Category name + percentage
-    ctx.fillStyle = CHART.text;
-    ctx.font = `11px ${CHART.font}`;
-    ctx.textAlign = 'left';
-    const lbl = c.category.length > maxLabelChars
-      ? c.category.slice(0, maxLabelChars - 1) + '…'
-      : c.category;
-    ctx.fillText(`${lbl} (${pct}%)`, lgX + 15, y + 14);
-
-    // Amount — right-aligned
-    ctx.fillStyle = CHART.strong;
-    ctx.font = `bold 11px ${CHART.font}`;
-    ctx.textAlign = 'right';
-    ctx.fillText(fmtEuro(c.amount).replace(' €', '€'), lgX + lgW, y + 14);
-  });
-}
-
-function _renderExpBarsChart(catData) {
-  const canvas = document.getElementById('expenseCategoryChart');
-  if (!canvas) return;
-  const ctx  = canvas.getContext('2d');
-  const W    = canvas.parentElement.clientWidth - 40;
-  const COLORS = CHART.cats;
-
+  const wrap = document.getElementById('expenseCategoryChart');
+  if (!wrap) return;
   if (!catData.length) {
-    canvas.width = W; canvas.height = 60;
-    ctx.clearRect(0, 0, W, 60);
-    ctx.fillStyle = CHART.muted; ctx.font = `13px ${CHART.font}`; ctx.textAlign = 'center';
-    ctx.fillText(t('dash_no_expenses'), W / 2, 34);
+    wrap.innerHTML = `<p class="empty-state">${t('dash_no_expenses')}</p>`;
     return;
   }
-
-  const total  = catData.reduce((s, c) => s + c.amount, 0);
-  const maxAmt = catData[0].amount;
-  const BAR_H  = 26;
-  const GAP    = 9;
-  const LW     = Math.min(150, Math.floor(W * 0.36));
-  const RW     = 95;
-  const BW     = W - LW - RW - 8;
-  const H      = catData.length * (BAR_H + GAP) + GAP + 22;
-
-  canvas.width  = W;
-  canvas.height = H;
-  ctx.clearRect(0, 0, W, H);
-
-  catData.forEach((c, i) => {
-    const y   = GAP + i * (BAR_H + GAP);
-    const col = COLORS[i % COLORS.length];
-    const bw  = Math.max(2, (c.amount / maxAmt) * BW);
-    const pct = Math.round(c.amount / total * 100);
-
-    // Track
-    ctx.fillStyle = CHART.track;
-    roundRect(ctx, LW, y, BW, BAR_H, 5); ctx.fill();
-
-    // Bar
-    ctx.fillStyle = col;
-    ctx.globalAlpha = 0.85;
-    roundRect(ctx, LW, y, bw, BAR_H, 5); ctx.fill();
-    ctx.globalAlpha = 1;
-
-    // Category label
-    const lbl = c.category.length > 21 ? c.category.slice(0, 20) + '…' : c.category;
-    ctx.fillStyle = CHART.text;
-    ctx.font = `11px ${CHART.font}`;
-    ctx.textAlign = 'right';
-    ctx.fillText(lbl, LW - 6, y + BAR_H / 2 + 4);
-
-    // Percentage inside bar (if wide enough)
-    if (bw > 32) {
-      ctx.fillStyle = '#fff';
-      ctx.font = `bold 10px ${CHART.font}`;
-      ctx.textAlign = 'left';
-      ctx.fillText(pct + '%', LW + 6, y + BAR_H / 2 + 4);
-    }
-
-    // Amount right
-    ctx.fillStyle = CHART.strong;
-    ctx.font = `bold 11px ${CHART.font}`;
-    ctx.textAlign = 'left';
-    ctx.fillText(fmtEuro(c.amount).replace(' €', '€'), LW + BW + 7, y + BAR_H / 2 + 4);
-  });
-
-  // Total footer
-  ctx.fillStyle = CHART.muted;
-  ctx.font = `10px ${CHART.font}`;
-  ctx.textAlign = 'left';
-  ctx.fillText(t('dash_total') + ': ' + fmtEuro(total), LW, H - 5);
+  const total = catData.reduce((s, c) => s + c.amount, 0);
+  const items = catData.map((c, i) => ({
+    ...c,
+    color: CHART.cats[i],
+    pct:   Math.round(c.amount / total * 100),
+  }));
+  items.forEach(c => { c.tip = tipData([c.category, [c.color, fmtEuro(c.amount), c.pct + '%']]); });
+  wrap.innerHTML = _expView === 'bars' ? _expBarsHtml(items, total) : _expDonutHtml(items, total);
+  bindChartTips(wrap);
 }
 
-// ── DAILY BALANCE LINE CHART ─────────────────────────────────
+// Ring segment between angles a0→a1 (radians, clockwise from 12 o'clock)
+function arcPath(cx, cy, R, r, a0, a1) {
+  const p = (rad, a) => `${(cx + rad * Math.cos(a)).toFixed(2)},${(cy + rad * Math.sin(a)).toFixed(2)}`;
+  const large = a1 - a0 > Math.PI ? 1 : 0;
+  return `M${p(R, a0)} A${R},${R} 0 ${large} 1 ${p(R, a1)} L${p(r, a1)} A${r},${r} 0 ${large} 0 ${p(r, a0)} Z`;
+}
+
+function _expDonutHtml(items, total) {
+  const S = 200, C = S / 2, R = 94, r = 60;
+  let a = -Math.PI / 2, segs = '';
+  items.forEach(c => {
+    const sweep = c.amount / total * 2 * Math.PI;
+    // A full ring can't be one arc — split it in two halves
+    const parts = sweep > 2 * Math.PI - 1e-6 ? [[a, a + Math.PI], [a + Math.PI, a + sweep]] : [[a, a + sweep]];
+    parts.forEach(([s, e]) => {
+      segs += `<path d="${arcPath(C, C, R, r, s, e)}" fill="${c.color}"${items.length > 1 ? ` stroke="${CHART.bg}" stroke-width="2"` : ''} data-tip="${c.tip}"/>`;
+    });
+    a += sweep;
+  });
+  const centre = `
+    <text x="${C}" y="${C + 3}" text-anchor="middle" font-size="17" font-weight="700" fill="${CHART.strong}" font-family="${CHART.num}">${esc(fmtEuro(total).replace(' €', '€'))}</text>
+    <text x="${C}" y="${C + 21}" text-anchor="middle" font-size="11" fill="${CHART.muted}" font-family="${CHART.font}">${esc(t('dash_subtotal'))}</text>`;
+  const legend = items.map(c => `
+    <li data-tip="${c.tip}"><i style="background:${c.color}"></i><span class="lg-name">${esc(c.category)}</span><span class="lg-pct">${c.pct}%</span><b class="lg-val">${esc(fmtEuro(c.amount))}</b></li>`).join('');
+  return `<div class="exp-donut">
+    <svg class="chart-svg" viewBox="0 0 ${S} ${S}" role="img" aria-label="${esc(t('dash_expense_by_cat'))}">${segs}${centre}</svg>
+    <ul class="exp-legend">${legend}</ul>
+  </div>`;
+}
+
+function _expBarsHtml(items, total) {
+  const max = items[0].amount || 1;
+  const rows = items.map(c => `
+    <div class="exp-bar-row" data-tip="${c.tip}">
+      <span class="exp-bar-name">${esc(c.category)}<small>${c.pct}%</small></span>
+      <span class="exp-bar-track"><span class="exp-bar-fill" style="width:${Math.max(1, c.amount / max * 100).toFixed(1)}%;background:${c.color}"></span></span>
+      <b class="exp-bar-val">${esc(fmtEuro(c.amount))}</b>
+    </div>`).join('');
+  return `<div class="exp-bars">${rows}<div class="exp-bars-total">${t('dash_total')}: <b>${esc(fmtEuro(total))}</b></div></div>`;
+}
+
+// ── DAILY BALANCE (STEP) CHART ───────────────────────────────
+// A balance stays flat between transactions and jumps on the day of each one,
+// so it is drawn as a step line. Zero is marked whenever it is in range.
 
 function renderDailyBalanceChart() {
   const wrap = document.getElementById('dailyBalanceWrapper');
@@ -506,144 +481,115 @@ function renderDailyBalanceChart() {
 
   const todayStr = today();
   const fd       = calcFutureDate(state);
+  const DAY      = 86400000;
 
-  // Build a data series per account
-  const series = state.accounts.map((acc, idx) => {
-    const points = dailyBalancePoints(acc, state.transactions, todayStr, fd);
+  const series = state.accounts.map((acc, idx) => ({
+    label:  acc.name,
+    color:  balPal(idx)[0],
+    points: dailyBalancePoints(acc, state.transactions, todayStr, fd),
+  }));
 
-    return { label: acc.name, color: balPal(idx)[0], points };
-  });
-
-  // All "breakpoint" dates (transaction dates + today + fd) for X axis
-  const breakDates = [...new Set([
-    todayStr, fd,
-    ...series.flatMap(s => s.points.map(p => p.date))
-  ])].sort();
-
-  // Layout constants
+  // Layout
   const W  = Math.max(wrap.clientWidth || 0, 300);
-  const H  = 230;
-  const ML = 72;   // left margin for Y labels
-  const MR = 16;
-  const MT = 20;
-  const MB = 50;   // bottom margin for X labels + legend
+  const H  = 240;
+  const ML = 56, MR = 14, MT = 16, MB = 30;
   const CW = W - ML - MR;
   const CH = H - MT - MB;
 
-  // X scale: proportional to real calendar days
-  const t0     = new Date(todayStr).getTime();
-  const t1     = new Date(fd).getTime();
-  const totMs  = Math.max(t1 - t0, 86400000); // minimum 1 day
-  const xOf    = d => ML + ((new Date(d).getTime() - t0) / totMs) * CW;
+  // X: real calendar days (UTC dates, so no DST drift)
+  const t0   = new Date(todayStr).getTime();
+  const days = Math.max(1, Math.round((new Date(fd).getTime() - t0) / DAY));
+  const xOf  = d => ML + ((new Date(d).getTime() - t0) / DAY / days) * CW;
 
-  // Y scale
-  const allVals = series.flatMap(s => s.points.map(p => p.value));
-  let yMin = Math.min(...allVals);
-  let yMax = Math.max(...allVals);
-  if (yMin === yMax) { yMin -= 200; yMax += 200; }
-  const yPad = (yMax - yMin) * 0.12;
-  yMin -= yPad; yMax += yPad;
-  const yOf = v => MT + CH - ((v - yMin) / (yMax - yMin)) * CH;
+  // Y: include zero when it is near or crossed, so "how close to 0" is visible
+  const vals = series.flatMap(s => s.points.map(p => p.value));
+  let lo = Math.min(...vals), hi = Math.max(...vals);
+  if (lo > 0 && lo < hi * 0.35) lo = 0;
+  if (hi < 0) hi = 0;
+  const pad = (hi - lo) * 0.08 || 100;
+  const dom = niceDomain(lo < 0 || lo === 0 ? lo - (lo < 0 ? pad : 0) : lo - pad, hi + pad);
+  const yOf = v => MT + CH - ((v - dom.min) / (dom.max - dom.min)) * CH;
 
-  // Compact Y axis formatter
-  const fmtAx = v => {
-    const sign = v < 0 ? '-' : '';
-    const abs  = Math.abs(v);
-    if (abs >= 1000) {
-      const k = (abs / 1000).toFixed(1).replace('.0', '');
-      return sign + (getLang() === 'en' ? k : k.replace('.', ',')) + 'k €';
-    }
-    return sign + Math.round(abs) + ' €';
-  };
+  let svg = '';
 
-  // Y gridlines + labels
-  let gridSvg = '', yLabels = '';
-  for (let i = 0; i <= 4; i++) {
-    const v = yMin + (yMax - yMin) * (i / 4);
+  // Negative zone + gridlines
+  if (dom.min < 0) {
+    const y0 = yOf(Math.min(0, dom.max));
+    svg += `<rect x="${ML}" y="${y0.toFixed(1)}" width="${CW}" height="${(MT + CH - y0).toFixed(1)}" fill="${CHART.neg}" opacity="0.07"/>`;
+  }
+  for (let v = dom.min; v <= dom.max + 1e-9; v += dom.step) {
     const y = yOf(v).toFixed(1);
-    gridSvg  += `<line x1="${ML}" y1="${y}" x2="${ML + CW}" y2="${y}" stroke="${CHART.grid}" stroke-width="1"/>`;
-    yLabels  += `<text x="${ML - 6}" y="${(parseFloat(y) + 4).toFixed(1)}" text-anchor="end" font-size="10" fill="${CHART.muted}" font-family="${CHART.font}">${fmtAx(v)}</text>`;
+    const zero = Math.abs(v) < 1e-9 && dom.min < 0;
+    svg += `<line x1="${ML}" y1="${y}" x2="${ML + CW}" y2="${y}" stroke="${zero ? CHART.neg : CHART.grid}" stroke-width="${zero ? 1.5 : 1}"${zero ? ' stroke-dasharray="5,4"' : ''}/>`;
+    svg += `<text x="${ML - 7}" y="${(+y + 4).toFixed(1)}" text-anchor="end" font-size="11" fill="${zero ? CHART.neg : CHART.muted}" font-weight="${zero ? 600 : 400}" font-family="${CHART.num}">${fmtCompact(v, true)}</text>`;
   }
 
-  // X axis labels (max 6, evenly spaced)
-  let xLabels = '';
-  const nLbl  = Math.min(breakDates.length, 6);
-  const step  = (breakDates.length - 1) / Math.max(nLbl - 1, 1);
-  for (let i = 0; i < nLbl; i++) {
-    const bd = breakDates[Math.min(Math.round(i * step), breakDates.length - 1)];
-    const x  = xOf(bd).toFixed(1);
-    const [, mm, dd] = bd.split('-');
-    xLabels += `<text x="${x}" y="${(MT + CH + 15).toFixed(1)}" text-anchor="middle" font-size="10" fill="${CHART.muted}" font-family="${CHART.font}">${dd}/${mm}</text>`;
-  }
+  // X ticks evenly spread over the period; the first one is "today"
+  const nX = Math.max(2, Math.min(6, Math.floor(CW / 85), days + 1));
+  const xDates = [...new Set(Array.from({ length: nX }, (_, i) =>
+    new Date(t0 + Math.round(i / (nX - 1) * days) * DAY).toISOString().slice(0, 10)))];
+  xDates.forEach((d, i) => {
+    const [, mm, dd] = d.split('-');
+    svg += `<text x="${xOf(d).toFixed(1)}" y="${MT + CH + 19}" text-anchor="${i === 0 ? 'start' : i === xDates.length - 1 ? 'end' : 'middle'}" font-size="11" fill="${i === 0 ? CHART.text : CHART.muted}" font-weight="${i === 0 ? 600 : 400}" font-family="${CHART.font}">${i === 0 ? t('chart_today') : `${dd}/${mm}`}</text>`;
+  });
+  svg += `<line x1="${ML}" y1="${MT + CH}" x2="${ML + CW}" y2="${MT + CH}" stroke="${CHART.axis}" stroke-width="1.5"/>`;
 
-  // "Σήμερα" vertical dashed marker
-  const tx = xOf(todayStr).toFixed(1);
-  const todayMarker = `<line x1="${tx}" y1="${MT}" x2="${tx}" y2="${MT + CH}" stroke="${CHART.axis}" stroke-width="1.5" stroke-dasharray="4,3"/>
-    <text x="${tx}" y="${MT - 5}" text-anchor="middle" font-size="9" fill="${CHART.muted}" font-family="${CHART.font}">${t('chart_today')}</text>`;
-
-  // Series: polylines (carry-forward step) + dots at real data points
-  let seriesSvg = '';
+  // Step lines (+ soft area when there is a single account)
   series.forEach(s => {
-    // Carry-forward value at each breakpoint
-    const coords = breakDates.map(d => {
-      let val = null;
-      for (const p of s.points) {
-        if (p.date <= d) val = p.value;
-        else break;
-      }
-      return val !== null ? { x: xOf(d), y: yOf(val), v: val } : null;
-    });
-
-    // Polyline
-    let path = '';
-    coords.forEach(c => {
-      if (!c) return;
-      path += (path ? ` L${c.x.toFixed(1)},${c.y.toFixed(1)}` : `M${c.x.toFixed(1)},${c.y.toFixed(1)}`);
-    });
-    if (path) seriesSvg += `<path d="${path}" fill="none" stroke="${s.color}" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>`;
-
-    // Dots at actual transaction change points
-    s.points.forEach(p => {
-      const cx = xOf(p.date).toFixed(1);
-      const cy = yOf(p.value).toFixed(1);
-      const [, mm, dd] = p.date.split('-');
-      seriesSvg += `<circle cx="${cx}" cy="${cy}" r="5" fill="${s.color}" stroke="${CHART.bg}" stroke-width="2"><title>${esc(s.label)}: ${dd}/${mm} → ${fmtEuro(p.value)}</title></circle>`;
+    const P = s.points;
+    let d = `M${xOf(P[0].date).toFixed(1)},${yOf(P[0].value).toFixed(1)}`;
+    for (let i = 1; i < P.length; i++) d += ` H${xOf(P[i].date).toFixed(1)} V${yOf(P[i].value).toFixed(1)}`;
+    d += ` H${(ML + CW).toFixed(1)}`;
+    if (series.length === 1) {
+      const base = yOf(Math.max(dom.min, Math.min(0, dom.max))).toFixed(1);
+      svg += `<path d="${d} V${base} H${ML} Z" fill="${s.color}" opacity="0.10"/>`;
+    }
+    svg += `<path d="${d}" fill="none" stroke="${s.color}" stroke-width="2.25" stroke-linejoin="round"/>`;
+    P.slice(1).forEach(p => {
+      svg += `<circle cx="${xOf(p.date).toFixed(1)}" cy="${yOf(p.value).toFixed(1)}" r="3.5" fill="${s.color}" stroke="${CHART.bg}" stroke-width="1.5"/>`;
     });
   });
 
-  // Legend (centered below chart)
-  const legY      = H - 14;
-  const legItemW  = Math.min(150, Math.floor(CW / series.length));
-  const legStartX = ML + (CW - series.length * legItemW) / 2;
-  let legSvg = '';
-  series.forEach((s, i) => {
-    const lx  = (legStartX + i * legItemW).toFixed(1);
-    const lbl = s.label.length > 14 ? s.label.slice(0, 13) + '…' : s.label;
-    legSvg += `<line x1="${lx}" y1="${legY - 4}" x2="${(parseFloat(lx) + 18).toFixed(1)}" y2="${legY - 4}" stroke="${s.color}" stroke-width="2.5" stroke-linecap="round"/>
-      <circle cx="${(parseFloat(lx) + 9).toFixed(1)}" cy="${legY - 4}" r="3" fill="${s.color}"/>
-      <text x="${(parseFloat(lx) + 24).toFixed(1)}" y="${legY}" font-size="10" fill="${CHART.text}" font-family="${CHART.font}">${esc(lbl)}</text>`;
+  // Crosshair (moved by the tooltip handler)
+  svg += `<g class="chart-cross" visibility="hidden" pointer-events="none">
+    <line y1="${MT}" y2="${MT + CH}" stroke="${CHART.axis}" stroke-width="1.5"/>
+    ${series.map(s => `<circle r="5" fill="${s.color}" stroke="${CHART.bg}" stroke-width="2"/>`).join('')}
+  </g>`;
+  // Capture layer over the plot
+  svg += `<rect x="${ML}" y="${MT}" width="${CW}" height="${CH}" fill="transparent"/>`;
+
+  const legend = series.length > 1
+    ? `<div class="chart-legend">${series.map(s => `<span><i class="line" style="background:${s.color}"></i>${esc(s.label)}</span>`).join('')}</div>`
+    : '';
+  wrap.innerHTML = chartSvg(W, H, svg, t('dash_daily_balance')) + legend;
+
+  // Value of an account on date d (carry forward the last change)
+  const valueAt = (s, d) => {
+    let v = s.points[0].value;
+    for (const p of s.points) { if (p.date <= d) v = p.value; else break; }
+    return v;
+  };
+  bindChartTips(wrap, e => {
+    const el = wrap.querySelector('svg');
+    const b  = el.getBoundingClientRect();
+    const k  = W / b.width;
+    const sx = (e.clientX - b.left) * k;
+    const sy = (e.clientY - b.top) * k;
+    if (sx < ML - 8 || sx > ML + CW + 8 || sy < MT - 8 || sy > MT + CH + 8) return null;
+    const di = Math.round(Math.min(Math.max((sx - ML) / CW, 0), 1) * days);
+    const d  = new Date(t0 + di * DAY).toISOString().slice(0, 10);
+    const x  = xOf(d);
+    const cross = el.querySelector('.chart-cross');
+    cross.setAttribute('visibility', 'visible');
+    cross.querySelector('line').setAttribute('x1', x);
+    cross.querySelector('line').setAttribute('x2', x);
+    const vs = series.map(s => valueAt(s, d));
+    cross.querySelectorAll('circle').forEach((c, i) => { c.setAttribute('cx', x); c.setAttribute('cy', yOf(vs[i])); });
+    return {
+      lines: [d === todayStr ? `${t('chart_today')} · ${fmtDate(d)}` : fmtDate(d),
+              ...series.map((s, i) => [s.color, s.label, fmtEuro(vs[i])])],
+      x: b.left + x / k,
+      y: b.top + MT / k,
+    };
   });
-
-  // Axes border
-  const axes = `<line x1="${ML}" y1="${MT}" x2="${ML}" y2="${MT + CH}" stroke="${CHART.axis}" stroke-width="1.5"/>
-    <line x1="${ML}" y1="${MT + CH}" x2="${ML + CW}" y2="${MT + CH}" stroke="${CHART.axis}" stroke-width="1.5"/>`;
-
-  wrap.innerHTML = `<svg width="100%" height="${H}" viewBox="0 0 ${W} ${H}" style="display:block;overflow:visible">
-    ${gridSvg}${axes}${todayMarker}${seriesSvg}${yLabels}${xLabels}${legSvg}
-  </svg>`;
-}
-
-function roundRect(ctx, x, y, w, h, r) {
-  if (h < 0) { y += h; h = -h; }
-  ctx.beginPath();
-  ctx.moveTo(x + r, y);
-  ctx.lineTo(x + w - r, y);
-  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
-  ctx.lineTo(x + w, y + h - r);
-  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
-  ctx.lineTo(x + r, y + h);
-  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
-  ctx.lineTo(x, y + r);
-  ctx.quadraticCurveTo(x, y, x + r, y);
-  ctx.closePath();
 }
