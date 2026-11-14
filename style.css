@@ -27,9 +27,67 @@
   --shadow:         0 1px 3px rgba(0,0,0,.08), 0 4px 12px rgba(0,0,0,.05);
   --shadow-lg:      0 8px 24px rgba(0,0,0,.12);
   --transition:     .2s ease;
+  --input-bg:       #ffffff;
+  --row-hover:      #f8fafc;
+  --subtle-bg:      #f1f5f9;
+  --toast-bg:       #1e293b;
+  /* Chart colours (read by app.js) */
+  --chart-text:     #475569;
+  --chart-muted:    #94a3b8;
+  --chart-grid:     #e2e8f0;
+  --chart-axis:     #cbd5e1;
+  --chart-track:    #f1f5f9;
+  --chart-strong:   #1e293b;
+  color-scheme: light dark;
+}
+
+/* Dark theme — follows the operating-system setting */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --primary:        #93c5fd;
+    --primary-light:  #bfdbfe;
+    --primary-dark:   #dbeafe;
+    --accent-light:   rgba(59,130,246,.18);
+    --success:        #22c55e;
+    --success-light:  rgba(34,197,94,.15);
+    --danger:         #ef4444;
+    --danger-light:   rgba(239,68,68,.16);
+    --warning:        #f59e0b;
+    --warning-light:  rgba(245,158,11,.16);
+    --text:           #e2e8f0;
+    --text-muted:     #94a3b8;
+    --border:         #2c3a52;
+    --bg:             #0b1220;
+    --card-bg:        #121b2e;
+    --sidebar-bg:     #08101f;
+    --shadow:         0 1px 3px rgba(0,0,0,.4), 0 4px 12px rgba(0,0,0,.25);
+    --shadow-lg:      0 8px 24px rgba(0,0,0,.5);
+    --input-bg:       #0e1626;
+    --row-hover:      #18233a;
+    --subtle-bg:      #1b2740;
+    --toast-bg:       #334155;
+    --chart-text:     #cbd5e1;
+    --chart-muted:    #94a3b8;
+    --chart-grid:     #26334d;
+    --chart-axis:     #3b4a63;
+    --chart-track:    #1b2740;
+    --chart-strong:   #f1f5f9;
+  }
+  /* Surfaces that use --primary as a background need a darker blue for white text */
+  body.privacy-mode .btn-privacy,
+  .card-tab.active,
+  .pwa-install-bar { background: var(--accent); border-color: var(--accent); }
+  .inst-badge.visa       { background: rgba(59,130,246,.18); color: #93c5fd; }
+  .inst-badge.mastercard { background: rgba(239,68,68,.16); color: #fca5a5; }
+  .badge-purple          { background: rgba(139,92,246,.18); color: #c4b5fd; }
+  .installment-card.inst-completed { border-color: #166534; background: #052e16; }
+  .highlight-alpha .account-name   { color: #fb923c; }
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+[hidden] { display: none !important; }
+
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
 html { font-size: 15px; }
 
@@ -639,7 +697,7 @@ body.privacy-mode .pv {
   vertical-align: middle;
 }
 
-.data-table tbody tr:hover { background: #f8fafc; }
+.data-table tbody tr:hover { background: var(--row-hover); }
 .data-table tbody tr:last-child td { border-bottom: none; }
 
 .amount-cell {
@@ -711,11 +769,6 @@ body.privacy-mode .pv {
   opacity: .85;
 }
 
-.dark-mode .installment-card.inst-completed {
-  border-color: #166534;
-  background: #052e16;
-  opacity: .85;
-}
 
 .inst-footer {
   display: flex;
@@ -949,7 +1002,7 @@ body.privacy-mode .pv {
   border-radius: 8px;
   font-size: .9rem;
   color: var(--text);
-  background: #fff;
+  background: var(--input-bg);
   transition: border-color var(--transition), box-shadow var(--transition);
   outline: none;
   font-family: inherit;
@@ -1186,7 +1239,7 @@ body.privacy-mode .pv {
   position: fixed;
   bottom: 24px; left: 50%;
   transform: translateX(-50%) translateY(80px);
-  background: #1e293b;
+  background: var(--toast-bg);
   color: #fff;
   padding: 10px 20px;
   border-radius: 24px;
@@ -1201,6 +1254,15 @@ body.privacy-mode .pv {
 }
 
 .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+.toast { white-space: normal; text-align: center; max-width: calc(100vw - 32px); width: max-content; }
+.toast.has-action { display: flex; align-items: center; gap: 14px; }
+.toast.has-action.show { pointer-events: auto; }
+.toast-action {
+  background: rgba(255,255,255,.18); color: #fff;
+  border: 1px solid rgba(255,255,255,.5); border-radius: 16px;
+  padding: 4px 12px; font: inherit; font-weight: 700; cursor: pointer; flex-shrink: 0;
+}
+.toast-action:hover { background: rgba(255,255,255,.3); }
 .toast.success { background: var(--success); }
 .toast.error { background: var(--danger); }
 
@@ -1262,7 +1324,7 @@ body.privacy-mode .pv {
 .badge-green { background: var(--success-light); color: var(--success); }
 .badge-red { background: var(--danger-light); color: var(--danger); }
 .badge-yellow { background: var(--warning-light); color: var(--warning); }
-.badge-gray   { background: #f1f5f9; color: var(--text-muted); }
+.badge-gray   { background: var(--subtle-bg); color: var(--text-muted); }
 .badge-purple { background: #ede9fe; color: #7c3aed; }
 
 /* ============================================================
@@ -1369,7 +1431,7 @@ body.privacy-mode .pv {
 }
 
 .help-content pre {
-  background: #f8fafc;
+  background: var(--row-hover);
   border: 1px solid var(--border);
   border-radius: 8px;
   padding: 12px 16px;
@@ -1381,7 +1443,7 @@ body.privacy-mode .pv {
 .help-content code {
   font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
   font-size: .82rem;
-  background: #f1f5f9;
+  background: var(--subtle-bg);
   color: var(--primary-dark);
   padding: 1px 5px;
   border-radius: 4px;
@@ -1425,7 +1487,7 @@ body.privacy-mode .pv {
 }
 
 .help-table th {
-  background: #f1f5f9;
+  background: var(--subtle-bg);
   font-weight: 600;
   color: var(--text);
   white-space: nowrap;
@@ -1564,6 +1626,9 @@ button, a, select, input {
     display: flex;
   }
 
+  /* Keep toasts (and their Undo button) above the bottom nav */
+  .toast { bottom: calc(var(--bottom-nav-h) + 12px + env(safe-area-inset-bottom, 0px)); }
+
   /* Always show sub-card action buttons on touch devices (no hover) */
   .sub-delete,
   .sub-gen-next { opacity: 1; }
@@ -1687,7 +1752,7 @@ button, a, select, input {
     cursor: pointer;
   }
   #transactionsTable tbody tr:active {
-    background: #e8f0fe;
+    background: var(--row-hover);
   }
 
   /* Reduce card padding on mobile so table gets more room */

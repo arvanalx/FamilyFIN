@@ -13,7 +13,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Family FiN">
   <link rel="apple-touch-icon" href="icon-192.png">
-  <link rel="stylesheet" href="style.css?v=0.936">
+  <link rel="stylesheet" href="style.css?v=0.937">
 </head>
 <body>
 
@@ -54,7 +54,7 @@
   </ul>
   <div class="sidebar-footer">
     <button id="langToggle" class="lang-toggle" onclick="toggleLang()">EN</button>
-    <span class="version">v0.936 Beta</span>
+    <span class="version">v0.937 Beta</span>
   </div>
 </nav>
 
@@ -69,11 +69,11 @@
     </div>
   </div>
   <header class="top-bar">
-    <button class="mobile-menu-btn" id="mobileMenuBtn">☰</button>
+    <button class="mobile-menu-btn" id="mobileMenuBtn" data-i18n-aria="btn_menu" aria-label="Μενού">☰</button>
     <h1 class="page-title" id="pageTitle">Γρήγορη ματιά</h1>
     <button id="syncStatus" class="sync-status sync-idle" onclick="retrySaveNow()" aria-live="polite"></button>
     <button id="langToggleMobile" class="lang-toggle-mobile" onclick="toggleLang()">EN</button>
-    <button class="btn-privacy" id="privacyToggle" onclick="togglePrivacy()" data-i18n-title="privacy_hide" title="Απόκρυψη ποσών">👁️</button>
+    <button class="btn-privacy" id="privacyToggle" onclick="togglePrivacy()" data-i18n-title="privacy_hide" data-i18n-aria="privacy_hide" title="Απόκρυψη ποσών">👁️</button>
   </header>
 
   <!-- DASHBOARD PAGE -->
@@ -465,10 +465,10 @@
 <!-- MODALS -->
 <!-- Add Transaction Modal -->
 <div class="modal-overlay" id="addTransactionModal">
-  <div class="modal">
+  <div class="modal" role="dialog" aria-modal="true">
     <div class="modal-header">
       <h3 id="transactionModalTitle" data-i18n="modal_new_tx">Νέα Κίνηση</h3>
-      <button class="modal-close" onclick="closeModal('addTransactionModal')">✕</button>
+      <button class="modal-close" data-i18n-aria="btn_close" aria-label="Κλείσιμο" onclick="closeModal('addTransactionModal')">✕</button>
     </div>
     <div class="modal-body">
       <input type="hidden" id="editTransactionId">
@@ -481,25 +481,25 @@
       </div>
       <div class="form-row">
         <div class="form-group">
-          <label data-i18n="label_date">Ημερομηνία *</label>
+          <label for="txDate" data-i18n="label_date">Ημερομηνία *</label>
           <input type="date" id="txDate" class="form-control" required>
         </div>
         <div class="form-group">
-          <label data-i18n="label_amount">Ποσό (€) *</label>
+          <label for="txAmount" data-i18n="label_amount">Ποσό (€) *</label>
           <input type="number" id="txAmount" class="form-control" step="0.01" min="0" placeholder="0,00" required>
         </div>
       </div>
       <div class="form-group">
-        <label data-i18n="label_desc">Περιγραφή *</label>
+        <label for="txDesc" data-i18n="label_desc">Περιγραφή *</label>
         <input type="text" id="txDesc" class="form-control" placeholder="π.χ. Σούπερ μάρκετ" required>
       </div>
       <div class="form-row">
         <div class="form-group">
-          <label data-i18n="label_category">Κατηγορία</label>
+          <label for="txCategory" data-i18n="label_category">Κατηγορία</label>
           <select id="txCategory" class="form-control"></select>
         </div>
         <div class="form-group">
-          <label data-i18n="label_account_req">Λογαριασμός *</label>
+          <label for="txAccount" data-i18n="label_account_req">Λογαριασμός *</label>
           <select id="txAccount" class="form-control" required>
           </select>
         </div>
@@ -512,7 +512,7 @@
         </label>
       </div>
       <div class="form-group">
-        <label data-i18n="label_notes">Σημειώσεις</label>
+        <label for="txNotes" data-i18n="label_notes">Σημειώσεις</label>
         <textarea id="txNotes" class="form-control" rows="2" data-i18n-placeholder="notes_placeholder" placeholder="Προαιρετικές σημειώσεις..."></textarea>
       </div>
     </div>
@@ -526,28 +526,29 @@
 
 <!-- Transfer Modal -->
 <div class="modal-overlay" id="transferModal">
-  <div class="modal">
+  <div class="modal" role="dialog" aria-modal="true">
     <div class="modal-header">
-      <h3 data-i18n="modal_transfer">Μεταφορά Χρημάτων</h3>
-      <button class="modal-close" onclick="closeModal('transferModal')">✕</button>
+      <h3 id="transferModalTitle" data-i18n="modal_transfer">Μεταφορά Χρημάτων</h3>
+      <button class="modal-close" data-i18n-aria="btn_close" aria-label="Κλείσιμο" onclick="closeModal('transferModal')">✕</button>
     </div>
     <div class="modal-body">
+      <input type="hidden" id="editTransferId">
       <div class="form-row">
         <div class="form-group">
-          <label data-i18n="label_date">Ημερομηνία *</label>
+          <label for="transferDate" data-i18n="label_date">Ημερομηνία *</label>
           <input type="date" id="transferDate" class="form-control" required>
         </div>
         <div class="form-group">
-          <label data-i18n="label_amount">Ποσό (€) *</label>
+          <label for="transferAmount" data-i18n="label_amount">Ποσό (€) *</label>
           <input type="number" id="transferAmount" class="form-control" step="0.01" min="0.01" placeholder="0,00" required>
         </div>
       </div>
       <div class="form-group">
-        <label data-i18n="label_from_account">Από Λογαριασμό *</label>
+        <label for="transferFrom" data-i18n="label_from_account">Από Λογαριασμό *</label>
         <select id="transferFrom" class="form-control" required></select>
       </div>
       <div class="form-group">
-        <label data-i18n="label_to_account">Σε Λογαριασμό *</label>
+        <label for="transferTo" data-i18n="label_to_account">Σε Λογαριασμό *</label>
         <select id="transferTo" class="form-control" required></select>
       </div>
       <div class="form-group form-group-inline">
@@ -558,7 +559,7 @@
         </label>
       </div>
       <div class="form-group">
-        <label data-i18n="label_notes">Σημειώσεις</label>
+        <label for="transferNotes" data-i18n="label_notes">Σημειώσεις</label>
         <textarea id="transferNotes" class="form-control" rows="2" data-i18n-placeholder="notes_placeholder" placeholder="Προαιρετικές σημειώσεις..."></textarea>
       </div>
     </div>
@@ -571,35 +572,35 @@
 
 <!-- Add Income Modal -->
 <div class="modal-overlay" id="addIncomeModal">
-  <div class="modal">
+  <div class="modal" role="dialog" aria-modal="true">
     <div class="modal-header">
       <h3 data-i18n="modal_new_income">Νέο Έσοδο</h3>
-      <button class="modal-close" onclick="closeModal('addIncomeModal')">✕</button>
+      <button class="modal-close" data-i18n-aria="btn_close" aria-label="Κλείσιμο" onclick="closeModal('addIncomeModal')">✕</button>
     </div>
     <div class="modal-body">
       <input type="hidden" id="editIncomeId">
       <div class="form-row">
         <div class="form-group">
-          <label data-i18n="label_date">Ημερομηνία *</label>
+          <label for="incDate" data-i18n="label_date">Ημερομηνία *</label>
           <input type="date" id="incDate" class="form-control" required>
         </div>
         <div class="form-group">
-          <label data-i18n="label_amount">Ποσό (€) *</label>
+          <label for="incAmount" data-i18n="label_amount">Ποσό (€) *</label>
           <input type="number" id="incAmount" class="form-control" step="0.01" min="0" required>
         </div>
       </div>
       <div class="form-group">
-        <label data-i18n="label_desc">Περιγραφή *</label>
+        <label for="incDesc" data-i18n="label_desc">Περιγραφή *</label>
         <input type="text" id="incDesc" class="form-control" placeholder="π.χ. Μισθός" required>
       </div>
       <div class="form-row">
         <div class="form-group">
-          <label data-i18n="label_category">Κατηγορία</label>
+          <label for="incCategory" data-i18n="label_category">Κατηγορία</label>
           <select id="incCategory" class="form-control">
           </select>
         </div>
         <div class="form-group">
-          <label data-i18n="label_account">Λογαριασμός</label>
+          <label for="incAccount" data-i18n="label_account">Λογαριασμός</label>
           <select id="incAccount" class="form-control">
           </select>
         </div>
@@ -614,53 +615,53 @@
 
 <!-- Add Installment Modal -->
 <div class="modal-overlay" id="addInstallmentModal">
-  <div class="modal">
+  <div class="modal" role="dialog" aria-modal="true">
     <div class="modal-header">
       <h3 id="installmentModalTitle" data-i18n="modal_new_inst">Νέα Δόση</h3>
-      <button class="modal-close" onclick="closeModal('addInstallmentModal')">✕</button>
+      <button class="modal-close" data-i18n-aria="btn_close" aria-label="Κλείσιμο" onclick="closeModal('addInstallmentModal')">✕</button>
     </div>
     <div class="modal-body">
       <input type="hidden" id="editInstallmentId">
       <div class="form-group">
-        <label data-i18n="label_desc">Περιγραφή *</label>
+        <label for="instDesc" data-i18n="label_desc">Περιγραφή *</label>
         <input type="text" id="instDesc" class="form-control" placeholder="π.χ. KOTSOVOLOS - Laptop" required>
       </div>
       <div class="form-row">
         <div class="form-group">
-          <label data-i18n="label_total_amt">Συνολικό Ποσό (€) *</label>
+          <label for="instTotal" data-i18n="label_total_amt">Συνολικό Ποσό (€) *</label>
           <input type="number" id="instTotal" class="form-control" step="0.01" min="0" required>
         </div>
         <div class="form-group">
-          <label data-i18n="label_monthly_amt">Μηνιαία Δόση (€) *</label>
+          <label for="instMonthly" data-i18n="label_monthly_amt">Μηνιαία Δόση (€) *</label>
           <input type="number" id="instMonthly" class="form-control" step="0.01" min="0" required>
         </div>
       </div>
       <div class="form-row">
         <div class="form-group">
-          <label data-i18n="label_paid_count">Δόσεις που πληρώθηκαν</label>
+          <label for="instPaid" data-i18n="label_paid_count">Δόσεις που πληρώθηκαν</label>
           <input type="number" id="instPaid" class="form-control" min="0" value="0">
         </div>
         <div class="form-group">
-          <label data-i18n="label_total_count">Συνολικές Δόσεις *</label>
+          <label for="instTotalCount" data-i18n="label_total_count">Συνολικές Δόσεις *</label>
           <input type="number" id="instTotalCount" class="form-control" min="1" required>
         </div>
       </div>
       <div class="form-row">
         <div class="form-group">
-          <label data-i18n="label_card">Κάρτα</label>
+          <label for="instCard" data-i18n="label_card">Κάρτα</label>
           <select id="instCard" class="form-control">
             <option value="visa">VISA (Alpha Bank)</option>
             <option value="mastercard">MASTERCARD (WinBank)</option>
           </select>
         </div>
         <div class="form-group">
-          <label data-i18n="label_store">Κατάστημα / Πάροχος</label>
+          <label for="instStore" data-i18n="label_store">Κατάστημα / Πάροχος</label>
           <input type="text" id="instStore" class="form-control" placeholder="π.χ. KOTSOVOLOS">
         </div>
       </div>
       <div class="form-row">
         <div class="form-group">
-          <label data-i18n="label_expense_cat">Κατηγορία Εξόδου</label>
+          <label for="instCategory" data-i18n="label_expense_cat">Κατηγορία Εξόδου</label>
           <select id="instCategory" class="form-control"></select>
         </div>
         <div class="form-group">
@@ -692,24 +693,24 @@
 
 <!-- Add Subscription Modal -->
 <div class="modal-overlay" id="addSubscriptionModal">
-  <div class="modal">
+  <div class="modal" role="dialog" aria-modal="true">
     <div class="modal-header">
       <h3 id="subscriptionModalTitle" data-i18n="modal_new_sub">Νέα Συνδρομή</h3>
-      <button class="modal-close" onclick="closeModal('addSubscriptionModal')">✕</button>
+      <button class="modal-close" data-i18n-aria="btn_close" aria-label="Κλείσιμο" onclick="closeModal('addSubscriptionModal')">✕</button>
     </div>
     <div class="modal-body">
       <input type="hidden" id="editSubscriptionId">
       <div class="form-group">
-        <label data-i18n="label_service">Υπηρεσία *</label>
+        <label for="subName" data-i18n="label_service">Υπηρεσία *</label>
         <input type="text" id="subName" class="form-control" placeholder="π.χ. Netflix" required>
       </div>
       <div class="form-row">
         <div class="form-group">
-          <label data-i18n="label_amount">Ποσό (€) *</label>
+          <label for="subAmount" data-i18n="label_amount">Ποσό (€) *</label>
           <input type="number" id="subAmount" class="form-control" step="0.01" min="0" required>
         </div>
         <div class="form-group">
-          <label data-i18n="label_frequency">Συχνότητα</label>
+          <label for="subFrequency" data-i18n="label_frequency">Συχνότητα</label>
           <select id="subFrequency" class="form-control">
             <option value="monthly" data-i18n="freq_monthly_opt">Μηνιαία</option>
             <option value="yearly" data-i18n="freq_yearly_opt">Ετήσια</option>
@@ -718,7 +719,7 @@
       </div>
       <div class="form-row">
         <div class="form-group">
-          <label data-i18n="label_card_account">Κάρτα/Λογαριασμός</label>
+          <label for="subCard" data-i18n="label_card_account">Κάρτα/Λογαριασμός</label>
           <select id="subCard" class="form-control">
             <option value="visa">VISA</option>
             <option value="mastercard">MASTERCARD</option>
@@ -728,17 +729,26 @@
           </select>
         </div>
         <div class="form-group">
-          <label data-i18n="label_billing_day">Ημέρα χρέωσης</label>
+          <label for="subDay" data-i18n="label_billing_day">Ημέρα χρέωσης</label>
           <input type="number" id="subDay" class="form-control" min="1" max="31" placeholder="1">
         </div>
       </div>
+      <div class="form-group" id="subBillingMonthGroup" hidden>
+        <label for="subBillingMonth" data-i18n="label_billing_month">Μήνας χρέωσης</label>
+        <select id="subBillingMonth" class="form-control mp-month">
+          <option value="01">Ιανουάριος</option><option value="02">Φεβρουάριος</option><option value="03">Μάρτιος</option>
+          <option value="04">Απρίλιος</option><option value="05">Μάιος</option><option value="06">Ιούνιος</option>
+          <option value="07">Ιούλιος</option><option value="08">Αύγουστος</option><option value="09">Σεπτέμβριος</option>
+          <option value="10">Οκτώβριος</option><option value="11">Νοέμβριος</option><option value="12">Δεκέμβριος</option>
+        </select>
+      </div>
       <div class="form-row">
         <div class="form-group">
-          <label data-i18n="label_expense_cat">Κατηγορία Εξόδου</label>
+          <label for="subCategory" data-i18n="label_expense_cat">Κατηγορία Εξόδου</label>
           <select id="subCategory" class="form-control"></select>
         </div>
         <div class="form-group">
-          <label data-i18n="label_icon">Εικονίδιο / Emoji</label>
+          <label for="subIcon" data-i18n="label_icon">Εικονίδιο / Emoji</label>
           <input type="text" id="subIcon" class="form-control" placeholder="🎬" maxlength="2">
         </div>
       </div>
@@ -758,30 +768,30 @@
 
 <!-- Card Transaction Modal -->
 <div class="modal-overlay" id="cardTransactionModal">
-  <div class="modal">
+  <div class="modal" role="dialog" aria-modal="true">
     <div class="modal-header">
       <h3 id="cardTxModalTitle" data-i18n="modal_card_tx">Κίνηση Κάρτας</h3>
-      <button class="modal-close" onclick="closeModal('cardTransactionModal')">✕</button>
+      <button class="modal-close" data-i18n-aria="btn_close" aria-label="Κλείσιμο" onclick="closeModal('cardTransactionModal')">✕</button>
     </div>
     <div class="modal-body">
       <input type="hidden" id="cardTxCard">
       <input type="hidden" id="editCardTransactionId">
       <div class="form-row">
         <div class="form-group">
-          <label data-i18n="label_date">Ημερομηνία *</label>
+          <label for="cardTxDate" data-i18n="label_date">Ημερομηνία *</label>
           <input type="date" id="cardTxDate" class="form-control" required>
         </div>
         <div class="form-group">
-          <label data-i18n="label_amount">Ποσό (€) *</label>
+          <label for="cardTxAmount" data-i18n="label_amount">Ποσό (€) *</label>
           <input type="number" id="cardTxAmount" class="form-control" step="0.01" min="0" required>
         </div>
       </div>
       <div class="form-group">
-        <label data-i18n="label_desc">Περιγραφή *</label>
+        <label for="cardTxDesc" data-i18n="label_desc">Περιγραφή *</label>
         <input type="text" id="cardTxDesc" class="form-control" required>
       </div>
       <div class="form-group">
-        <label data-i18n="label_category">Κατηγορία</label>
+        <label for="cardTxCategory" data-i18n="label_category">Κατηγορία</label>
         <select id="cardTxCategory" class="form-control"></select>
       </div>
     </div>
@@ -858,6 +868,7 @@
   <div class="action-sheet" onclick="event.stopPropagation()">
     <p class="action-sheet-title" id="transferActionDesc"></p>
     <button class="action-sheet-btn" id="transferActionSettledBtn" onclick="doTransferAction('settled')"></button>
+    <button class="action-sheet-btn" onclick="doTransferAction('edit')" data-i18n="btn_edit_tx">✏️ Επεξεργασία</button>
     <button class="action-sheet-btn danger" onclick="doTransferAction('delete')" data-i18n="confirm_del_transfer">
       🗑️ Διαγραφή Μεταφοράς
     </button>
@@ -873,6 +884,7 @@
     <button class="action-sheet-btn" onclick="doIncomeAction('copy')">
       📋 <span data-i18n="action_copy_next_month">Αντιγραφή στον επόμενο μήνα</span>
     </button>
+    <button class="action-sheet-btn" onclick="doIncomeAction('edit')" data-i18n="btn_edit_tx">✏️ Επεξεργασία</button>
     <button class="action-sheet-btn danger" onclick="doIncomeAction('delete')" data-i18n="btn_delete_tx">
       🗑️ Διαγραφή
     </button>
@@ -890,7 +902,7 @@
   </div>
 </div>
 
-<script src="i18n.js?v=0.936"></script>
-<script src="app.js?v=0.936"></script>
+<script src="i18n.js?v=0.937"></script>
+<script src="app.js?v=0.937"></script>
 </body>
 </html>

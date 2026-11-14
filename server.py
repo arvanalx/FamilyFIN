@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Family FiN — Local server with SQLite persistence (v0.936 Beta)
+Family FiN — Local server with SQLite persistence (v0.937 Beta)
 Serves the app's static files + provides /api/data for read/write via SQLite.
 No external dependencies (stdlib only).
 

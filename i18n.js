@@ -252,6 +252,39 @@ const TRANSLATIONS = {
     confirm_import:       'Εισαγωγή Δεδομένων',
     confirm_import_msg:   'Τα τρέχοντα δεδομένα θα αντικατασταθούν από το αρχείο. Ένα αντίγραφο ασφαλείας θα κρατηθεί στον φάκελο backups του server. Συνέχεια;',
 
+    btn_close:         'Κλείσιμο',
+    btn_menu:          'Μενού',
+    btn_edit:          'Επεξεργασία',
+    btn_delete:        'Διαγραφή',
+    btn_undo:          'Αναίρεση',
+    toast_undone:      'Η διαγραφή αναιρέθηκε',
+    undo_unavailable:  'Η αναίρεση δεν είναι πλέον δυνατή — έγιναν άλλες αλλαγές στο μεταξύ',
+    modal_edit_transfer: 'Επεξεργασία Μεταφοράς',
+    label_billing_month: 'Μήνας χρέωσης',
+    months_full: ['Ιανουάριος','Φεβρουάριος','Μάρτιος','Απρίλιος','Μάιος','Ιούνιος','Ιούλιος','Αύγουστος','Σεπτέμβριος','Οκτώβριος','Νοέμβριος','Δεκέμβριος'],
+    placeholder_bank:  'π.χ. Alpha Bank',
+
+    // Charts
+    chart_no_accounts: 'Δεν υπάρχουν λογαριασμοί',
+    chart_today:       'Σήμερα',
+    chart_forecast:    'Πρόβλεψη',
+    chart_increase:    'Αύξηση',
+    chart_decrease:    'Μείωση',
+    chart_change:      'Μεταβολή',
+
+    // Transactions report
+    report_title:      'Αναφορά Κινήσεων',
+    report_print:      '🖨️ Εκτύπωση / Αποθήκευση PDF',
+    report_filters:    'Φίλτρα:',
+    report_month:      'Μήνας',
+    report_all:        'Όλα',
+    report_count:      '{0} κινήσεις',
+    report_empty:      'Δεν βρέθηκαν κινήσεις για τα επιλεγμένα φίλτρα.',
+    report_income:     'Έσοδα',
+    report_expenses:   'Έξοδα',
+    report_balance:    'Υπόλοιπο',
+    report_popup_blocked: 'Ο browser μπλόκαρε το νέο παράθυρο. Επιτρέψτε τα pop-ups για αυτή τη σελίδα.',
+
     // Sync
     sync_saving:       'Αποθήκευση…',
     sync_saved:        'Αποθηκεύτηκε στον server',
@@ -542,6 +575,39 @@ const TRANSLATIONS = {
     confirm_import:       'Import Data',
     confirm_import_msg:   'Your current data will be replaced by the file. A backup copy will be kept in the server\'s backups folder. Continue?',
 
+    btn_close:         'Close',
+    btn_menu:          'Menu',
+    btn_edit:          'Edit',
+    btn_delete:        'Delete',
+    btn_undo:          'Undo',
+    toast_undone:      'Deletion undone',
+    undo_unavailable:  'Undo is no longer possible — other changes were made in the meantime',
+    modal_edit_transfer: 'Edit Transfer',
+    label_billing_month: 'Billing month',
+    months_full: ['January','February','March','April','May','June','July','August','September','October','November','December'],
+    placeholder_bank:  'e.g. Alpha Bank',
+
+    // Charts
+    chart_no_accounts: 'No accounts',
+    chart_today:       'Today',
+    chart_forecast:    'Forecast',
+    chart_increase:    'Increase',
+    chart_decrease:    'Decrease',
+    chart_change:      'Change',
+
+    // Transactions report
+    report_title:      'Transactions Report',
+    report_print:      '🖨️ Print / Save as PDF',
+    report_filters:    'Filters:',
+    report_month:      'Month',
+    report_all:        'All',
+    report_count:      '{0} transactions',
+    report_empty:      'No transactions match the selected filters.',
+    report_income:     'Income',
+    report_expenses:   'Expenses',
+    report_balance:    'Balance',
+    report_popup_blocked: 'The browser blocked the new window. Please allow pop-ups for this page.',
+
     // Sync
     sync_saving:       'Saving…',
     sync_saved:        'Saved to server',
@@ -633,6 +699,9 @@ function applyTranslations() {
   document.querySelectorAll('[data-i18n-title]').forEach(el => {
     el.title = t(el.dataset.i18nTitle);
   });
+  document.querySelectorAll('[data-i18n-aria]').forEach(el => {
+    el.setAttribute('aria-label', t(el.dataset.i18nAria));
+  });
   // Update lang toggle button labels (sidebar + mobile top bar)
   const btn = document.getElementById('langToggle');
   if (btn) btn.textContent = getLang() === 'el' ? 'EN' : 'EL';
@@ -640,4 +709,5 @@ function applyTranslations() {
   if (btnMobile) btnMobile.textContent = getLang() === 'el' ? 'EN' : 'EL';
   // Update html lang attribute
   document.documentElement.lang = getLang();
+  if (typeof localizeMonthPickers === 'function') localizeMonthPickers();
 }

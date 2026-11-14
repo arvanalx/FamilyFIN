@@ -85,6 +85,14 @@ At the top of each page a toolbar shows:
 - **Sync indicator** — ⟳ saving, ✓ saved to the server (fades after a moment), **⚠ save failed**. On ⚠ your changes are kept and resent automatically every 15″ — tap ⚠ to retry immediately
 - **👁️ Privacy button** — On the right, to blur all numbers (see Section 3)
 
+### Light / Dark theme
+
+The app automatically follows the device's appearance setting (light or dark — e.g. on macOS: System Settings → Appearance). All charts adapt, and switch immediately if you change the setting while the app is open.
+
+### Language
+
+The **EN / EL** button switches the language across the whole app — menus, forms, charts, month pickers and the PDF Report.
+
 ---
 
 ## 3. Privacy Mode
@@ -244,11 +252,13 @@ Clicking ✅ again → ☐ reverses the effect on the balance.
 
 **Desktop** (Actions column):
 - **☐ / ✅** — Toggle "Settled" status (affects the balance immediately)
-- **✏️** — Opens the edit form (available for all transactions except transfers ↔️)
-- **🗑️** — Asks for confirmation and deletes the transaction (if it was settled, the balance effect is automatically reversed)
+- **✏️** — Opens the edit form (for transfers ↔️ it opens the transfer form — see §5.7)
+- **🗑️** — Deletes the transaction immediately (if it was settled, the balance effect is automatically reversed)
 
 **Mobile** (tap on a transaction row):
 - Opens an action menu with options: **Mark as Settled / Unmark Settled**, **Edit**, **Delete**
+
+> ↩️ **Undo delete:** After deleting a transaction, card transaction or installment, a message with an **Undo** button appears for a few seconds; it restores the entry and the balance. Undo is not available if another change was made in the meantime.
 
 ### 5.4 Copy income to next month
 
@@ -291,6 +301,8 @@ Click **↕ Transfer** (next to "+ New Transaction") to open the transfer form. 
 
 **Settled transfer:** Check the **Settled** checkbox when creating a transfer to immediately update both account balances. Alternatively, you can mark it settled later by clicking **☐ / ✅** (desktop) or tapping the ↔️ transaction row (mobile) — the action applies to **both sides** simultaneously.
 
+**Editing a transfer:** Click **✏️** on either side (or **Edit** in the mobile menu). You can change the date, amount, accounts, notes and status — **both** sides are updated and balances are corrected automatically.
+
 > ⚠️ Deleting **either** side automatically deletes **both** and reverses the balance changes.
 
 ### 5.8 PDF Report
@@ -325,7 +337,7 @@ A dedicated view showing **only income** (without expenses).
 ### 6.1 Income Summary
 
 - **Monthly Income:** Total income for the selected month
-- **Annual (estimate):** Multiplies monthly income × 12
+- **Annual (estimate):** Average monthly income over the last 12 months (counting only months with income) × 12
 
 > ℹ️ **Transfers** between accounts do **not appear** in the income list, even though they are stored internally as incoming transactions.
 
@@ -396,7 +408,7 @@ A list of card transactions, sorted by date (most recent first).
 
 **Desktop — Transaction actions:**
 - **✏️** — Opens the edit form (date, amount, description, category)
-- **🗑️** — Asks for confirmation and deletes — if the transaction belongs to a subscription, it **prevents** automatic recreation
+- **🗑️** — Deletes immediately, with **Undo** available — if the transaction belongs to a subscription, it **prevents** automatic recreation
 
 **Mobile** (tap on a card transaction row):
 - Opens an action menu with **Edit** and **Delete** options.
@@ -432,7 +444,7 @@ Click **"+ New Installment"**. Fill in:
 
 - **+1 Installment** — Records one installment as paid (increments the counter). When the count is complete, the installment is **automatically deactivated**.
 - **✏️** — Edit details
-- **🗑️** — Permanently delete
+- **🗑️** — Delete, with **Undo** available for a few seconds
 
 ### 8.4 Progress bar
 
@@ -463,6 +475,7 @@ Click **"+ New Subscription"** and fill in:
 | **Frequency** | Monthly or Yearly |
 | **Card/Account** | Where it is charged |
 | **Billing day** | Day of the month (1–31) |
+| **Billing month** | Yearly subscriptions only — the month of the year when you are charged |
 | **Expense Category** | Category applied to generated transactions |
 | **Paused** | When checked, automatic transaction generation is suspended |
 
@@ -606,7 +619,8 @@ Deletes **all** data and restores factory defaults. Asks for confirmation before
 | Shortcut | Function |
 |----------|----------|
 | `Ctrl + N` | Open new transaction form |
-| `Escape` | Close open modal/dialog |
+| `Escape` | Close the open dialog or action menu |
+| `Tab` / `Shift + Tab` | Move between fields — when a form opens, the cursor is placed in its first field automatically |
 
 ---
 
@@ -640,4 +654,4 @@ Card payments from an account (category "Κάρτες" or "Cards") are excluded 
 
 ---
 
-*Family FiN — Version 0.936 Beta | Last updated: June 2026*
+*Family FiN — Version 0.937 Beta | Last updated: June 2026*

@@ -100,6 +100,7 @@ let saveInFlight  = false;
 let savePending   = false;
 let pendingReason = '';
 let retryTimer    = null;
+let mutationSeq   = 0; // bumped on every local change or server reload (guards Undo)
 
 const cloneDefaults = () => JSON.parse(JSON.stringify(DEFAULT_STATE));
 
@@ -140,6 +141,7 @@ async function loadState() {
 }
 
 function saveState(reason = '') {
+  mutationSeq++;
   persistLocal();
   if (LOCAL_ONLY) return;
   savePending = true;
@@ -195,6 +197,7 @@ function retrySaveNow() {
 function applyServerState(serverState, rev) {
   state    = migrateState(serverState?.accounts ? serverState : cloneDefaults());
   stateRev = rev || 0;
+  mutationSeq++;
   persistLocal();
   populateAllDropdowns();
   renderPage(currentPage());
@@ -258,11 +261,14 @@ const nextMonth = () => {
 };
 
 // ── MONTH PICKER HELPERS (Safari compat — replaces type="month") ──
-const MP_MONTH_NAMES = [
-  ['01','Ιανουάριος'],['02','Φεβρουάριος'],['03','Μάρτιος'],['04','Απρίλιος'],
-  ['05','Μάιος'],['06','Ιούνιος'],['07','Ιούλιος'],['08','Αύγουστος'],
-  ['09','Σεπτέμβριος'],['10','Οκτώβριος'],['11','Νοέμβριος'],['12','Δεκέμβριος']
-];
+const MP_MONTHS = ['01','02','03','04','05','06','07','08','09','10','11','12'];
+
+// Re-labels every month dropdown in the current language
+function localizeMonthPickers() {
+  const names = t('months_full');
+  document.querySelectorAll('.mp-month').forEach(sel =>
+    [...sel.options].forEach((o, i) => { o.textContent = names[i]; }));
+}
 
 function getMonthValue(id) {
   const w = document.getElementById(id);
@@ -291,8 +297,9 @@ function addMonthPickerListener(id, callback) {
 function buildMonthPickerHTML(id, val, onchangeFn) {
   const [y, m] = (val || thisMonth()).split('-');
   const cy = new Date().getFullYear();
-  const mOpts = MP_MONTH_NAMES.map(([v, l]) =>
-    `<option value="${v}"${v === m ? ' selected' : ''}>${l}</option>`).join('');
+  const names = t('months_full');
+  const mOpts = MP_MONTHS.map((v, i) =>
+    `<option value="${v}"${v === m ? ' selected' : ''}>${names[i]}</option>`).join('');
   let yOpts = '';
   for (let yr = cy - 5; yr <= cy + 3; yr++)
     yOpts += `<option value="${yr}"${String(yr) === y ? ' selected' : ''}>${yr}</option>`;
@@ -409,6 +416,16 @@ function cardMonthlyDebt(cardId) {
 }
 
 // ── CHART STATE ───────────────────────────────────────────────────────────────
+// Neutral chart colours come from CSS variables so charts follow light/dark theme
+const CHART = {};
+function refreshChartColors() {
+  const cs = getComputedStyle(document.documentElement);
+  for (const k of ['text', 'muted', 'grid', 'axis', 'track', 'strong']) {
+    CHART[k] = cs.getPropertyValue('--chart-' + k).trim();
+  }
+  CHART.bg = cs.getPropertyValue('--card-bg').trim();
+}
+
 let _balanceData = [];
 let _balanceView = 'compare'; // 'compare' | 'delta'
 let _expChartOffset = 0;      // 0 = current month, -1 = previous, etc.
@@ -566,7 +583,6 @@ function renderDashboard() {
 }
 
 // ── MONTHLY EXPENSES BAR CHART ────────────────────────────────
-const _ME_MONTHS = ['Ιαν','Φεβ','Μαρ','Απρ','Μαΐ','Ιουν','Ιουλ','Αυγ','Σεπ','Οκτ','Νοε','Δεκ'];
 
 function fmtAxisVal(v) {
   if (v >= 1000) return (v / 1000).toFixed(v % 1000 === 0 ? 0 : 1) + 'k';
@@ -596,7 +612,7 @@ function renderMonthlyExpenseChart() {
   const curMonStr = thisMonth();
 
   // Compute total expenses per month (same logic as expense category chart)
-  const totals = _ME_MONTHS.map((_, i) => {
+  const totals = Array.from({ length: 12 }, (_, i) => {
     const m = `${year}-${String(i + 1).padStart(2, '0')}`;
     let sum = 0;
     state.transactions
@@ -628,11 +644,11 @@ function renderMonthlyExpenseChart() {
   for (let g = 1; g <= 4; g++) {
     const v  = (maxVal / 4) * g;
     const yg = (padT + cH - (v / maxVal) * cH).toFixed(1);
-    svg += `<line x1="${padL}" y1="${yg}" x2="${W - padR}" y2="${yg}" stroke="#e2e8f0" stroke-width="1"/>`;
-    svg += `<text x="${(padL - 5).toFixed(1)}" y="${(parseFloat(yg) + 4).toFixed(1)}" text-anchor="end" font-size="9" fill="#94a3b8" font-family="system-ui,sans-serif">${esc(fmtAxisVal(v))}</text>`;
+    svg += `<line x1="${padL}" y1="${yg}" x2="${W - padR}" y2="${yg}" stroke="${CHART.grid}" stroke-width="1"/>`;
+    svg += `<text x="${(padL - 5).toFixed(1)}" y="${(parseFloat(yg) + 4).toFixed(1)}" text-anchor="end" font-size="9" fill="${CHART.muted}" font-family="system-ui,sans-serif">${esc(fmtAxisVal(v))}</text>`;
   }
   // Baseline
-  svg += `<line x1="${padL}" y1="${(padT + cH).toFixed(1)}" x2="${W - padR}" y2="${(padT + cH).toFixed(1)}" stroke="#cbd5e1" stroke-width="1.5"/>`;
+  svg += `<line x1="${padL}" y1="${(padT + cH).toFixed(1)}" x2="${W - padR}" y2="${(padT + cH).toFixed(1)}" stroke="${CHART.axis}" stroke-width="1.5"/>`;
 
   // Bars
   totals.forEach((val, i) => {
@@ -642,23 +658,23 @@ function renderMonthlyExpenseChart() {
     const barH  = val > 0 ? Math.max(2, (val / maxVal) * cH) : 0;
     const x     = (padL + i * slotW + gap).toFixed(1);
     const y     = (padT + cH - barH).toFixed(1);
-    const fill  = isCurrent ? '#3b82f6' : isFuture ? '#e2e8f0' : '#93c5fd';
+    const fill  = isCurrent ? '#3b82f6' : isFuture ? CHART.grid : '#93c5fd';
     const opacity = isFuture ? '0.6' : '1';
-    const lblCol  = isCurrent ? '#2563eb' : '#94a3b8';
+    const lblCol  = isCurrent ? '#2563eb' : CHART.muted;
     const lblW    = isCurrent ? '700' : '400';
 
-    svg += `<rect x="${x}" y="${y}" width="${barW.toFixed(1)}" height="${barH.toFixed(1)}" rx="3" fill="${fill}" opacity="${opacity}"><title>${_ME_MONTHS[i]}: ${esc(fmtEuro(val))}</title></rect>`;
+    svg += `<rect x="${x}" y="${y}" width="${barW.toFixed(1)}" height="${barH.toFixed(1)}" rx="3" fill="${fill}" opacity="${opacity}"><title>${t('months')[i]}: ${esc(fmtEuro(val))}</title></rect>`;
 
     // Amount label above bar (only when bar tall enough)
     if (val > 0 && barH > 22) {
       const lbl = fmtEuro(val).replace(' €', '');
-      svg += `<text x="${(parseFloat(x) + barW / 2).toFixed(1)}" y="${(parseFloat(y) - 4).toFixed(1)}" text-anchor="middle" font-size="9" fill="#475569" font-family="system-ui,sans-serif">${esc(lbl)}</text>`;
+      svg += `<text x="${(parseFloat(x) + barW / 2).toFixed(1)}" y="${(parseFloat(y) - 4).toFixed(1)}" text-anchor="middle" font-size="9" fill="${CHART.text}" font-family="system-ui,sans-serif">${esc(lbl)}</text>`;
     }
 
     // Month label below bar
     const lx = (parseFloat(x) + barW / 2).toFixed(1);
     const ly = (padT + cH + 15).toFixed(1);
-    svg += `<text x="${lx}" y="${ly}" text-anchor="middle" font-size="10" fill="${lblCol}" font-weight="${lblW}" font-family="system-ui,sans-serif">${_ME_MONTHS[i]}</text>`;
+    svg += `<text x="${lx}" y="${ly}" text-anchor="middle" font-size="10" fill="${lblCol}" font-weight="${lblW}" font-family="system-ui,sans-serif">${t('months')[i]}</text>`;
   });
 
   wrap.innerHTML = `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:${H}px">${svg}</svg>`;
@@ -701,7 +717,7 @@ function renderBalanceChart(accounts) {
   const wrap = document.getElementById('balanceChartWrapper');
   if (!wrap) return;
   if (!accounts.length) {
-    wrap.innerHTML = '<p style="padding:20px;text-align:center;color:#94a3b8">Δεν υπάρχουν λογαριασμοί</p>';
+    wrap.innerHTML = `<p class="empty-state">${t('chart_no_accounts')}</p>`;
     return;
   }
   _balanceView === 'delta'
@@ -737,10 +753,10 @@ function _renderBalanceCompare(accounts, wrap) {
     const up     = delta > 0;
     const flat   = Math.abs(delta) < 0.005;
     const arrow  = up ? '↑' : flat ? '→' : '↓';
-    const acol   = up ? '#16a34a' : flat ? '#94a3b8' : '#dc2626';
+    const acol   = up ? '#16a34a' : flat ? CHART.muted : '#dc2626';
 
     // Background track
-    const track = `<rect x="${LW + 8}" y="${barY}" width="${BW}" height="${barH}" rx="5" fill="#f1f5f9"/>`;
+    const track = `<rect x="${LW + 8}" y="${barY}" width="${BW}" height="${barH}" rx="5" fill="${CHART.track}"/>`;
 
     // Today bar
     const todayBar = nowPx > 0
@@ -763,14 +779,14 @@ function _renderBalanceCompare(accounts, wrap) {
 
     // Account name
     const lbl  = a.label.length > 13 ? a.label.slice(0, 12) + '…' : a.label;
-    const nameEl = `<text x="${LW + 4}" y="${barY + barH / 2 + 4}" text-anchor="end" font-size="12" fill="#475569" font-family="system-ui,sans-serif" font-weight="500">${esc(lbl)}</text>`;
+    const nameEl = `<text x="${LW + 4}" y="${barY + barH / 2 + 4}" text-anchor="end" font-size="12" fill="${CHART.text}" font-family="system-ui,sans-serif" font-weight="500">${esc(lbl)}</text>`;
 
     // Right column
     const rx = LW + BW + 18;
-    const todayTxt  = `<text x="${rx}" y="${barY + 10}"  font-size="10" fill="#94a3b8" font-family="system-ui,sans-serif">Σήμερα: ${esc(fmtEuro(a.now))}</text>`;
+    const todayTxt  = `<text x="${rx}" y="${barY + 10}"  font-size="10" fill="${CHART.muted}" font-family="system-ui,sans-serif">${t('chart_today')}: ${esc(fmtEuro(a.now))}</text>`;
     const futureTxt = `<text x="${rx}" y="${barY + barH - 2}" font-size="11" fill="${esc(acol)}" font-weight="600" font-family="system-ui,sans-serif">${esc(arrow)} ${esc(fmtEuro(a.future))}${pct ? ' (' + (up ? '+' : '') + esc(pct) + '%)' : ''}</text>`;
 
-    const ttip = `<title>${esc(a.label)}: Σήμερα ${esc(fmtEuro(a.now))} → Μέλλον ${esc(fmtEuro(a.future))}${pct ? ' (' + (up ? '+' : '') + pct + '%)' : ''}</title>`;
+    const ttip = `<title>${esc(a.label)}: ${t('chart_today')} ${esc(fmtEuro(a.now))} → ${t('chart_forecast')} ${esc(fmtEuro(a.future))}${pct ? ' (' + (up ? '+' : '') + pct + '%)' : ''}</title>`;
 
     rows += `<g>${ttip}${track}${todayBar}${futOver}${futLine}${nameEl}${todayTxt}${futureTxt}</g>\n`;
   });
@@ -779,13 +795,13 @@ function _renderBalanceCompare(accounts, wrap) {
   const legY = PAD + accounts.length * RH + 4;
   const legend = `
     <rect x="${LW + 8}" y="${legY + 4}" width="14" height="13" rx="3" fill="#1e40af" opacity="0.88"/>
-    <text x="${LW + 26}" y="${legY + 14}" font-size="10" fill="#94a3b8" font-family="system-ui,sans-serif">Σήμερα</text>
+    <text x="${LW + 26}" y="${legY + 14}" font-size="10" fill="${CHART.muted}" font-family="system-ui,sans-serif">${t('chart_today')}</text>
     <rect x="${LW + 78}" y="${legY + 4}" width="14" height="13" rx="3" fill="#93c5fd" opacity="0.65" stroke="#1e40af" stroke-width="1" stroke-dasharray="4,2"/>
-    <text x="${LW + 96}" y="${legY + 14}" font-size="10" fill="#94a3b8" font-family="system-ui,sans-serif">Κέρδος Μέλλον</text>
-    <rect x="${LW + 196}" y="${legY + 4}" width="14" height="13" rx="3" fill="#fca5a5" opacity="0.55"/>
-    <text x="${LW + 214}" y="${legY + 14}" font-size="10" fill="#94a3b8" font-family="system-ui,sans-serif">Μείωση</text>
-    <line x1="${LW + 265}" y1="${legY + 10}" x2="${LW + 278}" y2="${legY + 10}" stroke="#16a34a" stroke-width="2.5" stroke-linecap="round"/>
-    <text x="${LW + 282}" y="${legY + 14}" font-size="10" fill="#94a3b8" font-family="system-ui,sans-serif">Στόχος</text>`;
+    <text x="${LW + 96}" y="${legY + 14}" font-size="10" fill="${CHART.muted}" font-family="system-ui,sans-serif">${t('chart_increase')}</text>
+    <rect x="${LW + 158}" y="${legY + 4}" width="14" height="13" rx="3" fill="#fca5a5" opacity="0.55"/>
+    <text x="${LW + 176}" y="${legY + 14}" font-size="10" fill="${CHART.muted}" font-family="system-ui,sans-serif">${t('chart_decrease')}</text>
+    <line x1="${LW + 228}" y1="${legY + 10}" x2="${LW + 241}" y2="${legY + 10}" stroke="#16a34a" stroke-width="2.5" stroke-linecap="round"/>
+    <text x="${LW + 245}" y="${legY + 14}" font-size="10" fill="${CHART.muted}" font-family="system-ui,sans-serif">${t('chart_forecast')}</text>`;
 
   wrap.innerHTML = `<svg width="100%" height="${H}" viewBox="0 0 ${W} ${H}" style="display:block;overflow:visible">${rows}${legend}</svg>`;
 }
@@ -811,18 +827,18 @@ function _renderBalanceDelta(accounts, wrap) {
     const pct   = a.now !== 0 ? (delta / Math.abs(a.now) * 100).toFixed(1) : null;
     const up    = delta >= 0;
     const flat  = Math.abs(delta) < 0.005;
-    const col   = flat ? '#94a3b8' : up ? '#16a34a' : '#dc2626';
+    const col   = flat ? CHART.muted : up ? '#16a34a' : '#dc2626';
     const hw    = flat ? 0 : (Math.abs(delta) / maxD) * (BW / 2);
     const sign  = delta > 0 ? '+' : '';
 
-    const track = `<rect x="${LW + 8}" y="${barY + 8}" width="${BW}" height="${barH - 16}" rx="3" fill="#f1f5f9"/>`;
-    const zline = `<line x1="${midX}" y1="${barY}" x2="${midX}" y2="${barY + barH}" stroke="#cbd5e1" stroke-width="1.5"/>`;
+    const track = `<rect x="${LW + 8}" y="${barY + 8}" width="${BW}" height="${barH - 16}" rx="3" fill="${CHART.track}"/>`;
+    const zline = `<line x1="${midX}" y1="${barY}" x2="${midX}" y2="${barY + barH}" stroke="${CHART.axis}" stroke-width="1.5"/>`;
     const bar   = flat
-      ? `<circle cx="${midX}" cy="${barY + barH / 2}" r="5" fill="#94a3b8"/>`
+      ? `<circle cx="${midX}" cy="${barY + barH / 2}" r="5" fill="${CHART.muted}"/>`
       : `<rect x="${up ? midX : midX - hw}" y="${barY + 5}" width="${hw}" height="${barH - 10}" rx="3" fill="${esc(col)}" opacity="0.82"/>`;
 
     const lbl    = a.label.length > 13 ? a.label.slice(0, 12) + '…' : a.label;
-    const nameEl = `<text x="${LW + 4}" y="${barY + barH / 2 + 5}" text-anchor="end" font-size="12" fill="#475569" font-family="system-ui,sans-serif" font-weight="500">${esc(lbl)}</text>`;
+    const nameEl = `<text x="${LW + 4}" y="${barY + barH / 2 + 5}" text-anchor="end" font-size="12" fill="${CHART.text}" font-family="system-ui,sans-serif" font-weight="500">${esc(lbl)}</text>`;
 
     const rx     = LW + BW + 18;
     const valTxt = `<text x="${rx}" y="${barY + barH / 2 - 2}" font-size="11" fill="${esc(col)}" font-weight="600" font-family="system-ui,sans-serif">${esc(sign + fmtEuro(delta))}</text>`;
@@ -835,7 +851,7 @@ function _renderBalanceDelta(accounts, wrap) {
     rows += `<g>${ttip}${track}${zline}${bar}${nameEl}${valTxt}${pctTxt}</g>\n`;
   });
 
-  const zeroLbl = `<text x="${midX}" y="${PAD - 4}" text-anchor="middle" font-size="10" fill="#cbd5e1" font-family="system-ui,sans-serif">Μεταβολή</text>`;
+  const zeroLbl = `<text x="${midX}" y="${PAD - 4}" text-anchor="middle" font-size="10" fill="${CHART.axis}" font-family="system-ui,sans-serif">${t('chart_change')}</text>`;
 
   wrap.innerHTML = `<svg width="100%" height="${H}" viewBox="0 0 ${W} ${H}" style="display:block;overflow:visible">${zeroLbl}${rows}</svg>`;
 }
@@ -861,7 +877,7 @@ function _renderExpDonutChart(catData) {
   if (!items.length) {
     canvas.width = W; canvas.height = 60;
     ctx.clearRect(0, 0, W, 60);
-    ctx.fillStyle = '#94a3b8'; ctx.font = '13px system-ui'; ctx.textAlign = 'center';
+    ctx.fillStyle = CHART.muted; ctx.font = '13px system-ui'; ctx.textAlign = 'center';
     ctx.fillText(t('dash_no_expenses'), W / 2, 34);
     return;
   }
@@ -908,7 +924,7 @@ function _renderExpDonutChart(catData) {
     ctx.closePath();
     ctx.fillStyle = c.color;
     ctx.fill();
-    ctx.strokeStyle = '#fff';
+    ctx.strokeStyle = CHART.bg;
     ctx.lineWidth = 2;
     ctx.stroke();
     angle += sweep;
@@ -916,10 +932,10 @@ function _renderExpDonutChart(catData) {
 
   // ── Center label (total) ─────────────────────────────────────
   ctx.textAlign = 'center';
-  ctx.fillStyle = '#1e293b';
+  ctx.fillStyle = CHART.strong;
   ctx.font = `bold ${donutR >= 80 ? 13 : 11}px system-ui`;
   ctx.fillText(fmtEuro(total).replace(' €', '€'), cx, cy + 5);
-  ctx.fillStyle = '#94a3b8';
+  ctx.fillStyle = CHART.muted;
   ctx.font = '9px system-ui';
   ctx.fillText(t('dash_subtotal'), cx, cy + 16);
 
@@ -937,7 +953,7 @@ function _renderExpDonutChart(catData) {
     ctx.fill();
 
     // Category name + percentage
-    ctx.fillStyle = '#475569';
+    ctx.fillStyle = CHART.text;
     ctx.font = '11px system-ui';
     ctx.textAlign = 'left';
     const lbl = c.category.length > maxLabelChars
@@ -946,7 +962,7 @@ function _renderExpDonutChart(catData) {
     ctx.fillText(`${lbl} (${pct}%)`, lgX + 15, y + 14);
 
     // Amount — right-aligned
-    ctx.fillStyle = '#1e293b';
+    ctx.fillStyle = CHART.strong;
     ctx.font = 'bold 11px system-ui';
     ctx.textAlign = 'right';
     ctx.fillText(fmtEuro(c.amount).replace(' €', '€'), lgX + lgW, y + 14);
@@ -964,7 +980,7 @@ function _renderExpBarsChart(catData) {
   if (!catData.length) {
     canvas.width = W; canvas.height = 60;
     ctx.clearRect(0, 0, W, 60);
-    ctx.fillStyle = '#94a3b8'; ctx.font = '13px system-ui'; ctx.textAlign = 'center';
+    ctx.fillStyle = CHART.muted; ctx.font = '13px system-ui'; ctx.textAlign = 'center';
     ctx.fillText(t('dash_no_expenses'), W / 2, 34);
     return;
   }
@@ -989,7 +1005,7 @@ function _renderExpBarsChart(catData) {
     const pct = Math.round(c.amount / total * 100);
 
     // Track
-    ctx.fillStyle = '#f1f5f9';
+    ctx.fillStyle = CHART.track;
     roundRect(ctx, LW, y, BW, BAR_H, 5); ctx.fill();
 
     // Bar
@@ -1000,7 +1016,7 @@ function _renderExpBarsChart(catData) {
 
     // Category label
     const lbl = c.category.length > 21 ? c.category.slice(0, 20) + '…' : c.category;
-    ctx.fillStyle = '#475569';
+    ctx.fillStyle = CHART.text;
     ctx.font = '11px system-ui';
     ctx.textAlign = 'right';
     ctx.fillText(lbl, LW - 6, y + BAR_H / 2 + 4);
@@ -1014,17 +1030,17 @@ function _renderExpBarsChart(catData) {
     }
 
     // Amount right
-    ctx.fillStyle = '#1e293b';
+    ctx.fillStyle = CHART.strong;
     ctx.font = 'bold 11px system-ui';
     ctx.textAlign = 'left';
     ctx.fillText(fmtEuro(c.amount).replace(' €', '€'), LW + BW + 7, y + BAR_H / 2 + 4);
   });
 
   // Total footer
-  ctx.fillStyle = '#94a3b8';
+  ctx.fillStyle = CHART.muted;
   ctx.font = '10px system-ui';
   ctx.textAlign = 'left';
-  ctx.fillText('Σύνολο: ' + fmtEuro(total), LW, H - 5);
+  ctx.fillText(t('dash_total') + ': ' + fmtEuro(total), LW, H - 5);
 }
 
 // ── DAILY BALANCE LINE CHART ─────────────────────────────────
@@ -1033,7 +1049,7 @@ function renderDailyBalanceChart() {
   const wrap = document.getElementById('dailyBalanceWrapper');
   if (!wrap) return;
   if (!state.accounts.length) {
-    wrap.innerHTML = '<p style="padding:20px;text-align:center;color:#94a3b8">—</p>';
+    wrap.innerHTML = '<p class="empty-state">—</p>';
     return;
   }
 
@@ -1097,7 +1113,10 @@ function renderDailyBalanceChart() {
   const fmtAx = v => {
     const sign = v < 0 ? '-' : '';
     const abs  = Math.abs(v);
-    if (abs >= 1000) return sign + (abs / 1000).toFixed(1).replace('.0', '').replace('.', ',') + 'k €';
+    if (abs >= 1000) {
+      const k = (abs / 1000).toFixed(1).replace('.0', '');
+      return sign + (getLang() === 'en' ? k : k.replace('.', ',')) + 'k €';
+    }
     return sign + Math.round(abs) + ' €';
   };
 
@@ -1106,8 +1125,8 @@ function renderDailyBalanceChart() {
   for (let i = 0; i <= 4; i++) {
     const v = yMin + (yMax - yMin) * (i / 4);
     const y = yOf(v).toFixed(1);
-    gridSvg  += `<line x1="${ML}" y1="${y}" x2="${ML + CW}" y2="${y}" stroke="#e2e8f0" stroke-width="1"/>`;
-    yLabels  += `<text x="${ML - 6}" y="${(parseFloat(y) + 4).toFixed(1)}" text-anchor="end" font-size="10" fill="#94a3b8" font-family="system-ui,sans-serif">${fmtAx(v)}</text>`;
+    gridSvg  += `<line x1="${ML}" y1="${y}" x2="${ML + CW}" y2="${y}" stroke="${CHART.grid}" stroke-width="1"/>`;
+    yLabels  += `<text x="${ML - 6}" y="${(parseFloat(y) + 4).toFixed(1)}" text-anchor="end" font-size="10" fill="${CHART.muted}" font-family="system-ui,sans-serif">${fmtAx(v)}</text>`;
   }
 
   // X axis labels (max 6, evenly spaced)
@@ -1118,13 +1137,13 @@ function renderDailyBalanceChart() {
     const bd = breakDates[Math.min(Math.round(i * step), breakDates.length - 1)];
     const x  = xOf(bd).toFixed(1);
     const [, mm, dd] = bd.split('-');
-    xLabels += `<text x="${x}" y="${(MT + CH + 15).toFixed(1)}" text-anchor="middle" font-size="10" fill="#94a3b8" font-family="system-ui,sans-serif">${dd}/${mm}</text>`;
+    xLabels += `<text x="${x}" y="${(MT + CH + 15).toFixed(1)}" text-anchor="middle" font-size="10" fill="${CHART.muted}" font-family="system-ui,sans-serif">${dd}/${mm}</text>`;
   }
 
   // "Σήμερα" vertical dashed marker
   const tx = xOf(todayStr).toFixed(1);
-  const todayMarker = `<line x1="${tx}" y1="${MT}" x2="${tx}" y2="${MT + CH}" stroke="#cbd5e1" stroke-width="1.5" stroke-dasharray="4,3"/>
-    <text x="${tx}" y="${MT - 5}" text-anchor="middle" font-size="9" fill="#94a3b8" font-family="system-ui,sans-serif">Σήμερα</text>`;
+  const todayMarker = `<line x1="${tx}" y1="${MT}" x2="${tx}" y2="${MT + CH}" stroke="${CHART.axis}" stroke-width="1.5" stroke-dasharray="4,3"/>
+    <text x="${tx}" y="${MT - 5}" text-anchor="middle" font-size="9" fill="${CHART.muted}" font-family="system-ui,sans-serif">${t('chart_today')}</text>`;
 
   // Series: polylines (carry-forward step) + dots at real data points
   let seriesSvg = '';
@@ -1152,7 +1171,7 @@ function renderDailyBalanceChart() {
       const cx = xOf(p.date).toFixed(1);
       const cy = yOf(p.value).toFixed(1);
       const [, mm, dd] = p.date.split('-');
-      seriesSvg += `<circle cx="${cx}" cy="${cy}" r="5" fill="${s.color}" stroke="#fff" stroke-width="2"><title>${esc(s.label)}: ${dd}/${mm} → ${fmtEuro(p.value)}</title></circle>`;
+      seriesSvg += `<circle cx="${cx}" cy="${cy}" r="5" fill="${s.color}" stroke="${CHART.bg}" stroke-width="2"><title>${esc(s.label)}: ${dd}/${mm} → ${fmtEuro(p.value)}</title></circle>`;
     });
   });
 
@@ -1166,12 +1185,12 @@ function renderDailyBalanceChart() {
     const lbl = s.label.length > 14 ? s.label.slice(0, 13) + '…' : s.label;
     legSvg += `<line x1="${lx}" y1="${legY - 4}" x2="${(parseFloat(lx) + 18).toFixed(1)}" y2="${legY - 4}" stroke="${s.color}" stroke-width="2.5" stroke-linecap="round"/>
       <circle cx="${(parseFloat(lx) + 9).toFixed(1)}" cy="${legY - 4}" r="3" fill="${s.color}"/>
-      <text x="${(parseFloat(lx) + 24).toFixed(1)}" y="${legY}" font-size="10" fill="#475569" font-family="system-ui,sans-serif">${esc(lbl)}</text>`;
+      <text x="${(parseFloat(lx) + 24).toFixed(1)}" y="${legY}" font-size="10" fill="${CHART.text}" font-family="system-ui,sans-serif">${esc(lbl)}</text>`;
   });
 
   // Axes border
-  const axes = `<line x1="${ML}" y1="${MT}" x2="${ML}" y2="${MT + CH}" stroke="#cbd5e1" stroke-width="1.5"/>
-    <line x1="${ML}" y1="${MT + CH}" x2="${ML + CW}" y2="${MT + CH}" stroke="#cbd5e1" stroke-width="1.5"/>`;
+  const axes = `<line x1="${ML}" y1="${MT}" x2="${ML}" y2="${MT + CH}" stroke="${CHART.axis}" stroke-width="1.5"/>
+    <line x1="${ML}" y1="${MT + CH}" x2="${ML + CW}" y2="${MT + CH}" stroke="${CHART.axis}" stroke-width="1.5"/>`;
 
   wrap.innerHTML = `<svg width="100%" height="${H}" viewBox="0 0 ${W} ${H}" style="display:block;overflow:visible">
     ${gridSvg}${axes}${todayMarker}${seriesSvg}${yLabels}${xLabels}${legSvg}
@@ -1323,7 +1342,8 @@ function renderTransactions() {
   filterAndRenderTransactions();
 }
 
-function filterAndRenderTransactions() {
+// Transactions matching the filters on the Κινήσεις page, in the current sort order
+function getFilteredTransactions() {
   const month   = getMonthValue('txMonthFilter');
   const account = document.getElementById('txAccountFilter').value;
   const cat     = document.getElementById('txCategoryFilter').value;
@@ -1338,13 +1358,18 @@ function filterAndRenderTransactions() {
     (tx.notes || '').toLowerCase().includes(search)
   );
 
-  // Sort
   txs.sort((a, b) => {
     let av = a[txSort.field], bv = b[txSort.field];
     if (txSort.field === 'amount') { av = +av; bv = +bv; }
     else { av = String(av||'').toLowerCase(); bv = String(bv||'').toLowerCase(); }
+    if (av === bv) return 0;
     return txSort.asc ? (av > bv ? 1 : -1) : (av < bv ? 1 : -1);
   });
+  return { month, account, cat, search, txs };
+}
+
+function filterAndRenderTransactions() {
+  const { txs } = getFilteredTransactions();
 
   const income   = txs.filter(t => t.type === 'income'  && !t.transferId).reduce((s,t) => s + t.amount, 0);
   const expenses = txs.filter(t => t.type === 'expense' && !t.transferId).reduce((s,t) => s + t.amount, 0);
@@ -1378,9 +1403,9 @@ function filterAndRenderTransactions() {
       </td>
       <td>
         <div class="tx-actions">
-          <button class="btn-icon${tx.settled ? ' settled' : ''}" onclick="event.stopPropagation();toggleTransactionSettled('${tx.id}')" title="${t('btn_toggle_settled')}">${tx.settled ? '✅' : '☐'}</button>
-          ${!tx.transferId ? `<button class="btn-icon" onclick="event.stopPropagation();editTransaction('${tx.id}')">✏️</button>` : '<span class="btn-icon-spacer"></span>'}
-          <button class="btn-icon danger" onclick="event.stopPropagation();deleteTransaction('${tx.id}')">🗑️</button>
+          <button class="btn-icon${tx.settled ? ' settled' : ''}" onclick="event.stopPropagation();toggleTransactionSettled('${tx.id}')" title="${t('btn_toggle_settled')}" aria-label="${t('btn_toggle_settled')}">${tx.settled ? '✅' : '☐'}</button>
+          <button class="btn-icon" onclick="event.stopPropagation();${tx.transferId ? 'editTransfer' : 'editTransaction'}('${tx.id}')" title="${t('btn_edit')}" aria-label="${t('btn_edit')}">✏️</button>
+          <button class="btn-icon danger" onclick="event.stopPropagation();deleteTransaction('${tx.id}')" title="${t('btn_delete')}" aria-label="${t('btn_delete')}">🗑️</button>
         </div>
       </td>
     </tr>
@@ -1389,26 +1414,7 @@ function filterAndRenderTransactions() {
 
 // ── TRANSACTION PDF REPORT ────────────────────────────────────
 function generateTransactionReport() {
-  // Same filter logic as filterAndRenderTransactions()
-  const month   = getMonthValue('txMonthFilter');
-  const account = document.getElementById('txAccountFilter').value;
-  const cat     = document.getElementById('txCategoryFilter').value;
-  const search  = document.getElementById('txSearch').value.trim().toLowerCase();
-
-  let txs = [...state.transactions];
-  if (month)   txs = txs.filter(tx => tx.date.startsWith(month));
-  if (account) txs = txs.filter(tx => tx.account === account);
-  if (cat)     txs = txs.filter(tx => tx.category === cat);
-  if (search)  txs = txs.filter(tx =>
-    tx.desc.toLowerCase().includes(search) ||
-    (tx.notes || '').toLowerCase().includes(search)
-  );
-  txs.sort((a, b) => {
-    let av = a[txSort.field], bv = b[txSort.field];
-    if (txSort.field === 'amount') { av = +av; bv = +bv; }
-    else { av = String(av || '').toLowerCase(); bv = String(bv || '').toLowerCase(); }
-    return txSort.asc ? (av > bv ? 1 : -1) : (av < bv ? 1 : -1);
-  });
+  const { month, account, cat, search, txs } = getFilteredTransactions();
 
   const income   = txs.filter(tx => tx.type === 'income'  && !tx.transferId).reduce((s, tx) => s + tx.amount, 0);
   const expenses = txs.filter(tx => tx.type === 'expense' && !tx.transferId).reduce((s, tx) => s + tx.amount, 0);
@@ -1416,15 +1422,18 @@ function generateTransactionReport() {
 
   // Filter labels
   const [fy, fm] = month.split('-');
-  const monthLabel = month ? `${MP_MONTH_NAMES[parseInt(fm, 10) - 1][1]} ${fy}` : 'Όλοι';
+  const monthLabel = month ? `${t('months_full')[parseInt(fm, 10) - 1]} ${fy}` : t('report_all');
   const acctSel  = document.getElementById('txAccountFilter');
   const catSel   = document.getElementById('txCategoryFilter');
-  const acctLabel = account ? (acctSel.selectedOptions[0]?.text || account) : 'Όλοι';
-  const catLabel  = cat     ? (catSel.selectedOptions[0]?.text  || cat)     : 'Όλες';
+  const acctLabel = account ? (acctSel.selectedOptions[0]?.text || account) : t('report_all');
+  const catLabel  = cat     ? (catSel.selectedOptions[0]?.text  || cat)     : t('report_all');
+  const col = key => t(key).replace(' ↕', '');
 
+  const lang    = getLang();
+  const locale  = lang === 'en' ? 'en-GB' : 'el-GR';
   const now     = new Date();
-  const dateStr = now.toLocaleDateString('el-GR', { day: '2-digit', month: 'long', year: 'numeric' });
-  const timeStr = now.toLocaleTimeString('el-GR', { hour: '2-digit', minute: '2-digit' });
+  const dateStr = now.toLocaleDateString(locale, { day: '2-digit', month: 'long', year: 'numeric' });
+  const timeStr = now.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' });
   const appVer  = document.querySelector('.version')?.textContent || 'Family FiN';
 
   // Build table rows
@@ -1452,22 +1461,22 @@ function generateTransactionReport() {
   }).join('');
 
   const noData = txs.length === 0
-    ? `<div class="empty">Δεν βρέθηκαν κινήσεις για τα επιλεγμένα φίλτρα.</div>` : '';
+    ? `<div class="empty">${t('report_empty')}</div>` : '';
 
   const tableHtml = txs.length ? `
   <table>
     <thead><tr>
-      <th>Ημερομηνία</th><th>Περιγραφή</th><th>Κατηγορία</th>
-      <th>Λογαριασμός</th><th class="r">Ποσό</th><th class="c">✓</th>
+      <th>${col('col_date')}</th><th>${col('col_desc')}</th><th>${col('col_category')}</th>
+      <th>${col('col_account')}</th><th class="r">${col('col_amount')}</th><th class="c">✓</th>
     </tr></thead>
     <tbody>${rows}</tbody>
   </table>` : noData;
 
   const html = `<!DOCTYPE html>
-<html lang="el"><head>
+<html lang="${lang}"><head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Αναφορά Κινήσεων — Family FiN</title>
+<title>${t('report_title')} — Family FiN</title>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 body{font-family:system-ui,-apple-system,sans-serif;color:#1e293b;font-size:12px;padding:24px 28px;background:#fff}
@@ -1513,32 +1522,32 @@ td.r{text-align:right}td.c{text-align:center}td.nd{white-space:nowrap}
 }
 </style></head><body>
 
-<button class="pbtn" onclick="window.print()">🖨️ Εκτύπωση / Αποθήκευση PDF</button>
+<button class="pbtn" onclick="window.print()">${t('report_print')}</button>
 
 <div class="hdr">
-  <div><div class="logo">Family <b>FiN</b></div><div class="rname">Αναφορά Κινήσεων</div></div>
-  <div class="meta"><div><b>${dateStr}</b> — ${timeStr}</div><div>${txs.length} κινήσεις</div></div>
+  <div><div class="logo">Family <b>FiN</b></div><div class="rname">${t('report_title')}</div></div>
+  <div class="meta"><div><b>${dateStr}</b> — ${timeStr}</div><div>${tf('report_count', txs.length)}</div></div>
 </div>
 
 <div class="frow">
-  <span class="ftit">Φίλτρα:</span>
-  <span class="fc">📅 Μήνας: <b>${esc(monthLabel)}</b></span>
-  <span class="fc">🏦 Λογαριασμός: <b>${esc(acctLabel)}</b></span>
-  <span class="fc">🏷 Κατηγορία: <b>${esc(catLabel)}</b></span>
+  <span class="ftit">${t('report_filters')}</span>
+  <span class="fc">📅 ${t('report_month')}: <b>${esc(monthLabel)}</b></span>
+  <span class="fc">🏦 ${col('col_account')}: <b>${esc(acctLabel)}</b></span>
+  <span class="fc">🏷 ${col('col_category')}: <b>${esc(catLabel)}</b></span>
   ${search ? `<span class="fc">🔍 <b>${esc(search)}</b></span>` : ''}
 </div>
 
 <div class="sbar">
-  <div class="si"><div class="sl">Έσοδα</div><div class="sv inc">${fmtEuro(income)}</div></div>
-  <div class="si"><div class="sl">Έξοδα</div><div class="sv exp">${fmtEuro(expenses)}</div></div>
-  <div class="si"><div class="sl">Υπόλοιπο</div><div class="sv ${balance >= 0 ? 'pos' : 'neg'}">${fmtEuro(balance)}</div></div>
+  <div class="si"><div class="sl">${t('report_income')}</div><div class="sv inc">${fmtEuro(income)}</div></div>
+  <div class="si"><div class="sl">${t('report_expenses')}</div><div class="sv exp">${fmtEuro(expenses)}</div></div>
+  <div class="si"><div class="sl">${t('report_balance')}</div><div class="sv ${balance >= 0 ? 'pos' : 'neg'}">${fmtEuro(balance)}</div></div>
 </div>
 
 ${tableHtml}
 
 <div class="ftr">
   <span>${esc(appVer)}</span>
-  <span>${txs.length} κινήσεις &nbsp;·&nbsp; Έσοδα: ${fmtEuro(income)} &nbsp;·&nbsp; Έξοδα: ${fmtEuro(expenses)} &nbsp;·&nbsp; Υπόλοιπο: ${fmtEuro(balance)}</span>
+  <span>${tf('report_count', txs.length)} &nbsp;·&nbsp; ${t('report_income')}: ${fmtEuro(income)} &nbsp;·&nbsp; ${t('report_expenses')}: ${fmtEuro(expenses)} &nbsp;·&nbsp; ${t('report_balance')}: ${fmtEuro(balance)}</span>
 </div>
 
 <script>setTimeout(()=>window.print(),500);<\/script>
@@ -1546,7 +1555,7 @@ ${tableHtml}
 
   const win = window.open('', '_blank', 'width=920,height=720,menubar=yes');
   if (!win) {
-    showToast('Ο browser μπλόκαρε το νέο παράθυρο. Επιτρέψτε τα pop-ups για αυτή τη σελίδα.', 'error');
+    showToast(t('report_popup_blocked'), 'error');
     return;
   }
   win.document.write(html);
@@ -1597,32 +1606,21 @@ function deleteTransaction(id) {
   const tx = state.transactions.find(t => t.id === id);
   if (!tx) return;
 
-  const isTransfer = !!tx.transferId;
-  const title = isTransfer ? t('confirm_del_transfer') : t('confirm_del_tx');
-  const msg   = isTransfer ? t('confirm_del_transfer_msg')
-              : tx.subId   ? t('confirm_del_sub_tx') : t('confirm_del_tx_msg');
-
-  showConfirm(title, msg, () => {
-    if (isTransfer) {
-      // Delete both sides and reverse both balances
+  if (tx.transferId) {
+    // Delete both sides and reverse both balances
+    deleteWithUndo(() => {
       state.transactions
-        .filter(t => t.transferId === tx.transferId)
-        .forEach(t => { if (t.settled) adjustBalance(t.account, -txDelta(t)); });
-      state.transactions = state.transactions.filter(t => t.transferId !== tx.transferId);
-      showToast(t('toast_transfer_deleted'), 'success');
-    } else {
-      if (tx.subId && tx.subMonth) {
-        if (!state.deletedSubKeys) state.deletedSubKeys = [];
-        state.deletedSubKeys.push(`${tx.subId}|${tx.subMonth}`);
-      }
-      if (tx.settled) adjustBalance(tx.account, -txDelta(tx));
-      state.transactions = state.transactions.filter(t => t.id !== id);
-      showToast(t('toast_tx_deleted'), 'success');
-    }
-    saveState();
-    renderPage(currentPage());
-    updateDueBadge();
-  });
+        .filter(x => x.transferId === tx.transferId)
+        .forEach(x => { if (x.settled) adjustBalance(x.account, -txDelta(x)); });
+      state.transactions = state.transactions.filter(x => x.transferId !== tx.transferId);
+    }, t('toast_transfer_deleted'));
+    return;
+  }
+  deleteWithUndo(() => {
+    if (tx.subId && tx.subMonth) state.deletedSubKeys.push(`${tx.subId}|${tx.subMonth}`);
+    if (tx.settled) adjustBalance(tx.account, -txDelta(tx));
+    state.transactions = state.transactions.filter(x => x.id !== id);
+  }, t('toast_tx_deleted'));
 }
 
 // ── TRANSFERS ─────────────────────────────────────────────────
@@ -1634,6 +1632,8 @@ function openTransferModal() {
   if (state.accounts.length > 1) {
     document.getElementById('transferTo').value = state.accounts[1].id;
   }
+  document.getElementById('transferModalTitle').textContent = t('modal_transfer');
+  document.getElementById('editTransferId').value    = '';
   document.getElementById('transferDate').value      = today();
   document.getElementById('transferAmount').value   = '';
   document.getElementById('transferNotes').value    = '';
@@ -1641,7 +1641,25 @@ function openTransferModal() {
   openModal('transferModal');
 }
 
+function editTransfer(id) {
+  const tx = state.transactions.find(x => x.id === id);
+  if (!tx?.transferId) return;
+  const pair = state.transactions.filter(x => x.transferId === tx.transferId);
+  const out  = pair.find(x => x.type === 'expense');
+  const inc  = pair.find(x => x.type === 'income');
+  openTransferModal();
+  document.getElementById('transferModalTitle').textContent = t('modal_edit_transfer');
+  document.getElementById('editTransferId').value    = tx.transferId;
+  if (out) document.getElementById('transferFrom').value = out.account;
+  if (inc) document.getElementById('transferTo').value   = inc.account;
+  document.getElementById('transferDate').value      = tx.date;
+  document.getElementById('transferAmount').value    = tx.amount;
+  document.getElementById('transferNotes').value     = tx.notes || '';
+  document.getElementById('transferSettled').checked = !!tx.settled;
+}
+
 function saveTransfer() {
+  const editTid = document.getElementById('editTransferId').value;
   const date   = document.getElementById('transferDate').value;
   const amount = readAmount('transferAmount');
   const fromId  = document.getElementById('transferFrom').value;
@@ -1660,7 +1678,15 @@ function saveTransfer() {
   const toAcc   = state.accounts.find(a => a.id === toId);
   if (!fromAcc || !toAcc) return;
 
-  const tid = uid();
+  // Editing = undo the old pair's balance effect, then rebuild both sides under the same transferId
+  if (editTid) {
+    state.transactions
+      .filter(x => x.transferId === editTid)
+      .forEach(x => { if (x.settled) adjustBalance(x.account, -txDelta(x)); });
+    state.transactions = state.transactions.filter(x => x.transferId !== editTid);
+  }
+
+  const tid = editTid || uid();
   const label = t('transfer_label');
 
   state.transactions.push({
@@ -1683,8 +1709,9 @@ function saveTransfer() {
 
   saveState();
   closeModal('transferModal');
-  showToast(t('toast_transfer_saved'), 'success');
+  showToast(editTid ? t('toast_tx_updated') : t('toast_transfer_saved'), 'success');
   renderPage(currentPage());
+  updateDueBadge();
 }
 
 function toggleTransactionSettled(id) {
@@ -1768,7 +1795,7 @@ function filterAndRenderIncome() {
 
   const total = txs.reduce((s, tx) => s + tx.amount, 0);
   document.getElementById('incomeMonthTotal').textContent  = fmtEuro(total);
-  document.getElementById('incomeYearEstimate').textContent = fmtEuro(total * 12);
+  document.getElementById('incomeYearEstimate').textContent = fmtEuro(estimateYearlyIncome(month));
 
   const copyTitle = t('action_copy_next_month');
   document.getElementById('incomeTbody').innerHTML = txs.length
@@ -1780,11 +1807,28 @@ function filterAndRenderIncome() {
           <td>${esc(accountLabel(tx.account))}</td>
           <td class="amount-cell positive">+${fmtEuro(tx.amount)}</td>
           <td>
-            <button class="btn-icon" title="${copyTitle}" onclick="event.stopPropagation();copyIncomeToNextMonth('${tx.id}')">📋</button>
-            <button class="btn-icon danger" onclick="event.stopPropagation();deleteTransaction('${tx.id}')">🗑️</button>
+            <button class="btn-icon" title="${copyTitle}" aria-label="${copyTitle}" onclick="event.stopPropagation();copyIncomeToNextMonth('${tx.id}')">📋</button>
+            <button class="btn-icon" onclick="event.stopPropagation();editTransaction('${tx.id}')" title="${t('btn_edit')}" aria-label="${t('btn_edit')}">✏️</button>
+            <button class="btn-icon danger" onclick="event.stopPropagation();deleteTransaction('${tx.id}')" title="${t('btn_delete')}" aria-label="${t('btn_delete')}">🗑️</button>
           </td>
         </tr>`).join('')
     : `<tr><td colspan="6" class="empty-state">${t('income_none')}</td></tr>`;
+}
+
+// Average monthly income over the 12 months ending at `month` (counting only months
+// that had income, so a short history isn't diluted), projected to a full year
+function estimateYearlyIncome(month) {
+  const [y, m] = month.split('-').map(Number);
+  const from = m === 12 ? `${y}-01` : `${y - 1}-${String(m + 1).padStart(2, '0')}`;
+  const perMonth = {};
+  state.transactions
+    .filter(tx => tx.type === 'income' && !tx.transferId)
+    .forEach(tx => {
+      const ym = tx.date.slice(0, 7);
+      if (ym >= from && ym <= month) perMonth[ym] = (perMonth[ym] || 0) + tx.amount;
+    });
+  const totals = Object.values(perMonth);
+  return totals.length ? totals.reduce((s, v) => s + v, 0) / totals.length * 12 : 0;
 }
 
 function copyIncomeToNextMonth(id) {
@@ -1852,6 +1896,7 @@ function doTransferAction(action) {
   const id = _transferActionId;
   closeTransferActionSheet();
   if (action === 'settled') toggleTransactionSettled(id);
+  if (action === 'edit')    editTransfer(id);
   if (action === 'delete')  deleteTransaction(id);
 }
 
@@ -1878,6 +1923,7 @@ function doIncomeAction(action) {
   closeIncomeActionSheet();
   if (action === 'settled') toggleTransactionSettled(id);
   if (action === 'copy')    copyIncomeToNextMonth(id);
+  if (action === 'edit')    editTransaction(id);
   if (action === 'delete')  deleteTransaction(id);
 }
 
@@ -2100,8 +2146,8 @@ function renderInstallmentCards(containerId, list) {
       </div>
       <div class="inst-actions">
         ${!done ? `<button class="btn btn-sm btn-secondary" onclick="payInstallment('${i.id}')">${t('btn_pay_inst')}</button>` : ''}
-        <button class="btn btn-sm btn-secondary" onclick="editInstallment('${i.id}')">✏️</button>
-        <button class="btn btn-sm btn-danger" onclick="deleteInstallment('${i.id}')">🗑️</button>
+        <button class="btn btn-sm btn-secondary" onclick="editInstallment('${i.id}')" title="${t('btn_edit')}" aria-label="${t('btn_edit')}">✏️</button>
+        <button class="btn btn-sm btn-danger" onclick="deleteInstallment('${i.id}')" title="${t('btn_delete')}" aria-label="${t('btn_delete')}">🗑️</button>
       </div>
     </div>`;
   }).join('');
@@ -2118,8 +2164,8 @@ function renderCardTransactions(tbodyId, txs) {
           <td>${tx.category ? `<span class="badge badge-blue">${esc(tx.category)}</span>` : '—'}</td>
           <td class="amount-cell negative">-${fmtEuro(tx.amount)}</td>
           <td style="white-space:nowrap">
-            <button class="btn-icon" onclick="event.stopPropagation();editCardTransaction('${tx.id}')">✏️</button>
-            <button class="btn-icon danger" onclick="event.stopPropagation();deleteCardTx('${tx.id}')">🗑️</button>
+            <button class="btn-icon" onclick="event.stopPropagation();editCardTransaction('${tx.id}')" title="${t('btn_edit')}" aria-label="${t('btn_edit')}">✏️</button>
+            <button class="btn-icon danger" onclick="event.stopPropagation();deleteCardTx('${tx.id}')" title="${t('btn_delete')}" aria-label="${t('btn_delete')}">🗑️</button>
           </td>
         </tr>`).join('')
     : `<tr><td colspan="5" class="empty-state">${t('tx_empty')}</td></tr>`;
@@ -2212,12 +2258,9 @@ function payInstallment(id) {
 }
 
 function deleteInstallment(id) {
-  showConfirm(t('confirm_del_inst'), t('confirm_del_inst_msg'), () => {
+  deleteWithUndo(() => {
     state.installments = state.installments.filter(i => i.id !== id);
-    saveState();
-    renderPage(currentPage());
-    showToast(t('toast_inst_deleted'), 'success');
-  });
+  }, t('toast_inst_deleted'));
 }
 
 // ── SUBSCRIPTION AUTO-SYNC ───────────────────────────────────
@@ -2242,7 +2285,7 @@ function syncSubscriptionTransactions() {
       months = monthRange(start, current);
     } else {
       // yearly: one entry per year on the billing month
-      const billingMM = start.split('-')[1];
+      const billingMM = sub.billingMonth || start.split('-')[1];
       const [sy] = start.split('-');
       const [cy] = current.split('-');
       for (let y = parseInt(sy); y <= parseInt(cy); y++) {
@@ -2348,8 +2391,8 @@ function renderSubscriptions() {
 
   grid.innerHTML = subs.map(s => `
     <div class="sub-card${s.paused ? ' sub-paused' : ''}" onclick="editSubscription('${s.id}')">
-      <button class="sub-delete" onclick="event.stopPropagation();deleteSubscription('${s.id}')" title="✕">✕</button>
-      <button class="sub-gen-next" onclick="event.stopPropagation();generateNextMonthForSub('${s.id}')" title="${t('btn_gen_next_month')}">📅 +1</button>
+      <button class="sub-delete" onclick="event.stopPropagation();deleteSubscription('${s.id}')" title="${t('btn_delete')}" aria-label="${t('btn_delete')}">✕</button>
+      <button class="sub-gen-next" onclick="event.stopPropagation();generateNextMonthForSub('${s.id}')" title="${t('btn_gen_next_month')}" aria-label="${t('btn_gen_next_month')}">📅 +1</button>
       <div class="sub-icon">${s.icon || '📱'}</div>
       <div class="sub-name">${esc(s.name)}</div>
       <div class="sub-amount">${fmtEuro(s.amount)}</div>
@@ -2358,6 +2401,11 @@ function renderSubscriptions() {
       ${s.paused ? `<div class="sub-paused-badge">${t('sub_paused_badge')}</div>` : ''}
     </div>
   `).join('');
+}
+
+function toggleSubBillingMonth() {
+  document.getElementById('subBillingMonthGroup').hidden =
+    document.getElementById('subFrequency').value !== 'yearly';
 }
 
 function openSubscriptionModal() {
@@ -2369,6 +2417,8 @@ function openSubscriptionModal() {
   document.getElementById('subDay').value       = '';
   document.getElementById('subIcon').value      = '';
   document.getElementById('subPaused').checked  = false;
+  document.getElementById('subBillingMonth').value = thisMonth().split('-')[1];
+  toggleSubBillingMonth();
   populateCategorySelect('subCategory');
   openModal('addSubscriptionModal');
 }
@@ -2385,6 +2435,8 @@ function editSubscription(id) {
   document.getElementById('subDay').value       = s.day || '';
   document.getElementById('subIcon').value      = s.icon || '';
   document.getElementById('subPaused').checked  = !!s.paused;
+  document.getElementById('subBillingMonth').value = s.billingMonth || (s.startMonth || thisMonth()).split('-')[1];
+  toggleSubBillingMonth();
   populateCategorySelect('subCategory');
   document.getElementById('subCategory').value  = s.category || '';
   openModal('addSubscriptionModal');
@@ -2403,7 +2455,8 @@ function saveSubscription() {
 
   if (!name || isNaN(amount)) { showToast(t('toast_fill_required'), 'error'); return; }
 
-  const obj = { name, amount, frequency: freq, card, day, icon, category, paused };
+  const billingMonth = freq === 'yearly' ? document.getElementById('subBillingMonth').value : undefined;
+  const obj = { name, amount, frequency: freq, card, day, icon, category, paused, billingMonth };
   if (editId) {
     const idx = state.subscriptions.findIndex(s => s.id === editId);
     if (idx >= 0) {
@@ -2496,20 +2549,12 @@ function saveCardTransaction() {
 }
 
 function deleteCardTx(id) {
-  const tx = state.cardTransactions.find(t => t.id === id);
-  const msg = tx?.subId
-    ? t('confirm_del_sub_tx')
-    : t('confirm_del_card_tx_msg');
-  showConfirm(t('confirm_del_tx'), msg, () => {
-    if (tx?.subId && tx?.subMonth) {
-      if (!state.deletedSubKeys) state.deletedSubKeys = [];
-      state.deletedSubKeys.push(`${tx.subId}|${tx.subMonth}`);
-    }
-    state.cardTransactions = state.cardTransactions.filter(tx => tx.id !== id);
-    saveState();
-    renderPage(currentPage());
-    showToast(t('toast_card_tx_deleted'), 'success');
-  });
+  const tx = state.cardTransactions.find(x => x.id === id);
+  if (!tx) return;
+  deleteWithUndo(() => {
+    if (tx.subId && tx.subMonth) state.deletedSubKeys.push(`${tx.subId}|${tx.subMonth}`);
+    state.cardTransactions = state.cardTransactions.filter(x => x.id !== id);
+  }, t('toast_card_tx_deleted'));
 }
 
 // ── SETTINGS ─────────────────────────────────────────────────
@@ -2540,7 +2585,7 @@ function renderAccountsSettings() {
         </div>
         <div class="form-group" id="accBankGroup_${acc.id}" ${acc.type === 'cash' ? 'style="display:none"' : ''}>
           <label>${t('acc_label_bank')}</label>
-          <input type="text" id="accBank_${acc.id}" class="form-control" value="${esc(acc.bank || '')}" placeholder="π.χ. Alpha Bank">
+          <input type="text" id="accBank_${acc.id}" class="form-control" value="${esc(acc.bank || '')}" placeholder="${t('placeholder_bank')}">
         </div>
         <div class="form-group">
           <label>${t('acc_label_balance')}</label>
@@ -2570,7 +2615,7 @@ function renderCardsSettings() {
         </div>
         <div class="form-group">
           <label>${t('card_label_bank')}</label>
-          <input type="text" id="cardBank_${card.id}" class="form-control" value="${esc(card.bank || '')}" placeholder="π.χ. Alpha Bank">
+          <input type="text" id="cardBank_${card.id}" class="form-control" value="${esc(card.bank || '')}" placeholder="${t('placeholder_bank')}">
         </div>
         <div class="form-group">
           <label>${t('card_label_linked')}</label>
@@ -2878,6 +2923,7 @@ function togglePrivacy() {
   const btn = document.getElementById('privacyToggle');
   btn.textContent = on ? '🙈' : '👁️';
   btn.title       = on ? t('privacy_show') : t('privacy_hide');
+  btn.setAttribute('aria-label', btn.title);
 }
 
 function currentPage() {
@@ -2886,24 +2932,64 @@ function currentPage() {
 }
 
 // ── MODALS ───────────────────────────────────────────────────
+// Keyboard users land in the first field and return to the button that opened the dialog
+const modalOpeners = {};
 function openModal(id) {
   const m = document.getElementById(id);
-  if (m) m.classList.add('open');
+  if (!m) return;
+  modalOpeners[id] = document.activeElement;
+  m.classList.add('open');
+  const first = m.querySelector('.modal-body input:not([type=hidden]):not([type=radio]):not([type=checkbox]), .modal-body select, .modal-body textarea, .modal-footer .btn-primary');
+  if (first) setTimeout(() => first.focus({ preventScroll: true }), 50);
 }
 
 function closeModal(id) {
   const m = document.getElementById(id);
-  if (m) m.classList.remove('open');
+  if (!m?.classList.contains('open')) return;
+  m.classList.remove('open');
+  modalOpeners[id]?.focus?.({ preventScroll: true });
+  delete modalOpeners[id];
 }
 
 // ── TOAST ────────────────────────────────────────────────────
 let toastTimer;
-function showToast(msg, type = '') {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.className = 'toast' + (type ? ' ' + type : '') + ' show';
+function showToast(msg, type = '', action = null) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  if (action) {
+    const btn = document.createElement('button');
+    btn.className   = 'toast-action';
+    btn.textContent = action.label;
+    btn.onclick     = () => { el.classList.remove('show'); action.onClick(); };
+    el.append(btn);
+  }
+  el.className = 'toast' + (type ? ' ' + type : '') + (action ? ' has-action' : '') + ' show';
+  el.setAttribute('role', type === 'error' ? 'alert' : 'status');
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
+  toastTimer = setTimeout(() => el.classList.remove('show'), action ? 6000 : 2800);
+}
+
+// Deletes immediately and offers "Undo" in the toast instead of a confirm dialog.
+// Undo restores the pre-delete snapshot, but only if nothing else changed since.
+function deleteWithUndo(mutate, msg) {
+  const snapshot = JSON.stringify(state);
+  mutate();
+  saveState();
+  const seq = mutationSeq;
+  renderPage(currentPage());
+  updateDueBadge();
+  showToast(msg, 'success', {
+    label: t('btn_undo'),
+    onClick: () => {
+      if (mutationSeq !== seq) { showToast(t('undo_unavailable'), 'error'); return; }
+      state = migrateState(JSON.parse(snapshot));
+      saveState();
+      populateAllDropdowns();
+      renderPage(currentPage());
+      updateDueBadge();
+      showToast(t('toast_undone'), 'success');
+    },
+  });
 }
 
 // ── NOTIFICATIONS ────────────────────────────────────────────
@@ -3053,7 +3139,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Close modals on overlay click
   document.querySelectorAll('.modal-overlay').forEach(overlay => {
     overlay.addEventListener('click', e => {
-      if (e.target === overlay) overlay.classList.remove('open');
+      if (e.target === overlay) closeModal(overlay.id);
     });
   });
 
@@ -3064,6 +3150,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
   document.getElementById('txSearch')?.addEventListener('input', filterAndRenderTransactions);
   addMonthPickerListener('incomeMonthFilter', filterAndRenderIncome);
+  document.getElementById('subFrequency').addEventListener('change', toggleSubBillingMonth);
 
   // Αλλαγή τύπου στο modal κινήσεων → ανανέωση κατηγοριών
   document.querySelectorAll('input[name="txType"]').forEach(r => {
@@ -3088,7 +3175,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Keyboard shortcuts
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape') {
-      document.querySelectorAll('.modal-overlay.open').forEach(m => m.classList.remove('open'));
+      document.querySelectorAll('.modal-overlay.open').forEach(m => closeModal(m.id));
+      document.querySelectorAll('.action-sheet-overlay.open').forEach(m => m.classList.remove('open'));
     }
     if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
       e.preventDefault();
@@ -3096,8 +3184,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
-  // Redraw chart on resize
+  // Redraw charts on resize (debounced) and when the OS switches light/dark theme
+  let resizeTimer;
   window.addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => { if (currentPage() === 'dashboard') renderDashboard(); }, 150);
+  });
+  refreshChartColors();
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+    refreshChartColors();
     if (currentPage() === 'dashboard') renderDashboard();
   });
 
