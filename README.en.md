@@ -612,19 +612,19 @@ Manage browser notifications for pending expenses.
 
 In the **Settings → Data** section there are three options:
 
-### 📤 Export JSON
+### Export JSON
 
 Downloads a `familyfin_backup_YYYYMMDD.json` file with **all** app data (accounts, transactions, installments, subscriptions, etc.).
 
 > ✅ Recommended periodically as a backup.
 
-### 📥 Import JSON
+### Import JSON
 
 Loads a previously exported backup file or a file from the server's `backups/` folder. **Completely replaces** current data after asking for confirmation. Files from older versions are converted automatically.
 
 > 💾 Before importing, the server automatically keeps a copy of the current data (`backups/before-import-…json`).
 
-### 🗑️ Reset
+### Reset
 
 Deletes **all** data and restores factory defaults. Asks for confirmation before executing, and the server automatically keeps a copy (`backups/before-reset-…json`).
 
@@ -670,4 +670,4 @@ Card payments from an account (category "Κάρτες" or "Cards") are excluded 
 
 ---
 
-*Family FiN — Version 0.943 Beta | Last updated: June 2026*
+*Family FiN — Version 0.944 Beta | Last updated: June 2026*

@@ -26,12 +26,15 @@
       document.documentElement.dataset.style = style;
     })();
   </script>
-  <link rel="stylesheet" href="style.css?v=0.943">
+  <link rel="stylesheet" href="style.css?v=0.944">
 </head>
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
   <defs>
     <symbol id="i-logo" viewBox="0 0 24 24"><rect x="3.5" y="13" width="4.5" height="8" rx="1.3" fill="currentColor"/><rect x="9.75" y="9" width="4.5" height="12" rx="1.3" fill="currentColor"/><rect x="16" y="5" width="4.5" height="16" rx="1.3" fill="currentColor"/></symbol>
+    <symbol id="i-export" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3M7.5 7.5 12 3l4.5 4.5M4 14v4.5A2.5 2.5 0 0 0 6.5 21h11a2.5 2.5 0 0 0 2.5-2.5V14"/></symbol>
+    <symbol id="i-import" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7.5 10.5 12 15l4.5-4.5M4 14v4.5A2.5 2.5 0 0 0 6.5 21h11a2.5 2.5 0 0 0 2.5-2.5V14"/></symbol>
+    <symbol id="i-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9.5 7V4.5h5V7M6.5 7l.9 12.1A2 2 0 0 0 9.4 21h5.2a2 2 0 0 0 2-1.9L17.5 7M10 11v6M14 11v6"/></symbol>
     <symbol id="i-home" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7.5" height="9" rx="1.5"/><rect x="13.5" y="3" width="7.5" height="5.5" rx="1.5"/><rect x="13.5" y="11.5" width="7.5" height="9.5" rx="1.5"/><rect x="3" y="15" width="7.5" height="6" rx="1.5"/></symbol>
     <symbol id="i-tx" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4v16M7 20l-3-3M7 20l3-3M17 20V4M17 4l-3 3M17 4l3 3"/></symbol>
     <symbol id="i-income" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M8.5 13.5 12 17l3.5-3.5"/></symbol>
@@ -80,7 +83,7 @@
   </ul>
   <div class="sidebar-footer">
     <button id="langToggle" class="lang-toggle" onclick="toggleLang()">EN</button>
-    <span class="version">v0.943 Beta</span>
+    <span class="version">v0.944 Beta</span>
   </div>
 </nav>
 
@@ -505,10 +508,10 @@
       <div class="card">
         <div class="card-header"><h2 data-i18n="settings_data">Δεδομένα</h2></div>
         <div class="settings-section settings-actions">
-          <button class="btn btn-secondary" onclick="exportData()" data-i18n="btn_export">📤 Εξαγωγή JSON</button>
-          <button class="btn btn-secondary" onclick="importData()" data-i18n="btn_import">📥 Εισαγωγή JSON</button>
+          <button class="btn btn-secondary" onclick="exportData()"><svg class="btn-ico" aria-hidden="true"><use href="#i-export"/></svg><span data-i18n="btn_export">Εξαγωγή JSON</span></button>
+          <button class="btn btn-secondary" onclick="importData()"><svg class="btn-ico" aria-hidden="true"><use href="#i-import"/></svg><span data-i18n="btn_import">Εισαγωγή JSON</span></button>
           <input type="file" id="importFile" accept=".json" style="display:none" onchange="handleImport(event)">
-          <button class="btn btn-danger" onclick="confirmReset()" data-i18n="btn_reset">🗑️ Επαναφορά</button>
+          <button class="btn btn-danger" onclick="confirmReset()"><svg class="btn-ico" aria-hidden="true"><use href="#i-trash"/></svg><span data-i18n="btn_reset">Επαναφορά</span></button>
         </div>
       </div>
 
@@ -956,11 +959,11 @@
   </div>
 </div>
 
-<script src="i18n.js?v=0.943"></script>
-<script src="calc.js?v=0.943"></script>
-<script src="charts.js?v=0.943"></script>
-<script src="help.js?v=0.943"></script>
-<script src="report.js?v=0.943"></script>
-<script src="app.js?v=0.943"></script>
+<script src="i18n.js?v=0.944"></script>
+<script src="calc.js?v=0.944"></script>
+<script src="charts.js?v=0.944"></script>
+<script src="help.js?v=0.944"></script>
+<script src="report.js?v=0.944"></script>
+<script src="app.js?v=0.944"></script>
 </body>
 </html>
