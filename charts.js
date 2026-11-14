@@ -13,7 +13,32 @@ function refreshChartColors() {
   for (const k of ['text', 'muted', 'grid', 'axis', 'track', 'strong']) {
     CHART[k] = cs.getPropertyValue('--chart-' + k).trim();
   }
-  CHART.bg = cs.getPropertyValue('--card-bg').trim();
+  CHART.bg     = cs.getPropertyValue('--card-bg').trim();
+  CHART.accent = cs.getPropertyValue('--accent').trim();
+  CHART.pos    = cs.getPropertyValue('--success').trim();
+  CHART.neg    = cs.getPropertyValue('--danger').trim();
+  CHART.font   = cs.getPropertyValue('--font-ui').trim() || 'system-ui, sans-serif';
+  CHART.cats   = Array.from({ length: 8 }, (_, i) => cs.getPropertyValue(`--cat-${i + 1}`).trim());
+}
+
+// Blend two #rrggbb colours (t = share of `a`) — used for lighter tints of a series colour
+function mixHex(a, b, t) {
+  const p = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
+  const [ca, cb] = [p(a), p(b)];
+  return '#' + ca.map((v, i) => Math.round(v * t + cb[i] * (1 - t)).toString(16).padStart(2, '0')).join('');
+}
+
+// Account colours follow the validated categorical slots; the light tint marks the forecast part
+const balPal = i => {
+  const c = CHART.cats[i % CHART.cats.length];
+  return [c, mixHex(c, CHART.bg, 0.5)];
+};
+
+// More than 8 categories fold into one "other" slice (8 validated colours, never cycled)
+function foldCategories(catData) {
+  if (catData.length <= 8) return catData;
+  const rest = catData.slice(7).reduce((s, c) => s + c.amount, 0);
+  return [...catData.slice(0, 7), { category: t('chart_other'), amount: rest }];
 }
 
 let _balanceData = [];
@@ -101,7 +126,7 @@ function renderMonthlyExpenseChart() {
     const v  = (maxVal / 4) * g;
     const yg = (padT + cH - (v / maxVal) * cH).toFixed(1);
     svg += `<line x1="${padL}" y1="${yg}" x2="${W - padR}" y2="${yg}" stroke="${CHART.grid}" stroke-width="1"/>`;
-    svg += `<text x="${(padL - 5).toFixed(1)}" y="${(parseFloat(yg) + 4).toFixed(1)}" text-anchor="end" font-size="9" fill="${CHART.muted}" font-family="system-ui,sans-serif">${esc(fmtAxisVal(v))}</text>`;
+    svg += `<text x="${(padL - 5).toFixed(1)}" y="${(parseFloat(yg) + 4).toFixed(1)}" text-anchor="end" font-size="9" fill="${CHART.muted}" font-family="${CHART.font}">${esc(fmtAxisVal(v))}</text>`;
   }
   // Baseline
   svg += `<line x1="${padL}" y1="${(padT + cH).toFixed(1)}" x2="${W - padR}" y2="${(padT + cH).toFixed(1)}" stroke="${CHART.axis}" stroke-width="1.5"/>`;
@@ -114,9 +139,9 @@ function renderMonthlyExpenseChart() {
     const barH  = val > 0 ? Math.max(2, (val / maxVal) * cH) : 0;
     const x     = (padL + i * slotW + gap).toFixed(1);
     const y     = (padT + cH - barH).toFixed(1);
-    const fill  = isCurrent ? '#3b82f6' : isFuture ? CHART.grid : '#93c5fd';
+    const fill  = isCurrent ? CHART.accent : mixHex(CHART.accent, CHART.bg, isFuture ? 0.22 : 0.5);
     const opacity = isFuture ? '0.6' : '1';
-    const lblCol  = isCurrent ? '#2563eb' : CHART.muted;
+    const lblCol  = isCurrent ? CHART.strong : CHART.muted;
     const lblW    = isCurrent ? '700' : '400';
 
     svg += `<rect x="${x}" y="${y}" width="${barW.toFixed(1)}" height="${barH.toFixed(1)}" rx="3" fill="${fill}" opacity="${opacity}"><title>${t('months')[i]}: ${esc(fmtEuro(val))}</title></rect>`;
@@ -124,13 +149,13 @@ function renderMonthlyExpenseChart() {
     // Amount label above bar (only when bar tall enough)
     if (val > 0 && barH > 22) {
       const lbl = fmtEuro(val).replace(' €', '');
-      svg += `<text x="${(parseFloat(x) + barW / 2).toFixed(1)}" y="${(parseFloat(y) - 4).toFixed(1)}" text-anchor="middle" font-size="9" fill="${CHART.text}" font-family="system-ui,sans-serif">${esc(lbl)}</text>`;
+      svg += `<text x="${(parseFloat(x) + barW / 2).toFixed(1)}" y="${(parseFloat(y) - 4).toFixed(1)}" text-anchor="middle" font-size="9" fill="${CHART.text}" font-family="${CHART.font}">${esc(lbl)}</text>`;
     }
 
     // Month label below bar
     const lx = (parseFloat(x) + barW / 2).toFixed(1);
     const ly = (padT + cH + 15).toFixed(1);
-    svg += `<text x="${lx}" y="${ly}" text-anchor="middle" font-size="10" fill="${lblCol}" font-weight="${lblW}" font-family="system-ui,sans-serif">${t('months')[i]}</text>`;
+    svg += `<text x="${lx}" y="${ly}" text-anchor="middle" font-size="10" fill="${lblCol}" font-weight="${lblW}" font-family="${CHART.font}">${t('months')[i]}</text>`;
   });
 
   wrap.innerHTML = `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:${H}px">${svg}</svg>`;
@@ -138,10 +163,6 @@ function renderMonthlyExpenseChart() {
 
 // ── SVG BALANCE CHART ─────────────────────────────────────────────────────────
 // Palette: [solid color, light extension color]
-const _BAL_PAL = [
-  ['#1e40af', '#93c5fd'], ['#b91c1c', '#fca5a5'], ['#15803d', '#86efac'],
-  ['#b45309', '#fcd34d'], ['#6d28d9', '#c4b5fd'], ['#0e7490', '#67e8f9'],
-];
 
 function renderBalanceChart(accounts) {
   _balanceData = accounts;
@@ -169,10 +190,10 @@ function _renderBalanceCompare(accounts, wrap) {
 
   let rows = '';
   accounts.forEach((a, i) => {
-    const [baseCol, lightCol] = _BAL_PAL[i % _BAL_PAL.length];
+    const [baseCol, lightCol] = balPal(i);
     const isNeg = a.now < 0;
-    const col   = isNeg ? '#dc2626' : baseCol;
-    const ext   = isNeg ? '#fca5a5' : lightCol;
+    const col   = isNeg ? CHART.neg : baseCol;
+    const ext   = isNeg ? mixHex(CHART.neg, CHART.bg, 0.45) : lightCol;
 
     const y0    = PAD + i * RH;
     const barY  = y0 + 14;
@@ -184,7 +205,7 @@ function _renderBalanceCompare(accounts, wrap) {
     const up     = delta > 0;
     const flat   = Math.abs(delta) < 0.005;
     const arrow  = up ? '↑' : flat ? '→' : '↓';
-    const acol   = up ? '#16a34a' : flat ? CHART.muted : '#dc2626';
+    const acol   = up ? CHART.pos : flat ? CHART.muted : CHART.neg;
 
     // Background track
     const track = `<rect x="${LW + 8}" y="${barY}" width="${BW}" height="${barH}" rx="5" fill="${CHART.track}"/>`;
@@ -210,12 +231,12 @@ function _renderBalanceCompare(accounts, wrap) {
 
     // Account name
     const lbl  = a.label.length > 13 ? a.label.slice(0, 12) + '…' : a.label;
-    const nameEl = `<text x="${LW + 4}" y="${barY + barH / 2 + 4}" text-anchor="end" font-size="12" fill="${CHART.text}" font-family="system-ui,sans-serif" font-weight="500">${esc(lbl)}</text>`;
+    const nameEl = `<text x="${LW + 4}" y="${barY + barH / 2 + 4}" text-anchor="end" font-size="12" fill="${CHART.text}" font-family="${CHART.font}" font-weight="500">${esc(lbl)}</text>`;
 
     // Right column
     const rx = LW + BW + 18;
-    const todayTxt  = `<text x="${rx}" y="${barY + 10}"  font-size="10" fill="${CHART.muted}" font-family="system-ui,sans-serif">${t('chart_today')}: ${esc(fmtEuro(a.now))}</text>`;
-    const futureTxt = `<text x="${rx}" y="${barY + barH - 2}" font-size="11" fill="${esc(acol)}" font-weight="600" font-family="system-ui,sans-serif">${esc(arrow)} ${esc(fmtEuro(a.future))}${pct ? ' (' + (up ? '+' : '') + esc(pct) + '%)' : ''}</text>`;
+    const todayTxt  = `<text x="${rx}" y="${barY + 10}"  font-size="10" fill="${CHART.muted}" font-family="${CHART.font}">${t('chart_today')}: ${esc(fmtEuro(a.now))}</text>`;
+    const futureTxt = `<text x="${rx}" y="${barY + barH - 2}" font-size="11" fill="${esc(acol)}" font-weight="600" font-family="${CHART.font}">${esc(arrow)} ${esc(fmtEuro(a.future))}${pct ? ' (' + (up ? '+' : '') + esc(pct) + '%)' : ''}</text>`;
 
     const ttip = `<title>${esc(a.label)}: ${t('chart_today')} ${esc(fmtEuro(a.now))} → ${t('chart_forecast')} ${esc(fmtEuro(a.future))}${pct ? ' (' + (up ? '+' : '') + pct + '%)' : ''}</title>`;
 
@@ -225,14 +246,14 @@ function _renderBalanceCompare(accounts, wrap) {
   // Legend
   const legY = PAD + accounts.length * RH + 4;
   const legend = `
-    <rect x="${LW + 8}" y="${legY + 4}" width="14" height="13" rx="3" fill="#1e40af" opacity="0.88"/>
-    <text x="${LW + 26}" y="${legY + 14}" font-size="10" fill="${CHART.muted}" font-family="system-ui,sans-serif">${t('chart_today')}</text>
-    <rect x="${LW + 78}" y="${legY + 4}" width="14" height="13" rx="3" fill="#93c5fd" opacity="0.65" stroke="#1e40af" stroke-width="1" stroke-dasharray="4,2"/>
-    <text x="${LW + 96}" y="${legY + 14}" font-size="10" fill="${CHART.muted}" font-family="system-ui,sans-serif">${t('chart_increase')}</text>
-    <rect x="${LW + 158}" y="${legY + 4}" width="14" height="13" rx="3" fill="#fca5a5" opacity="0.55"/>
-    <text x="${LW + 176}" y="${legY + 14}" font-size="10" fill="${CHART.muted}" font-family="system-ui,sans-serif">${t('chart_decrease')}</text>
-    <line x1="${LW + 228}" y1="${legY + 10}" x2="${LW + 241}" y2="${legY + 10}" stroke="#16a34a" stroke-width="2.5" stroke-linecap="round"/>
-    <text x="${LW + 245}" y="${legY + 14}" font-size="10" fill="${CHART.muted}" font-family="system-ui,sans-serif">${t('chart_forecast')}</text>`;
+    <rect x="${LW + 8}" y="${legY + 4}" width="14" height="13" rx="3" fill="${CHART.cats[0]}" opacity="0.88"/>
+    <text x="${LW + 26}" y="${legY + 14}" font-size="10" fill="${CHART.muted}" font-family="${CHART.font}">${t('chart_today')}</text>
+    <rect x="${LW + 78}" y="${legY + 4}" width="14" height="13" rx="3" fill="${mixHex(CHART.cats[0], CHART.bg, 0.5)}" opacity="0.65" stroke="${CHART.cats[0]}" stroke-width="1" stroke-dasharray="4,2"/>
+    <text x="${LW + 96}" y="${legY + 14}" font-size="10" fill="${CHART.muted}" font-family="${CHART.font}">${t('chart_increase')}</text>
+    <rect x="${LW + 158}" y="${legY + 4}" width="14" height="13" rx="3" fill="${mixHex(CHART.neg, CHART.bg, 0.45)}" opacity="0.55"/>
+    <text x="${LW + 176}" y="${legY + 14}" font-size="10" fill="${CHART.muted}" font-family="${CHART.font}">${t('chart_decrease')}</text>
+    <line x1="${LW + 228}" y1="${legY + 10}" x2="${LW + 241}" y2="${legY + 10}" stroke="${CHART.pos}" stroke-width="2.5" stroke-linecap="round"/>
+    <text x="${LW + 245}" y="${legY + 14}" font-size="10" fill="${CHART.muted}" font-family="${CHART.font}">${t('chart_forecast')}</text>`;
 
   wrap.innerHTML = `<svg width="100%" height="${H}" viewBox="0 0 ${W} ${H}" style="display:block;overflow:visible">${rows}${legend}</svg>`;
 }
@@ -258,7 +279,7 @@ function _renderBalanceDelta(accounts, wrap) {
     const pct   = a.now !== 0 ? (delta / Math.abs(a.now) * 100).toFixed(1) : null;
     const up    = delta >= 0;
     const flat  = Math.abs(delta) < 0.005;
-    const col   = flat ? CHART.muted : up ? '#16a34a' : '#dc2626';
+    const col   = flat ? CHART.muted : up ? CHART.pos : CHART.neg;
     const hw    = flat ? 0 : (Math.abs(delta) / maxD) * (BW / 2);
     const sign  = delta > 0 ? '+' : '';
 
@@ -269,12 +290,12 @@ function _renderBalanceDelta(accounts, wrap) {
       : `<rect x="${up ? midX : midX - hw}" y="${barY + 5}" width="${hw}" height="${barH - 10}" rx="3" fill="${esc(col)}" opacity="0.82"/>`;
 
     const lbl    = a.label.length > 13 ? a.label.slice(0, 12) + '…' : a.label;
-    const nameEl = `<text x="${LW + 4}" y="${barY + barH / 2 + 5}" text-anchor="end" font-size="12" fill="${CHART.text}" font-family="system-ui,sans-serif" font-weight="500">${esc(lbl)}</text>`;
+    const nameEl = `<text x="${LW + 4}" y="${barY + barH / 2 + 5}" text-anchor="end" font-size="12" fill="${CHART.text}" font-family="${CHART.font}" font-weight="500">${esc(lbl)}</text>`;
 
     const rx     = LW + BW + 18;
-    const valTxt = `<text x="${rx}" y="${barY + barH / 2 - 2}" font-size="11" fill="${esc(col)}" font-weight="600" font-family="system-ui,sans-serif">${esc(sign + fmtEuro(delta))}</text>`;
+    const valTxt = `<text x="${rx}" y="${barY + barH / 2 - 2}" font-size="11" fill="${esc(col)}" font-weight="600" font-family="${CHART.font}">${esc(sign + fmtEuro(delta))}</text>`;
     const pctTxt = pct
-      ? `<text x="${rx}" y="${barY + barH / 2 + 13}" font-size="10" fill="${esc(col)}" font-family="system-ui,sans-serif">${esc(sign + pct + '%')}</text>`
+      ? `<text x="${rx}" y="${barY + barH / 2 + 13}" font-size="10" fill="${esc(col)}" font-family="${CHART.font}">${esc(sign + pct + '%')}</text>`
       : '';
 
     const ttip = `<title>${esc(a.label)}: ${esc(sign + fmtEuro(delta))}${pct ? ' (' + sign + pct + '%)' : ''}</title>`;
@@ -282,12 +303,13 @@ function _renderBalanceDelta(accounts, wrap) {
     rows += `<g>${ttip}${track}${zline}${bar}${nameEl}${valTxt}${pctTxt}</g>\n`;
   });
 
-  const zeroLbl = `<text x="${midX}" y="${PAD - 4}" text-anchor="middle" font-size="10" fill="${CHART.axis}" font-family="system-ui,sans-serif">${t('chart_change')}</text>`;
+  const zeroLbl = `<text x="${midX}" y="${PAD - 4}" text-anchor="middle" font-size="10" fill="${CHART.axis}" font-family="${CHART.font}">${t('chart_change')}</text>`;
 
   wrap.innerHTML = `<svg width="100%" height="${H}" viewBox="0 0 ${W} ${H}" style="display:block;overflow:visible">${zeroLbl}${rows}</svg>`;
 }
 
 function renderExpenseCategoryChart(catData) {
+  catData = foldCategories(catData);
   if (_expView === 'bars') { _renderExpBarsChart(catData); return; }
   _renderExpDonutChart(catData);
 }
@@ -299,8 +321,7 @@ function _renderExpDonutChart(catData) {
   const W   = canvas.parentElement.clientWidth - 40;
 
   // Palette
-  const COLORS = ['#1e40af','#b91c1c','#15803d','#b45309','#6d28d9',
-                  '#0e7490','#be185d','#0f766e','#92400e','#374151','#7c3aed','#0369a1'];
+  const COLORS = CHART.cats;
 
   const items = catData.map((c, i) => ({ ...c, color: COLORS[i % COLORS.length] }));
 
@@ -308,7 +329,7 @@ function _renderExpDonutChart(catData) {
   if (!items.length) {
     canvas.width = W; canvas.height = 60;
     ctx.clearRect(0, 0, W, 60);
-    ctx.fillStyle = CHART.muted; ctx.font = '13px system-ui'; ctx.textAlign = 'center';
+    ctx.fillStyle = CHART.muted; ctx.font = `13px ${CHART.font}`; ctx.textAlign = 'center';
     ctx.fillText(t('dash_no_expenses'), W / 2, 34);
     return;
   }
@@ -364,10 +385,10 @@ function _renderExpDonutChart(catData) {
   // ── Center label (total) ─────────────────────────────────────
   ctx.textAlign = 'center';
   ctx.fillStyle = CHART.strong;
-  ctx.font = `bold ${donutR >= 80 ? 13 : 11}px system-ui`;
+  ctx.font = `bold ${donutR >= 80 ? 13 : 11}px ${CHART.font}`;
   ctx.fillText(fmtEuro(total).replace(' €', '€'), cx, cy + 5);
   ctx.fillStyle = CHART.muted;
-  ctx.font = '9px system-ui';
+  ctx.font = `9px ${CHART.font}`;
   ctx.fillText(t('dash_subtotal'), cx, cy + 16);
 
   // ── Legend ───────────────────────────────────────────────────
@@ -385,7 +406,7 @@ function _renderExpDonutChart(catData) {
 
     // Category name + percentage
     ctx.fillStyle = CHART.text;
-    ctx.font = '11px system-ui';
+    ctx.font = `11px ${CHART.font}`;
     ctx.textAlign = 'left';
     const lbl = c.category.length > maxLabelChars
       ? c.category.slice(0, maxLabelChars - 1) + '…'
@@ -394,7 +415,7 @@ function _renderExpDonutChart(catData) {
 
     // Amount — right-aligned
     ctx.fillStyle = CHART.strong;
-    ctx.font = 'bold 11px system-ui';
+    ctx.font = `bold 11px ${CHART.font}`;
     ctx.textAlign = 'right';
     ctx.fillText(fmtEuro(c.amount).replace(' €', '€'), lgX + lgW, y + 14);
   });
@@ -405,13 +426,12 @@ function _renderExpBarsChart(catData) {
   if (!canvas) return;
   const ctx  = canvas.getContext('2d');
   const W    = canvas.parentElement.clientWidth - 40;
-  const COLORS = ['#1e40af','#b91c1c','#15803d','#b45309','#6d28d9',
-                  '#0e7490','#be185d','#0f766e','#92400e','#374151','#7c3aed','#0369a1'];
+  const COLORS = CHART.cats;
 
   if (!catData.length) {
     canvas.width = W; canvas.height = 60;
     ctx.clearRect(0, 0, W, 60);
-    ctx.fillStyle = CHART.muted; ctx.font = '13px system-ui'; ctx.textAlign = 'center';
+    ctx.fillStyle = CHART.muted; ctx.font = `13px ${CHART.font}`; ctx.textAlign = 'center';
     ctx.fillText(t('dash_no_expenses'), W / 2, 34);
     return;
   }
@@ -448,28 +468,28 @@ function _renderExpBarsChart(catData) {
     // Category label
     const lbl = c.category.length > 21 ? c.category.slice(0, 20) + '…' : c.category;
     ctx.fillStyle = CHART.text;
-    ctx.font = '11px system-ui';
+    ctx.font = `11px ${CHART.font}`;
     ctx.textAlign = 'right';
     ctx.fillText(lbl, LW - 6, y + BAR_H / 2 + 4);
 
     // Percentage inside bar (if wide enough)
     if (bw > 32) {
       ctx.fillStyle = '#fff';
-      ctx.font = 'bold 10px system-ui';
+      ctx.font = `bold 10px ${CHART.font}`;
       ctx.textAlign = 'left';
       ctx.fillText(pct + '%', LW + 6, y + BAR_H / 2 + 4);
     }
 
     // Amount right
     ctx.fillStyle = CHART.strong;
-    ctx.font = 'bold 11px system-ui';
+    ctx.font = `bold 11px ${CHART.font}`;
     ctx.textAlign = 'left';
     ctx.fillText(fmtEuro(c.amount).replace(' €', '€'), LW + BW + 7, y + BAR_H / 2 + 4);
   });
 
   // Total footer
   ctx.fillStyle = CHART.muted;
-  ctx.font = '10px system-ui';
+  ctx.font = `10px ${CHART.font}`;
   ctx.textAlign = 'left';
   ctx.fillText(t('dash_total') + ': ' + fmtEuro(total), LW, H - 5);
 }
@@ -491,7 +511,7 @@ function renderDailyBalanceChart() {
   const series = state.accounts.map((acc, idx) => {
     const points = dailyBalancePoints(acc, state.transactions, todayStr, fd);
 
-    return { label: acc.name, color: _BAL_PAL[idx % _BAL_PAL.length][0], points };
+    return { label: acc.name, color: balPal(idx)[0], points };
   });
 
   // All "breakpoint" dates (transaction dates + today + fd) for X axis
@@ -542,7 +562,7 @@ function renderDailyBalanceChart() {
     const v = yMin + (yMax - yMin) * (i / 4);
     const y = yOf(v).toFixed(1);
     gridSvg  += `<line x1="${ML}" y1="${y}" x2="${ML + CW}" y2="${y}" stroke="${CHART.grid}" stroke-width="1"/>`;
-    yLabels  += `<text x="${ML - 6}" y="${(parseFloat(y) + 4).toFixed(1)}" text-anchor="end" font-size="10" fill="${CHART.muted}" font-family="system-ui,sans-serif">${fmtAx(v)}</text>`;
+    yLabels  += `<text x="${ML - 6}" y="${(parseFloat(y) + 4).toFixed(1)}" text-anchor="end" font-size="10" fill="${CHART.muted}" font-family="${CHART.font}">${fmtAx(v)}</text>`;
   }
 
   // X axis labels (max 6, evenly spaced)
@@ -553,13 +573,13 @@ function renderDailyBalanceChart() {
     const bd = breakDates[Math.min(Math.round(i * step), breakDates.length - 1)];
     const x  = xOf(bd).toFixed(1);
     const [, mm, dd] = bd.split('-');
-    xLabels += `<text x="${x}" y="${(MT + CH + 15).toFixed(1)}" text-anchor="middle" font-size="10" fill="${CHART.muted}" font-family="system-ui,sans-serif">${dd}/${mm}</text>`;
+    xLabels += `<text x="${x}" y="${(MT + CH + 15).toFixed(1)}" text-anchor="middle" font-size="10" fill="${CHART.muted}" font-family="${CHART.font}">${dd}/${mm}</text>`;
   }
 
   // "Σήμερα" vertical dashed marker
   const tx = xOf(todayStr).toFixed(1);
   const todayMarker = `<line x1="${tx}" y1="${MT}" x2="${tx}" y2="${MT + CH}" stroke="${CHART.axis}" stroke-width="1.5" stroke-dasharray="4,3"/>
-    <text x="${tx}" y="${MT - 5}" text-anchor="middle" font-size="9" fill="${CHART.muted}" font-family="system-ui,sans-serif">${t('chart_today')}</text>`;
+    <text x="${tx}" y="${MT - 5}" text-anchor="middle" font-size="9" fill="${CHART.muted}" font-family="${CHART.font}">${t('chart_today')}</text>`;
 
   // Series: polylines (carry-forward step) + dots at real data points
   let seriesSvg = '';
@@ -601,7 +621,7 @@ function renderDailyBalanceChart() {
     const lbl = s.label.length > 14 ? s.label.slice(0, 13) + '…' : s.label;
     legSvg += `<line x1="${lx}" y1="${legY - 4}" x2="${(parseFloat(lx) + 18).toFixed(1)}" y2="${legY - 4}" stroke="${s.color}" stroke-width="2.5" stroke-linecap="round"/>
       <circle cx="${(parseFloat(lx) + 9).toFixed(1)}" cy="${legY - 4}" r="3" fill="${s.color}"/>
-      <text x="${(parseFloat(lx) + 24).toFixed(1)}" y="${legY}" font-size="10" fill="${CHART.text}" font-family="system-ui,sans-serif">${esc(lbl)}</text>`;
+      <text x="${(parseFloat(lx) + 24).toFixed(1)}" y="${legY}" font-size="10" fill="${CHART.text}" font-family="${CHART.font}">${esc(lbl)}</text>`;
   });
 
   // Axes border

@@ -85,14 +85,23 @@ At the top of each page a toolbar shows:
 - **Sync indicator** — ⟳ saving, ✓ saved to the server (fades after a moment), **⚠ save failed**. On ⚠ your changes are kept and resent automatically every 15″ — tap ⚠ to retry immediately
 - **👁️ Privacy button** — On the right, to blur all numbers (see Section 3)
 
-### Light / Dark theme
+### Appearance: Style and Theme
 
-In **Settings → Appearance** choose:
+**Settings → Appearance** has two independent choices.
+
+**Style** — the overall look of the app:
+- **Navy** (default) — dark blue menu, blue for actions
+- **Sage** — light menu, teal accent, thin borders instead of shadows
+- **Graphite** — neutral black-grey with indigo; amounts in a fixed-width font so decimals line up
+
+All three share the same layout and features; only colours, fonts and details change.
+
+**Theme**:
 - **🖥️ Auto** (default) — follows the device setting (e.g. on macOS: System Settings → Appearance) and switches together with it
 - **☀️ Light** — always light
 - **🌙 Dark** — always dark
 
-The choice is saved **per device** (e.g. dark on your phone, light on your computer). All charts adapt.
+Style and theme are saved **per device** (e.g. dark on your phone, light on your computer). All charts adapt.
 
 ### Language
 
@@ -659,4 +668,4 @@ Card payments from an account (category "Κάρτες" or "Cards") are excluded 
 
 ---
 
-*Family FiN — Version 0.939 Beta | Last updated: June 2026*
+*Family FiN — Version 0.940 Beta | Last updated: June 2026*

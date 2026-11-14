@@ -1793,15 +1793,34 @@ function setThemePref(pref) {
   applyTheme();
 }
 
+// Visual style (navy / sage / graphite) — independent of light/dark, also stored per device
+const STYLE_KEY = 'familyfin_style';
+const STYLES    = ['navy', 'sage', 'graphite'];
+
+function getStylePref() {
+  try {
+    const s = localStorage.getItem(STYLE_KEY);
+    return STYLES.includes(s) ? s : 'navy';
+  } catch (_) { return 'navy'; }
+}
+
+function setStylePref(style) {
+  try { localStorage.setItem(STYLE_KEY, style); } catch (_) {}
+  applyTheme();
+}
+
 function applyTheme(rerender = true) {
-  const pref = getThemePref();
-  const dark = pref === 'dark' || (pref === 'auto' && darkQuery.matches);
+  const pref  = getThemePref();
+  const style = getStylePref();
+  const dark  = pref === 'dark' || (pref === 'auto' && darkQuery.matches);
   document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+  document.documentElement.dataset.style = style;
   document.querySelectorAll('[data-theme-pref]').forEach(b => {
     const on = b.dataset.themePref === pref;
     b.classList.toggle('chart-tog-active', on);
     b.setAttribute('aria-pressed', on);
   });
+  document.querySelectorAll('[data-style-pref]').forEach(b => b.setAttribute('aria-pressed', b.dataset.stylePref === style));
   refreshChartColors();
   if (rerender && currentPage() === 'dashboard') renderDashboard();
 }
