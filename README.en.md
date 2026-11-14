@@ -41,7 +41,18 @@ http://localhost:8765
 
 Data is saved **automatically** on every change:
 - **Primary storage:** SQLite database (`familyfin.db`) in the app folder — reliable, crash-safe
-- **Fallback storage:** browser `localStorage` (used if the server is not running)
+- **Local copy:** browser `localStorage` (shown only if the server is unavailable)
+- **Automatic backups:** in the server's `backups/` folder — one per day (last 30 kept) and one before every Import or Reset (last 10 kept). Restore them via **Settings → Import JSON**.
+
+#### Using multiple devices
+
+Every save is checked against the version of the data on the server. If another device changed the data in the meantime, the save does **not** overwrite the newer data: the latest version is loaded automatically and a message asks you to redo your last change.
+
+#### Security
+
+- The server serves **only** the app's files — never the database, backups or other files in the folder.
+- Your data is accessible only from the app itself, not from other websites you may have open in the browser.
+- Access is allowed via `localhost`, an IP address (e.g. `192.168.68.10`) or a local name (e.g. `zimaos`, `nas.local`). For any other name (e.g. your own domain) set it at startup: `FAMILYFIN_HOSTS=nas.example.com python3 server.py`
 
 #### Automatic migration from data.json
 
@@ -71,6 +82,7 @@ The left sidebar contains all sections of the app:
 
 At the top of each page a toolbar shows:
 - **Page title** — The name of the current section
+- **Sync indicator** — ⟳ saving, ✓ saved to the server (fades after a moment), **⚠ save failed**. On ⚠ your changes are kept and resent automatically every 15″ — tap ⚠ to retry immediately
 - **👁️ Privacy button** — On the right, to blur all numbers (see Section 3)
 
 ---
@@ -577,13 +589,13 @@ Downloads a `familyfin_backup_YYYYMMDD.json` file with **all** app data (account
 
 ### 📥 Import JSON
 
-Loads a backup file previously exported. **Completely replaces** current data.
+Loads a previously exported backup file or a file from the server's `backups/` folder. **Completely replaces** current data after asking for confirmation. Files from older versions are converted automatically.
 
-> ⚠️ Import is **irreversible**. Export first if you want to keep current data.
+> 💾 Before importing, the server automatically keeps a copy of the current data (`backups/before-import-…json`).
 
 ### 🗑️ Reset
 
-Deletes **all** data and restores factory defaults. Asks for confirmation before executing.
+Deletes **all** data and restores factory defaults. Asks for confirmation before executing, and the server automatically keeps a copy (`backups/before-reset-…json`).
 
 ---
 
@@ -624,4 +636,4 @@ Calculates for the **current month**:
 
 ---
 
-*Family FiN — Version 0.934 Beta | Last updated: June 2026*
+*Family FiN — Version 0.935 Beta | Last updated: June 2026*

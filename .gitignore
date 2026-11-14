@@ -13,3 +13,6 @@ familyfin.db
 familyfin.db-shm
 familyfin.db-wal
 data.json
+
+# Server-side automatic backups
+backups/

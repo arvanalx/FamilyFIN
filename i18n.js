@@ -246,7 +246,16 @@ const TRANSLATIONS = {
     confirm_del_acc_msg:  'Να διαγραφεί αυτός ο λογαριασμός;',
     confirm_del_card:     'Διαγραφή Κάρτας',
     confirm_reset:        'Επαναφορά Δεδομένων',
-    confirm_reset_msg:    'Θα διαγραφούν ΟΛΑ τα δεδομένα. Συνέχεια;',
+    confirm_reset_msg:    'Θα διαγραφούν ΟΛΑ τα δεδομένα. Ένα αντίγραφο ασφαλείας θα κρατηθεί στον φάκελο backups του server. Συνέχεια;',
+    confirm_import:       'Εισαγωγή Δεδομένων',
+    confirm_import_msg:   'Τα τρέχοντα δεδομένα θα αντικατασταθούν από το αρχείο. Ένα αντίγραφο ασφαλείας θα κρατηθεί στον φάκελο backups του server. Συνέχεια;',
+
+    // Sync
+    sync_saving:       'Αποθήκευση…',
+    sync_saved:        'Αποθηκεύτηκε στον server',
+    sync_error:        'Αποτυχία αποθήκευσης — νέα προσπάθεια σε λίγο (πατήστε για άμεση επανάληψη)',
+    sync_conflict:     'Τα δεδομένα άλλαξαν από άλλη συσκευή — φορτώθηκε η τελευταία έκδοση. Επαναλάβετε την τελευταία σας αλλαγή.',
+    sync_offline_load: 'Ο server δεν είναι διαθέσιμος — εμφανίζεται το τοπικό αντίγραφο',
 
     // Misc dynamic strings
     account_new:      'Νέος Λογαριασμός',
@@ -525,7 +534,16 @@ const TRANSLATIONS = {
     confirm_del_acc_msg:  'Delete this account?',
     confirm_del_card:     'Delete Card',
     confirm_reset:        'Reset Data',
-    confirm_reset_msg:    'ALL data will be deleted. Continue?',
+    confirm_reset_msg:    'ALL data will be deleted. A backup copy will be kept in the server\'s backups folder. Continue?',
+    confirm_import:       'Import Data',
+    confirm_import_msg:   'Your current data will be replaced by the file. A backup copy will be kept in the server\'s backups folder. Continue?',
+
+    // Sync
+    sync_saving:       'Saving…',
+    sync_saved:        'Saved to server',
+    sync_error:        'Save failed — retrying shortly (tap to retry now)',
+    sync_conflict:     'Data was changed on another device — the latest version was loaded. Please redo your last change.',
+    sync_offline_load: 'Server unavailable — showing the local copy',
 
     // Misc dynamic strings
     account_new:      'New Account',

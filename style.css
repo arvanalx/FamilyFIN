@@ -194,6 +194,20 @@ body {
 
 .top-actions { display: flex; gap: 8px; }
 
+/* Sync status indicator */
+.sync-status {
+  background: none; border: none;
+  font-size: 1rem; line-height: 1;
+  min-width: 22px; padding: 4px;
+  cursor: default; flex-shrink: 0;
+  transition: opacity .4s;
+}
+.sync-saving { color: var(--text-muted); animation: sync-spin 1s linear infinite; }
+.sync-saved  { color: var(--success); }
+.sync-error  { color: var(--danger); cursor: pointer; font-weight: 700; }
+.sync-idle   { opacity: 0; }
+@keyframes sync-spin { to { transform: rotate(360deg); } }
+
 /* Privacy toggle button */
 .btn-privacy {
   background: none;

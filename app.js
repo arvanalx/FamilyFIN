@@ -64,9 +64,10 @@ function migrateState(data) {
       }
     });
   }
-  // Ensure required arrays exist
-  if (!data.deletedSubKeys) data.deletedSubKeys = [];
-  if (!data.cardTransactions) data.cardTransactions = [];
+  // Ensure every top-level collection exists (partial imports / older backups)
+  for (const [key, def] of Object.entries(DEFAULT_STATE)) {
+    if (!Array.isArray(data[key])) data[key] = JSON.parse(JSON.stringify(def));
+  }
   // Migration: move sub transactions that landed in state.transactions but belong to a custom card
   if (data.transactions && data.cards && data.cardTransactions) {
     const cardIds = new Set((data.cards || []).map(c => c.id));
@@ -89,34 +90,128 @@ function migrateState(data) {
   return data;
 }
 
-async function loadState() {
-  // 1. Try the local server (persistent file)
-  try {
-    const res = await fetch(API);
-    if (res.ok) {
-      const data = await res.json();
-      if (data && data.accounts) return migrateState(data);
-    }
-  } catch (_) { /* server not running — fall through */ }
+// ── PERSISTENCE / SYNC ───────────────────────────────────────
+// Every save carries the server revision it was based on; the server rejects
+// stale saves (409) so one device can never silently overwrite another's changes.
+const LS_KEY      = 'familyfin_v1';
+const LOCAL_ONLY  = location.protocol === 'file:';
+let stateRev      = 0;
+let saveInFlight  = false;
+let savePending   = false;
+let pendingReason = '';
+let retryTimer    = null;
 
-  // 2. Fallback: localStorage (e.g. opened via file://)
-  try {
-    const raw = localStorage.getItem('familyfin_v1');
-    if (raw) return migrateState(JSON.parse(raw));
-  } catch (_) {}
+const cloneDefaults = () => JSON.parse(JSON.stringify(DEFAULT_STATE));
 
-  // 3. First run — use defaults
-  return JSON.parse(JSON.stringify(DEFAULT_STATE));
+function apiHeaders(reason) {
+  const h = { 'Content-Type': 'application/json', 'X-FamilyFin': '1' };
+  if (reason) h['X-FamilyFin-Reason'] = reason;
+  return h;
 }
 
-function saveState() {
-  // Fire-and-forget POST to server; mirror to localStorage as safety net
-  fetch(API, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(state),
-  }).catch(() => {});
-  try { localStorage.setItem('familyfin_v1', JSON.stringify(state)); } catch (_) {}
+function persistLocal() {
+  try { localStorage.setItem(LS_KEY, JSON.stringify({ rev: stateRev, state })); } catch (_) {}
+}
+
+function loadLocal() {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(LS_KEY) || 'null');
+    if (parsed?.state) return { state: parsed.state, rev: parsed.rev || 0 };
+    if (parsed?.accounts) return { state: parsed, rev: 0 }; // legacy format
+  } catch (_) {}
+  return null;
+}
+
+async function loadState() {
+  if (!LOCAL_ONLY) {
+    try {
+      const res = await fetch(API, { headers: apiHeaders(), cache: 'no-store' });
+      if (res.ok) {
+        const data = await res.json();
+        stateRev = data.rev || 0;
+        return migrateState(data.state?.accounts ? data.state : cloneDefaults());
+      }
+    } catch (_) { /* server unreachable — fall through to the local copy */ }
+    setTimeout(() => { setSyncStatus('error'); showToast(t('sync_offline_load'), 'error'); }, 0);
+  }
+  const local = loadLocal();
+  if (local) { stateRev = local.rev; return migrateState(local.state); }
+  return cloneDefaults();
+}
+
+function saveState(reason = '') {
+  persistLocal();
+  if (LOCAL_ONLY) return;
+  savePending = true;
+  if (reason) pendingReason = reason;
+  flushSave();
+}
+
+async function flushSave() {
+  if (saveInFlight || !savePending) return;
+  saveInFlight  = true;
+  savePending   = false;
+  const reason  = pendingReason;
+  pendingReason = '';
+  setSyncStatus('saving');
+  let res = null, body = null;
+  try {
+    res  = await fetch(API, {
+      method: 'POST',
+      headers: apiHeaders(reason),
+      body: JSON.stringify({ rev: stateRev, state }),
+    });
+    body = await res.json();
+  } catch (_) { res = null; }
+  saveInFlight = false;
+
+  if (res?.ok) {
+    stateRev = body.rev;
+    persistLocal();
+    setSyncStatus('saved');
+  } else if (res?.status === 409) {
+    try { localStorage.setItem('familyfin_conflict_backup', JSON.stringify(state)); } catch (_) {}
+    savePending = false;
+    applyServerState(body.state, body.rev);
+    setSyncStatus('saved');
+    showToast(t('sync_conflict'), 'error');
+    return;
+  } else {
+    savePending = true;
+    if (reason && !pendingReason) pendingReason = reason;
+    setSyncStatus('error');
+    if (!retryTimer) retryTimer = setTimeout(() => { retryTimer = null; flushSave(); }, 15000);
+    return;
+  }
+  if (savePending) flushSave();
+}
+
+function retrySaveNow() {
+  clearTimeout(retryTimer);
+  retryTimer = null;
+  if (savePending) flushSave();
+}
+
+function applyServerState(serverState, rev) {
+  state    = migrateState(serverState?.accounts ? serverState : cloneDefaults());
+  stateRev = rev || 0;
+  persistLocal();
+  populateAllDropdowns();
+  renderPage(currentPage());
+  updateDueBadge();
+}
+
+let syncFadeTimer;
+function setSyncStatus(status) {
+  const el = document.getElementById('syncStatus');
+  if (!el) return;
+  const icons = { saving: '⟳', saved: '✓', error: '⚠' };
+  el.textContent = icons[status] || '';
+  el.className   = 'sync-status sync-' + status;
+  el.title       = t('sync_' + status);
+  el.setAttribute('aria-label', el.title);
+  clearTimeout(syncFadeTimer);
+  if (status === 'saved') syncFadeTimer = setTimeout(() => el.classList.add('sync-idle'), 2500);
 }
 
 // ── HELPERS ─────────────────────────────────────────────────
@@ -1137,7 +1232,7 @@ function mdToHtml(md) {
 
     // ── headings ───────────────────────────────────────────
     let m;
-    if ((m = line.match(/^(#{1,3}) (.+)/))) {
+    if ((m = line.match(/^(#{1,4}) (.+)/))) {
       flushLists();
       const lvl = m[1].length;
       out.push(`<h${lvl}>${inline(m[2])}</h${lvl}>`);
@@ -2699,14 +2794,18 @@ function handleImport(event) {
   reader.onload = e => {
     try {
       const data = JSON.parse(e.target.result);
-      if (data.accounts && data.transactions !== undefined) {
-        state = data;
-        saveState();
-        renderPage(currentPage());
-        showToast(t('toast_import_ok'), 'success');
-      } else {
+      if (!data || !Array.isArray(data.transactions) || !data.accounts) {
         showToast(t('toast_import_invalid'), 'error');
+        return;
       }
+      showConfirm(t('confirm_import'), t('confirm_import_msg'), () => {
+        state = migrateState({ ...cloneDefaults(), ...data });
+        saveState('import');
+        populateAllDropdowns();
+        renderPage(currentPage());
+        updateDueBadge();
+        showToast(t('toast_import_ok'), 'success');
+      });
     } catch { showToast(t('toast_import_error'), 'error'); }
   };
   reader.readAsText(file);
@@ -2715,8 +2814,9 @@ function handleImport(event) {
 
 function confirmReset() {
   showConfirm(t('confirm_reset'), t('confirm_reset_msg'), () => {
-    state = JSON.parse(JSON.stringify(DEFAULT_STATE));
-    saveState();
+    state = cloneDefaults();
+    saveState('reset');
+    populateAllDropdowns();
     renderPage(currentPage());
     showToast(t('toast_reset_done'), 'success');
   });
@@ -3065,9 +3165,18 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   // Register Service Worker
-  if ('serviceWorker' in navigator) {
+  if ('serviceWorker' in navigator && !LOCAL_ONLY) {
+    // Reload once when an updated worker takes over, so a new version appears without Cmd+Shift+R
+    const hadController = !!navigator.serviceWorker.controller;
+    let reloaded = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (!hadController || reloaded || savePending || saveInFlight) return;
+      reloaded = true;
+      location.reload();
+    });
     navigator.serviceWorker.register('/sw.js').catch(() => {});
   }
+  window.addEventListener('online', retrySaveNow);
 
   // Apply translations (static elements with data-i18n)
   applyTranslations();
