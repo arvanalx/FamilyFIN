@@ -670,4 +670,4 @@ Card payments from an account (category "Κάρτες" or "Cards") are excluded 
 
 ---
 
-*Family FiN — Version 0.944 Beta | Last updated: June 2026*
+*Family FiN — Version 0.944 Beta | Last updated: November 2026*
