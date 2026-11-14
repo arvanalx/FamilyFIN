@@ -94,7 +94,7 @@ At the top of each page a toolbar shows:
 - **Sage** — light menu, teal accent, thin borders instead of shadows
 - **Graphite** — neutral black-grey with indigo; amounts in a fixed-width font so decimals line up
 
-All three share the same layout and features; only colours, fonts and details change.
+All three share the same layout and features; only colours, fonts and details change. The **logo** (the three bars at the top left) takes the style's colour too. The app icon on the phone's home screen and in the browser tab stays fixed, because the device keeps a single icon.
 
 **Theme**:
 - **🖥️ Auto** (default) — follows the device setting (e.g. on macOS: System Settings → Appearance) and switches together with it
@@ -339,6 +339,8 @@ A new window opens with the report and the print dialog appears automatically.
 - **Print on paper:** Click "🖨️ Print / Save as PDF" in the report window
 - **Save as PDF:** In the print dialog choose "Save as PDF" (Chrome) or "PDF → Save as PDF" (Safari)
 - **Send by email:** macOS → Share → Mail (from the preview window)
+
+**Appearance:** The report uses the colours and fonts of the **style** you selected (Navy, Sage or Graphite), always in its **light** version — even when the app is in dark theme — so it prints cleanly.
 
 > ℹ️ If the browser blocks the new window, allow pop-ups for the app's address.
 
@@ -668,4 +670,4 @@ Card payments from an account (category "Κάρτες" or "Cards") are excluded 
 
 ---
 
-*Family FiN — Version 0.942 Beta | Last updated: June 2026*
+*Family FiN — Version 0.943 Beta | Last updated: June 2026*
