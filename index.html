@@ -26,7 +26,7 @@
       document.documentElement.dataset.style = style;
     })();
   </script>
-  <link rel="stylesheet" href="style.css?v=0.944">
+  <link rel="stylesheet" href="style.css?v=0.945">
 </head>
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -42,6 +42,8 @@
     <symbol id="i-inst" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M8 3v4M16 3v4M3.5 10h17M8 14h2M14 14h2M8 17.5h2"/></symbol>
     <symbol id="i-sub" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11a8 8 0 0 1 14-5l2 2M20 4v4h-4M20 13a8 8 0 0 1-14 5l-2-2M4 20v-4h4"/></symbol>
     <symbol id="i-gear" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/></symbol>
+    <symbol id="i-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z"/><circle cx="12" cy="12" r="3"/></symbol>
+    <symbol id="i-eye-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10.6 5.6A9.7 9.7 0 0 1 12 5.5c6 0 9.5 6.5 9.5 6.5a17 17 0 0 1-2.6 3.4M6.4 7.4C3.9 9.1 2.5 12 2.5 12S6 18.5 12 18.5c1.9 0 3.5-.6 4.9-1.5M9.9 9.9a3 3 0 0 0 4.2 4.2M3.5 3.5l17 17"/></symbol>
     <symbol id="i-help" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.6 2.6 0 0 1 5 1c0 1.7-2.5 2.2-2.5 3.7M12 17.3h.01"/></symbol>
   </defs>
 </svg>
@@ -83,7 +85,7 @@
   </ul>
   <div class="sidebar-footer">
     <button id="langToggle" class="lang-toggle" onclick="toggleLang()">EN</button>
-    <span class="version">v0.944 Beta</span>
+    <span class="version">v0.945 Beta</span>
   </div>
 </nav>
 
@@ -102,7 +104,7 @@
     <h1 class="page-title" id="pageTitle">Γρήγορη ματιά</h1>
     <button id="syncStatus" class="sync-status sync-idle" onclick="retrySaveNow()" aria-live="polite"></button>
     <button id="langToggleMobile" class="lang-toggle-mobile" onclick="toggleLang()">EN</button>
-    <button class="btn-privacy" id="privacyToggle" onclick="togglePrivacy()" data-i18n-title="privacy_hide" data-i18n-aria="privacy_hide" title="Απόκρυψη ποσών">👁️</button>
+    <button class="btn-privacy" id="privacyToggle" aria-pressed="false" onclick="togglePrivacy()" data-i18n-title="privacy_hide" data-i18n-aria="privacy_hide" title="Απόκρυψη ποσών"><svg class="ico-eye" aria-hidden="true"><use href="#i-eye"/></svg><svg class="ico-eye-off" aria-hidden="true"><use href="#i-eye-off"/></svg></button>
   </header>
 
   <!-- DASHBOARD PAGE -->
@@ -959,11 +961,11 @@
   </div>
 </div>
 
-<script src="i18n.js?v=0.944"></script>
-<script src="calc.js?v=0.944"></script>
-<script src="charts.js?v=0.944"></script>
-<script src="help.js?v=0.944"></script>
-<script src="report.js?v=0.944"></script>
-<script src="app.js?v=0.944"></script>
+<script src="i18n.js?v=0.945"></script>
+<script src="calc.js?v=0.945"></script>
+<script src="charts.js?v=0.945"></script>
+<script src="help.js?v=0.945"></script>
+<script src="report.js?v=0.945"></script>
+<script src="app.js?v=0.945"></script>
 </body>
 </html>

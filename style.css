@@ -526,9 +526,8 @@ body {
   background: none;
   border: 1px solid var(--border);
   border-radius: 20px;
-  font-size: 1.15rem;
-  line-height: 1;
-  padding: 5px 10px;
+  line-height: 0;
+  padding: 6px 11px;
   cursor: pointer;
   color: var(--text-muted);
   transition: background .15s, border-color .15s, transform .15s;
@@ -545,6 +544,10 @@ body.privacy-mode .btn-privacy {
   border-color: var(--accent);
   color: #fff;
 }
+.btn-privacy svg { width: 18px; height: 18px; display: block; }
+.btn-privacy .ico-eye-off,
+body.privacy-mode .btn-privacy .ico-eye { display: none; }
+body.privacy-mode .btn-privacy .ico-eye-off { display: block; }
 
 /* ============================================================
    PRIVACY MODE — blur all monetary values

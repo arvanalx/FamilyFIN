@@ -83,7 +83,7 @@ The left sidebar contains all sections of the app:
 At the top of each page a toolbar shows:
 - **Page title** — The name of the current section
 - **Sync indicator** — ⟳ saving, ✓ saved to the server (fades after a moment), **⚠ save failed**. On ⚠ your changes are kept and resent automatically every 15″ — tap ⚠ to retry immediately
-- **👁️ Privacy button** — On the right, to blur all numbers (see Section 3)
+- **Privacy button (eye icon)** — On the right, to blur all numbers (see Section 3)
 
 ### Appearance: Style and Theme
 
@@ -111,14 +111,14 @@ The **EN / EL** button switches the language across the whole app — menus, for
 
 ## 3. Privacy Mode
 
-The **👁️** button in the top right corner activates **Privacy Mode** — useful when you want to show the app to someone else without revealing financial values.
+The **eye icon** button in the top right corner activates **Privacy Mode** — useful when you want to show the app to someone else without revealing financial values.
 
 ### How it works
 
 | State | Icon | Button appearance |
 |-------|------|-------------------|
-| **Normal** | 👁️ | Transparent, with border |
-| **Private** | 🙈 | Solid blue — reminds you that amounts are hidden |
+| **Normal** | Open eye | Transparent, with border |
+| **Private** | Crossed-out eye | Filled with the theme's accent colour — reminds you that amounts are hidden |
 
 Tap once to enable, again to disable. The toggle uses a **smooth blur animation** (0.3 seconds).
 
@@ -670,4 +670,4 @@ Card payments from an account (category "Κάρτες" or "Cards") are excluded 
 
 ---
 
-*Family FiN — Version 0.944 Beta | Last updated: November 2026*
+*Family FiN — Version 0.945 Beta | Last updated: November 2026*

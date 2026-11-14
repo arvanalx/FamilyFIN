@@ -1828,7 +1828,7 @@ function applyTheme(rerender = true) {
 function togglePrivacy() {
   const on  = document.body.classList.toggle('privacy-mode');
   const btn = document.getElementById('privacyToggle');
-  btn.textContent = on ? '🙈' : '👁️';
+  btn.setAttribute('aria-pressed', on ? 'true' : 'false');
   btn.title       = on ? t('privacy_show') : t('privacy_hide');
   btn.setAttribute('aria-label', btn.title);
 }
