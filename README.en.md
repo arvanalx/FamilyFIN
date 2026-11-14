@@ -68,13 +68,13 @@ The left sidebar contains all sections of the app:
 
 | Icon | Section | Description |
 |------|---------|-------------|
-| 📊 | **Dashboard** | Overall financial overview |
-| 📋 | **Transactions** | Account expenses and income |
-| 💵 | **Income** | Dedicated income view |
-| 💳 | **Credit Cards** | Card transactions and installments |
-| 📅 | **Installments** | All active card installments |
-| 🔄 | **Subscriptions** | Monthly/annual subscriptions |
-| ⚙️ | **Settings** | Accounts, cards, categories |
+| {{home}} | **Dashboard** | Overall financial overview |
+| {{tx}} | **Transactions** | Account expenses and income |
+| {{income}} | **Income** | Dedicated income view |
+| {{card}} | **Credit Cards** | Card transactions and installments |
+| {{inst}} | **Installments** | All active card installments |
+| {{sub}} | **Subscriptions** | Monthly/annual subscriptions |
+| {{gear}} | **Settings** | Accounts, cards, categories |
 
 **On mobile:** tap ☰ at the top left to open the menu.
 
@@ -249,25 +249,25 @@ Fill in the fields:
 Each account transaction can be marked as **Settled**, meaning the money has actually moved to/from the account.
 
 **How to toggle:**
-- **Quick toggle (desktop):** Click the **☐** button (1st in the Actions column) → it becomes **✅**
-- **On mobile:** Tap a transaction row → select **✅ Mark as Settled** or **☐ Unmark Settled** from the action menu
+- **Quick toggle (desktop):** Click the {{box}} button (1st in the Actions column) → it becomes {{check}}
+- **On mobile:** Tap a transaction row → select {{check}} **Mark as Settled** or {{box}} **Unmark Settled** from the action menu
 - **From the form:** Check the "Settled" checkbox when adding or editing a transaction
 
 **Effect:**
-- **Expense ✅** → The amount is deducted from the account balance
-- **Income ✅** → The amount is added to the account balance
+- **Expense** {{check}} → The amount is deducted from the account balance
+- **Income** {{check}} → The amount is added to the account balance
 - The transaction is **excluded** from the "Forecast" balance calculation in the Dashboard (it is already reflected in the stored balance)
 
-Clicking ✅ again → ☐ reverses the effect on the balance.
+Clicking {{check}} again → {{box}} reverses the effect on the balance.
 
-> ℹ️ Transactions created automatically by Subscriptions (🔄) can also be marked as settled and edited normally.
+> ℹ️ Transactions created automatically by Subscriptions ({{sub}}) can also be marked as settled and edited normally.
 
 ### 5.3 Editing / Deleting a transaction
 
 **Desktop** (Actions column):
-- **☐ / ✅** — Toggle "Settled" status (affects the balance immediately)
-- **✏️** — Opens the edit form (for transfers ↔️ it opens the transfer form — see §5.7)
-- **🗑️** — Deletes the transaction immediately (if it was settled, the balance effect is automatically reversed)
+- {{box}} / {{check}} — Toggle "Settled" status (affects the balance immediately)
+- {{edit}} — Opens the edit form (for transfers {{tx}} it opens the transfer form — see §5.7)
+- {{trash}} — Deletes the transaction immediately (if it was settled, the balance effect is automatically reversed)
 
 **Mobile** (tap on a transaction row):
 - Opens an action menu with options: **Mark as Settled / Unmark Settled**, **Edit**, **Delete**
@@ -276,7 +276,7 @@ Clicking ✅ again → ☐ reverses the effect on the balance.
 
 ### 5.4 Copy income to next month
 
-For transactions of type **Income**, the **📋** icon appears. Clicking it automatically creates a copy of the transaction with a date **+1 month** from the original (if that day does not exist in the next month, e.g. 31/01, its last day is used — 28/02).
+For transactions of type **Income**, the {{copy}} icon appears. Clicking it automatically creates a copy of the transaction with a date **+1 month** from the original (if that day does not exist in the next month, e.g. 31/01, its last day is used — 28/02).
 
 > Useful for recurring income (salary, pension, etc.).
 
@@ -311,11 +311,11 @@ Click **↕ Transfer** (next to "+ New Transaction") to open the transfer form. 
 | **To Account** | The account to credit |
 | **Notes** | Optional description |
 
-**Result:** Two linked transactions are created automatically — one debit (Expense) on the source account and one credit (Income) on the destination account. Both are marked with the ↔️ icon and the **Transfer** category (purple).
+**Result:** Two linked transactions are created automatically — one debit (Expense) on the source account and one credit (Income) on the destination account. Both are marked with the {{tx}} icon and the **Transfer** category (purple).
 
-**Settled transfer:** Check the **Settled** checkbox when creating a transfer to immediately update both account balances. Alternatively, you can mark it settled later by clicking **☐ / ✅** (desktop) or tapping the ↔️ transaction row (mobile) — the action applies to **both sides** simultaneously.
+**Settled transfer:** Check the **Settled** checkbox when creating a transfer to immediately update both account balances. Alternatively, you can mark it settled later by clicking {{box}} / {{check}} (desktop) or tapping the {{tx}} transaction row (mobile) — the action applies to **both sides** simultaneously.
 
-**Editing a transfer:** Click **✏️** on either side (or **Edit** in the mobile menu). You can change the date, amount, accounts, notes and status — **both** sides are updated and balances are corrected automatically.
+**Editing a transfer:** Click {{edit}} on either side (or **Edit** in the mobile menu). You can change the date, amount, accounts, notes and status — **both** sides are updated and balances are corrected automatically.
 
 > ⚠️ Deleting **either** side automatically deletes **both** and reverses the balance changes.
 
@@ -364,9 +364,9 @@ Click **"+ New Income"**. The fields are the same as the transaction form (witho
 ### 6.3 Income row actions
 
 **Desktop** (Actions column):
-- **✏️** — Edit
-- **📋** — Copy to next month
-- **🗑️** — Delete
+- {{edit}} — Edit
+- {{copy}} — Copy to next month
+- {{trash}} — Delete
 
 **Mobile** (tap on an income row):
 - Opens an action menu with options: **Mark as Settled / Unmark Settled**, **Copy to next month**, **Edit**, **Delete**
@@ -407,7 +407,7 @@ Active installments for the selected card are shown with:
 - Remaining installments
 - Monthly amount
 
-When an installment is **completed** (all payments made), it remains visible in the list with a green style and "**0 remaining**" — the "+1 Installment" button disappears. It is **no longer included** in balance calculations. To remove it entirely, click 🗑️.
+When an installment is **completed** (all payments made), it remains visible in the list with a green style and "**0 remaining**" — the "+1 Installment" button disappears. It is **no longer included** in balance calculations. To remove it entirely, click {{trash}}.
 
 **Add installment:** Click **"+ Add"** (see Section 8).
 
@@ -420,11 +420,11 @@ A list of card transactions, sorted by date (most recent first).
 **Add card transaction:** Click **"+ Transaction"** and fill in:
 - Date, amount, description, category
 
-> 📌 Transactions created automatically by **Subscriptions** are shown with the 🔄 icon.
+> 📌 Transactions created automatically by **Subscriptions** are shown with the {{sub}} icon.
 
 **Desktop — Transaction actions:**
-- **✏️** — Opens the edit form (date, amount, description, category)
-- **🗑️** — Deletes immediately, with **Undo** available — if the transaction belongs to a subscription, it **prevents** automatic recreation
+- {{edit}} — Opens the edit form (date, amount, description, category)
+- {{trash}} — Deletes immediately, with **Undo** available — if the transaction belongs to a subscription, it **prevents** automatic recreation
 
 **Mobile** (tap on a card transaction row):
 - Opens an action menu with **Edit** and **Delete** options.
@@ -459,8 +459,8 @@ Click **"+ New Installment"**. Fill in:
 ### 8.3 Installment actions
 
 - **+1 Installment** — Records one installment as paid (increments the counter). When the count is complete, the installment is **automatically deactivated**.
-- **✏️** — Edit details
-- **🗑️** — Delete, with **Undo** available for a few seconds
+- {{edit}} — Edit details
+- {{trash}} — Delete, with **Undo** available for a few seconds
 
 ### 8.4 Progress bar
 
@@ -501,7 +501,7 @@ Each subscription **automatically creates** transactions for each month:
 - If charged to a **card** → a transaction is created in Card Transactions
 - If charged to an **account** → a transaction is created in Account Transactions
 
-Automatic creation runs **every time the app is opened**, covering all months retroactively from the subscription's start date up to the current month. Automatic transactions are identified by the 🔄 icon. If you delete such a transaction, it **will not** be recreated automatically for that month.
+Automatic creation runs **every time the app is opened**, covering all months retroactively from the subscription's start date up to the current month. Automatic transactions are identified by the {{sub}} icon. If you delete such a transaction, it **will not** be recreated automatically for that month.
 
 > 💡 Changing the **category** of a subscription automatically updates **all existing** automatic transactions associated with it.
 
@@ -523,8 +523,8 @@ In the subscription edit form there is a **"Paused"** option:
 
 ### 9.6 Subscription actions
 
-- **✏️** — Edit
-- **🗑️** — Delete the subscription. Transactions already recorded are **kept** and converted to regular independent transactions
+- {{edit}} — Edit
+- {{trash}} — Delete the subscription. Transactions already recorded are **kept** and converted to regular independent transactions
 
 ---
 
@@ -563,7 +563,7 @@ Each card has:
 
 **Save:** Click **"Save"** after each change.
 
-**Delete:** Click **"🗑️ Delete"**. If the card has linked transactions, installments, or subscriptions, the system notifies you and deletes everything together after confirmation.
+**Delete:** Click {{trash}} **"Delete"**. If the card has linked transactions, installments, or subscriptions, the system notifies you and deletes everything together after confirmation.
 
 Cards appear as **tabs** on the Credit Cards page.
 
@@ -670,4 +670,4 @@ Card payments from an account (category "Κάρτες" or "Cards") are excluded 
 
 ---
 
-*Family FiN — Version 0.945 Beta | Last updated: November 2026*
+*Family FiN — Version 0.946 Beta | Last updated: November 2026*

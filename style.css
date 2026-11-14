@@ -1238,6 +1238,13 @@ body.privacy-mode .pv {
 
 .settings-actions { flex-direction: row !important; flex-wrap: wrap; }
 .btn-ico { width: 16px; height: 16px; flex-shrink: 0; }
+.desc-ico { width: 15px; height: 15px; vertical-align: -2px; color: var(--text-muted); }
+.desc-ico.settled { color: var(--success); }
+.btn-icon .btn-ico { display: block; width: 17px; height: 17px; }
+.btn-icon { line-height: 0; }
+.btn-sm .btn-ico { width: 15px; height: 15px; }
+.action-sheet-btn .btn-ico { width: 19px; height: 19px; color: var(--text-muted); }
+.action-sheet-btn.danger .btn-ico { color: inherit; }
 
 /* Account / Card setting blocks in Settings */
 .acc-setting-block {
@@ -1663,6 +1670,8 @@ body.privacy-mode .pv {
   line-height: 1.75;
   color: var(--text);
 }
+
+.help-ico { width: 1.1em; height: 1.1em; vertical-align: -0.2em; color: var(--primary); }
 
 .help-content h1 {
   font-size: 1.4rem;

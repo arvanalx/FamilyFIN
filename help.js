@@ -18,6 +18,9 @@ function renderHelp() {
 }
 
 // Lightweight Markdown → HTML converter (supports the subset used in README.md)
+const HELP_ICONS = new Set(['edit','trash','check','box','copy','eye','eye-off','export','import',
+  'home','tx','income','card','inst','sub','gear','help','logo']);
+
 function mdToHtml(md) {
   const lines = md.split('\n');
   const out   = [];
@@ -31,7 +34,9 @@ function mdToHtml(md) {
     .replace(/`([^`]+)`/g,        (_, c) => `<code>${esc(c)}</code>`)
     .replace(/\*\*([^*]+)\*\*/g,  '<strong>$1</strong>')
     .replace(/\*([^*]+)\*/g,      '<em>$1</em>')
-    .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1');   // strip links → plain text
+    .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')    // strip links → plain text
+    .replace(/\{\{([a-z][a-z-]*)\}\}/g, (_, n) => HELP_ICONS.has(n)       // {{edit}} → app SVG icon
+      ? `<svg class="help-ico" aria-hidden="true"><use href="#i-${n}"/></svg>` : _);
 
   const flushUl  = () => { if (inUl)  { out.push('</ul>');  inUl  = false; } };
   const flushOl  = () => { if (inOl)  { out.push('</ol>');  inOl  = false; } };

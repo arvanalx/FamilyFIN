@@ -439,7 +439,7 @@ function filterAndRenderTransactions() {
     <tr onclick="${tx.transferId ? `showTransferActions('${tx.id}')` : `showTransactionActions('${tx.id}')`}" style="cursor:pointer">
       <td>${fmtDate(tx.date)}</td>
       <td>
-        <div style="font-weight:600">${esc(tx.desc)}${tx.subId ? ` <span title="${t('auto_sub_note')}" style="font-size:.85em">🔄</span>` : ''}${tx.transferId ? ` <span style="font-size:.85em" title="${t('transfer_label')}">↔️</span>` : ''}${tx.settled ? ` <span style="font-size:.8em" title="${t('label_settled')}">✅</span>` : ''}</div>
+        <div style="font-weight:600">${esc(tx.desc)}${tx.subId ? ` <svg class="desc-ico" role="img" aria-label="${t('auto_sub_note')}"><title>${t('auto_sub_note')}</title><use href="#i-sub"/></svg>` : ''}${tx.transferId ? ` <svg class="desc-ico" role="img" aria-label="${t('transfer_label')}"><title>${t('transfer_label')}</title><use href="#i-tx"/></svg>` : ''}${tx.settled ? ` <svg class="desc-ico settled" role="img" aria-label="${t('label_settled')}"><title>${t('label_settled')}</title><use href="#i-check"/></svg>` : ''}</div>
         ${tx.notes && !tx.subId && !tx.transferId ? `<div style="font-size:.75rem;color:#64748b">${esc(tx.notes)}</div>` : ''}
       </td>
       <td>${tx.category ? `<span class="badge ${tx.transferId ? 'badge-purple' : 'badge-blue'}">${esc(tx.category)}</span>` : '<span class="muted">—</span>'}</td>
@@ -449,9 +449,9 @@ function filterAndRenderTransactions() {
       </td>
       <td>
         <div class="tx-actions">
-          <button class="btn-icon${tx.settled ? ' settled' : ''}" onclick="event.stopPropagation();toggleTransactionSettled('${tx.id}')" title="${t('btn_toggle_settled')}" aria-label="${t('btn_toggle_settled')}">${tx.settled ? '✅' : '☐'}</button>
-          <button class="btn-icon" onclick="event.stopPropagation();${tx.transferId ? 'editTransfer' : 'editTransaction'}('${tx.id}')" title="${t('btn_edit')}" aria-label="${t('btn_edit')}">✏️</button>
-          <button class="btn-icon danger" onclick="event.stopPropagation();deleteTransaction('${tx.id}')" title="${t('btn_delete')}" aria-label="${t('btn_delete')}">🗑️</button>
+          <button class="btn-icon${tx.settled ? ' settled' : ''}" onclick="event.stopPropagation();toggleTransactionSettled('${tx.id}')" title="${t('btn_toggle_settled')}" aria-label="${t('btn_toggle_settled')}">${ico(tx.settled ? 'check' : 'box')}</button>
+          <button class="btn-icon" onclick="event.stopPropagation();${tx.transferId ? 'editTransfer' : 'editTransaction'}('${tx.id}')" title="${t('btn_edit')}" aria-label="${t('btn_edit')}">${ico('edit')}</button>
+          <button class="btn-icon danger" onclick="event.stopPropagation();deleteTransaction('${tx.id}')" title="${t('btn_delete')}" aria-label="${t('btn_delete')}">${ico('trash')}</button>
         </div>
       </td>
     </tr>
@@ -703,9 +703,9 @@ function filterAndRenderIncome() {
           <td>${esc(accountLabel(tx.account))}</td>
           <td class="amount-cell positive">+${fmtEuro(tx.amount)}</td>
           <td>
-            <button class="btn-icon" title="${copyTitle}" aria-label="${copyTitle}" onclick="event.stopPropagation();copyIncomeToNextMonth('${tx.id}')">📋</button>
-            <button class="btn-icon" onclick="event.stopPropagation();editTransaction('${tx.id}')" title="${t('btn_edit')}" aria-label="${t('btn_edit')}">✏️</button>
-            <button class="btn-icon danger" onclick="event.stopPropagation();deleteTransaction('${tx.id}')" title="${t('btn_delete')}" aria-label="${t('btn_delete')}">🗑️</button>
+            <button class="btn-icon" title="${copyTitle}" aria-label="${copyTitle}" onclick="event.stopPropagation();copyIncomeToNextMonth('${tx.id}')">${ico('copy')}</button>
+            <button class="btn-icon" onclick="event.stopPropagation();editTransaction('${tx.id}')" title="${t('btn_edit')}" aria-label="${t('btn_edit')}">${ico('edit')}</button>
+            <button class="btn-icon danger" onclick="event.stopPropagation();deleteTransaction('${tx.id}')" title="${t('btn_delete')}" aria-label="${t('btn_delete')}">${ico('trash')}</button>
           </td>
         </tr>`).join('')
     : `<tr><td colspan="6" class="empty-state">${t('income_none')}</td></tr>`;
@@ -731,7 +731,7 @@ function showTransactionActions(id) {
   if (!tx) return;
   _txActionId = id;
   document.getElementById('txActionDesc').textContent = tx.desc;
-  document.getElementById('txActionSettledBtn').textContent = tx.settled ? t('action_unmark_settled') : t('action_mark_settled');
+  document.getElementById('txActionSettledBtn').innerHTML = tx.settled ? ico('box') + esc(t('action_unmark_settled')) : ico('check') + esc(t('action_mark_settled'));
   const editBtn = document.getElementById('txActionEditBtn');
   editBtn.style.display = tx.transferId ? 'none' : '';
   document.getElementById('txActionSheet').classList.add('open');
@@ -759,7 +759,7 @@ function showTransferActions(id) {
   if (!tx) return;
   _transferActionId = id;
   document.getElementById('transferActionDesc').textContent = tx.desc;
-  document.getElementById('transferActionSettledBtn').textContent = tx.settled ? t('action_unmark_settled') : t('action_mark_settled');
+  document.getElementById('transferActionSettledBtn').innerHTML = tx.settled ? ico('box') + esc(t('action_unmark_settled')) : ico('check') + esc(t('action_mark_settled'));
   document.getElementById('transferActionSheet').classList.add('open');
 }
 
@@ -785,7 +785,7 @@ function showIncomeActions(id) {
   if (!tx) return;
   _incomeActionId = id;
   document.getElementById('incomeActionDesc').textContent = tx.desc;
-  document.getElementById('incomeActionSettledBtn').textContent = tx.settled ? t('action_unmark_settled') : t('action_mark_settled');
+  document.getElementById('incomeActionSettledBtn').innerHTML = tx.settled ? ico('box') + esc(t('action_unmark_settled')) : ico('check') + esc(t('action_mark_settled'));
   document.getElementById('incomeActionSheet').classList.add('open');
 }
 
@@ -1023,8 +1023,8 @@ function renderInstallmentCards(containerId, list) {
       </div>
       <div class="inst-actions">
         ${!done ? `<button class="btn btn-sm btn-secondary" onclick="payInstallment('${i.id}')">${t('btn_pay_inst')}</button>` : ''}
-        <button class="btn btn-sm btn-secondary" onclick="editInstallment('${i.id}')" title="${t('btn_edit')}" aria-label="${t('btn_edit')}">✏️</button>
-        <button class="btn btn-sm btn-danger" onclick="deleteInstallment('${i.id}')" title="${t('btn_delete')}" aria-label="${t('btn_delete')}">🗑️</button>
+        <button class="btn btn-sm btn-secondary" onclick="editInstallment('${i.id}')" title="${t('btn_edit')}" aria-label="${t('btn_edit')}">${ico('edit')}</button>
+        <button class="btn btn-sm btn-danger" onclick="deleteInstallment('${i.id}')" title="${t('btn_delete')}" aria-label="${t('btn_delete')}">${ico('trash')}</button>
       </div>
     </div>`;
   }).join('');
@@ -1037,12 +1037,12 @@ function renderCardTransactions(tbodyId, txs) {
     ? txs.map(tx => `
         <tr onclick="showCardTxActions('${tx.id}')" style="cursor:pointer">
           <td>${fmtDate(tx.date)}</td>
-          <td>${esc(tx.desc)}${tx.subId ? ` <span title="${t('auto_sub_note')}" style="font-size:.85em">🔄</span>` : ''}</td>
+          <td>${esc(tx.desc)}${tx.subId ? ` <svg class="desc-ico" role="img" aria-label="${t('auto_sub_note')}"><title>${t('auto_sub_note')}</title><use href="#i-sub"/></svg>` : ''}</td>
           <td>${tx.category ? `<span class="badge badge-blue">${esc(tx.category)}</span>` : '—'}</td>
           <td class="amount-cell negative">-${fmtEuro(tx.amount)}</td>
           <td style="white-space:nowrap">
-            <button class="btn-icon" onclick="event.stopPropagation();editCardTransaction('${tx.id}')" title="${t('btn_edit')}" aria-label="${t('btn_edit')}">✏️</button>
-            <button class="btn-icon danger" onclick="event.stopPropagation();deleteCardTx('${tx.id}')" title="${t('btn_delete')}" aria-label="${t('btn_delete')}">🗑️</button>
+            <button class="btn-icon" onclick="event.stopPropagation();editCardTransaction('${tx.id}')" title="${t('btn_edit')}" aria-label="${t('btn_edit')}">${ico('edit')}</button>
+            <button class="btn-icon danger" onclick="event.stopPropagation();deleteCardTx('${tx.id}')" title="${t('btn_delete')}" aria-label="${t('btn_delete')}">${ico('trash')}</button>
           </td>
         </tr>`).join('')
     : `<tr><td colspan="5" class="empty-state">${t('tx_empty')}</td></tr>`;
@@ -1455,7 +1455,7 @@ function renderAccountsSettings() {
       </div>
       <div class="acc-setting-actions">
         <button class="btn btn-sm btn-primary" onclick="saveAccountSetting('${acc.id}')">${t('btn_save')}</button>
-        <button class="btn btn-sm btn-danger" onclick="deleteAccount('${acc.id}')">🗑️</button>
+        <button class="btn btn-sm btn-danger" onclick="deleteAccount('${acc.id}')" title="${t('btn_delete')}" aria-label="${t('btn_delete')}">${ico('trash')}</button>
       </div>
     </div>
   `).join('');
@@ -1488,7 +1488,7 @@ function renderCardsSettings() {
       </div>
       <div class="acc-setting-actions">
         <button class="btn btn-sm btn-primary" onclick="saveCardSetting('${card.id}')">${t('btn_save')}</button>
-        <button class="btn btn-sm btn-danger"  onclick="deleteCard('${card.id}')">${t('btn_delete_card')}</button>
+        <button class="btn btn-sm btn-danger"  onclick="deleteCard('${card.id}')">${ico('trash')}${t('btn_delete_card')}</button>
       </div>
     </div>
   `).join('');
@@ -1823,6 +1823,10 @@ function applyTheme(rerender = true) {
   document.querySelectorAll('[data-style-pref]').forEach(b => b.setAttribute('aria-pressed', b.dataset.stylePref === style));
   refreshChartColors();
   if (rerender && currentPage() === 'dashboard') renderDashboard();
+}
+
+function ico(name) {
+  return `<svg class="btn-ico" aria-hidden="true"><use href="#i-${name}"/></svg>`;
 }
 
 function togglePrivacy() {
