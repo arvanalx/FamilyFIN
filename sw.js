@@ -1,13 +1,17 @@
 /* Family FiN — Service Worker
    Network-first for app files (so new versions show up immediately),
    cache only as an offline fallback. The data API is never cached. */
-const CACHE = 'familyfin-v3';
+const CACHE = 'familyfin-v4';
 const ASSETS = [
   '/',
   '/index.html',
   '/style.css',
   '/app.js',
   '/i18n.js',
+  '/calc.js',
+  '/charts.js',
+  '/help.js',
+  '/report.js',
   '/manifest.json',
   '/icon-192.png',
   '/icon-512.png'

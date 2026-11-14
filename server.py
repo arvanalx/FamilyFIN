@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Family FiN — Local server with SQLite persistence (v0.937 Beta)
+Family FiN — Local server with SQLite persistence (v0.938 Beta)
 Serves the app's static files + provides /api/data for read/write via SQLite.
 No external dependencies (stdlib only).
 
@@ -34,6 +34,10 @@ STATIC_FILES = {
     '/style.css':      'style.css',
     '/app.js':         'app.js',
     '/i18n.js':        'i18n.js',
+    '/calc.js':        'calc.js',
+    '/charts.js':      'charts.js',
+    '/help.js':        'help.js',
+    '/report.js':      'report.js',
     '/sw.js':          'sw.js',
     '/manifest.json':  'manifest.json',
     '/icon-192.png':   'icon-192.png',
