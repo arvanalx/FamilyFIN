@@ -26,11 +26,12 @@
       document.documentElement.dataset.style = style;
     })();
   </script>
-  <link rel="stylesheet" href="style.css?v=0.941">
+  <link rel="stylesheet" href="style.css?v=0.942">
 </head>
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
   <defs>
+    <symbol id="i-logo" viewBox="0 0 24 24"><rect x="3.5" y="13" width="4.5" height="8" rx="1.3" fill="currentColor"/><rect x="9.75" y="9" width="4.5" height="12" rx="1.3" fill="currentColor"/><rect x="16" y="5" width="4.5" height="16" rx="1.3" fill="currentColor"/></symbol>
     <symbol id="i-home" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7.5" height="9" rx="1.5"/><rect x="13.5" y="3" width="7.5" height="5.5" rx="1.5"/><rect x="13.5" y="11.5" width="7.5" height="9.5" rx="1.5"/><rect x="3" y="15" width="7.5" height="6" rx="1.5"/></symbol>
     <symbol id="i-tx" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4v16M7 20l-3-3M7 20l3-3M17 20V4M17 4l-3 3M17 4l3 3"/></symbol>
     <symbol id="i-income" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M8.5 13.5 12 17l3.5-3.5"/></symbol>
@@ -46,7 +47,7 @@
 <nav class="sidebar" id="sidebar">
   <div class="sidebar-header">
     <div class="logo">
-      <img src="icon-192.png" class="logo-icon" alt="FamilyFIN logo">
+      <svg class="logo-icon" role="img" aria-label="Family FiN"><use href="#i-logo"/></svg>
       <span class="logo-text">Family <strong>FiN</strong></span>
     </div>
     <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar">☰</button>
@@ -79,7 +80,7 @@
   </ul>
   <div class="sidebar-footer">
     <button id="langToggle" class="lang-toggle" onclick="toggleLang()">EN</button>
-    <span class="version">v0.941 Beta</span>
+    <span class="version">v0.942 Beta</span>
   </div>
 </nav>
 
@@ -955,11 +956,11 @@
   </div>
 </div>
 
-<script src="i18n.js?v=0.941"></script>
-<script src="calc.js?v=0.941"></script>
-<script src="charts.js?v=0.941"></script>
-<script src="help.js?v=0.941"></script>
-<script src="report.js?v=0.941"></script>
-<script src="app.js?v=0.941"></script>
+<script src="i18n.js?v=0.942"></script>
+<script src="calc.js?v=0.942"></script>
+<script src="charts.js?v=0.942"></script>
+<script src="help.js?v=0.942"></script>
+<script src="report.js?v=0.942"></script>
+<script src="app.js?v=0.942"></script>
 </body>
 </html>

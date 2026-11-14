@@ -386,7 +386,7 @@ body {
   white-space: nowrap;
 }
 
-.logo-icon { width: 28px; height: 28px; object-fit: contain; flex-shrink: 0; }
+.logo-icon { width: 26px; height: 26px; flex-shrink: 0; color: var(--logo-accent); }
 .logo-text { font-family: var(--font-head); font-weight: 600; }
 .logo-text strong { color: var(--logo-accent); font-weight: 700; }
 
