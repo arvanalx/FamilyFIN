@@ -870,6 +870,7 @@ body.privacy-mode .chart-tip { display: none; }
   background: var(--card-bg);
 }
 
+.stat-icon svg { width: 21px; height: 21px; display: block; }
 .stat-icon {
   font-size: 1.6rem;
   width: 40px;
@@ -1208,6 +1209,8 @@ body.privacy-mode .chart-tip { display: none; }
   transition: opacity var(--transition);
   padding: 2px 4px;
 }
+.sub-gen-next { display: inline-flex; align-items: center; gap: 3px; }
+.sub-gen-next .btn-ico { width: 13px; height: 13px; }
 .sub-card:hover .sub-gen-next { opacity: 1; }
 .sub-gen-next:hover { color: var(--accent); }
 

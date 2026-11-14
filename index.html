@@ -26,7 +26,7 @@
       document.documentElement.dataset.style = style;
     })();
   </script>
-  <link rel="stylesheet" href="style.css?v=0.948">
+  <link rel="stylesheet" href="style.css?v=0.949">
 </head>
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -48,6 +48,12 @@
     <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="17" height="17" rx="4"/><path d="m8 12.3 2.7 2.7L16 9.5"/></symbol>
     <symbol id="i-box" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="17" height="17" rx="4"/></symbol>
     <symbol id="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="8.5" y="8.5" width="12" height="12" rx="2.5"/><path d="M15.5 8.5V6a2.5 2.5 0 0 0-2.5-2.5H6A2.5 2.5 0 0 0 3.5 6v7A2.5 2.5 0 0 0 6 15.5h2.5"/></symbol>
+    <symbol id="i-arrow-up" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M6 11l6-6 6 6"/></symbol>
+    <symbol id="i-arrow-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M6 13l6 6 6-6"/></symbol>
+    <symbol id="i-scale" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v16M8 20h8M5 7h14M5 7l-2.5 6a2.5 2.5 0 0 0 5 0L5 7ZM19 7l-2.5 6a2.5 2.5 0 0 0 5 0L19 7Z"/></symbol>
+    <symbol id="i-wallet" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M19 7V5.5A1.5 1.5 0 0 0 17.5 4H5.5A2.5 2.5 0 0 0 3 6.5v11A2.5 2.5 0 0 0 5.5 20h13a1.5 1.5 0 0 0 1.5-1.5V15M3 6.5A2.5 2.5 0 0 0 5.5 9h13A1.5 1.5 0 0 1 20 10.5V15h-4a2 2 0 0 1 0-4h4"/></symbol>
+    <symbol id="i-cal-year" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M8 3v4M16 3v4M3.5 10h17M7.5 17l3-3 2 2 4-4"/></symbol>
+    <symbol id="i-hourglass" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 3h11M6.5 21h11M7.5 3v3.5a4.5 4.5 0 0 0 9 0V3M7.5 21v-3.5a4.5 4.5 0 0 1 9 0V21"/></symbol>
     <symbol id="i-help" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.6 2.6 0 0 1 5 1c0 1.7-2.5 2.2-2.5 3.7M12 17.3h.01"/></symbol>
   </defs>
 </svg>
@@ -89,7 +95,7 @@
   </ul>
   <div class="sidebar-footer">
     <button id="langToggle" class="lang-toggle" onclick="toggleLang()">EN</button>
-    <span class="version">v0.948 Beta</span>
+    <span class="version">v0.949 Beta</span>
   </div>
 </nav>
 
@@ -158,21 +164,21 @@
         <div class="card-header"><h2 data-i18n="dash_monthly_stats">Στατιστικά Μήνα</h2></div>
         <div class="stats-grid">
           <div class="stat-item stat-income">
-            <span class="stat-icon">↑</span>
+            <span class="stat-icon"><svg aria-hidden="true"><use href="#i-arrow-up"/></svg></span>
             <div>
               <div class="stat-label" data-i18n="stat_income">Έσοδα</div>
               <div class="stat-value" id="monthlyIncome">0,00 €</div>
             </div>
           </div>
           <div class="stat-item stat-expense">
-            <span class="stat-icon">↓</span>
+            <span class="stat-icon"><svg aria-hidden="true"><use href="#i-arrow-down"/></svg></span>
             <div>
               <div class="stat-label" data-i18n="stat_expense">Έξοδα</div>
               <div class="stat-value" id="monthlyExpenses">0,00 €</div>
             </div>
           </div>
           <div class="stat-item stat-balance stat-full">
-            <span class="stat-icon">≈</span>
+            <span class="stat-icon"><svg aria-hidden="true"><use href="#i-scale"/></svg></span>
             <div>
               <div class="stat-label" data-i18n="stat_balance">Υπόλοιπο</div>
               <div class="stat-value" id="monthlyBalance">0,00 €</div>
@@ -318,14 +324,14 @@
         <div class="card-header"><h2 data-i18n="income_summary">Σύνοψη Εσόδων</h2></div>
         <div class="stats-grid">
           <div class="stat-item stat-income">
-            <span class="stat-icon">💰</span>
+            <span class="stat-icon"><svg aria-hidden="true"><use href="#i-wallet"/></svg></span>
             <div>
               <div class="stat-label" data-i18n="income_monthly">Μηνιαία Έσοδα</div>
               <div class="stat-value" id="incomeMonthTotal">0,00 €</div>
             </div>
           </div>
           <div class="stat-item stat-balance">
-            <span class="stat-icon">📆</span>
+            <span class="stat-icon"><svg aria-hidden="true"><use href="#i-cal-year"/></svg></span>
             <div>
               <div class="stat-label" data-i18n="income_yearly">Ετήσια (εκτίμηση)</div>
               <div class="stat-value" id="incomeYearEstimate">0,00 €</div>
@@ -369,14 +375,14 @@
         <div class="card-header"><h2 data-i18n="inst_summary">Σύνοψη Δόσεων</h2></div>
         <div class="stats-grid">
           <div class="stat-item stat-expense">
-            <span class="stat-icon">💳</span>
+            <span class="stat-icon"><svg aria-hidden="true"><use href="#i-card"/></svg></span>
             <div>
               <div class="stat-label" data-i18n="inst_monthly_charge">Μηνιαία Επιβάρυνση</div>
               <div class="stat-value" id="installmentMonthly">0,00 €</div>
             </div>
           </div>
           <div class="stat-item stat-card">
-            <span class="stat-icon">📋</span>
+            <span class="stat-icon"><svg aria-hidden="true"><use href="#i-hourglass"/></svg></span>
             <div>
               <div class="stat-label" data-i18n="inst_remaining_amt">Εναπομείναντα Ποσό</div>
               <div class="stat-value" id="installmentRemaining">0,00 €</div>
@@ -402,14 +408,14 @@
         <div class="card-header"><h2 data-i18n="sub_cost">Κόστος Συνδρομών</h2></div>
         <div class="stats-grid">
           <div class="stat-item stat-expense">
-            <span class="stat-icon">📅</span>
+            <span class="stat-icon"><svg aria-hidden="true"><use href="#i-sub"/></svg></span>
             <div>
               <div class="stat-label" data-i18n="sub_stat_monthly">Μηνιαία</div>
               <div class="stat-value" id="subMonthly">0,00 €</div>
             </div>
           </div>
           <div class="stat-item stat-card">
-            <span class="stat-icon">📆</span>
+            <span class="stat-icon"><svg aria-hidden="true"><use href="#i-cal-year"/></svg></span>
             <div>
               <div class="stat-label" data-i18n="sub_stat_yearly">Ετήσια</div>
               <div class="stat-value" id="subYearly">0,00 €</div>
@@ -957,11 +963,11 @@
   </div>
 </div>
 
-<script src="i18n.js?v=0.948"></script>
-<script src="calc.js?v=0.948"></script>
-<script src="charts.js?v=0.948"></script>
-<script src="help.js?v=0.948"></script>
-<script src="report.js?v=0.948"></script>
-<script src="app.js?v=0.948"></script>
+<script src="i18n.js?v=0.949"></script>
+<script src="calc.js?v=0.949"></script>
+<script src="charts.js?v=0.949"></script>
+<script src="help.js?v=0.949"></script>
+<script src="report.js?v=0.949"></script>
+<script src="app.js?v=0.949"></script>
 </body>
 </html>

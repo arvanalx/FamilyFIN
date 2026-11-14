@@ -869,7 +869,7 @@ function renderCardsPage() {
     const n   = (c.id + ' ' + c.name).toLowerCase();
     const cls = n.includes('visa') ? 'tab-visa' : n.includes('master') ? 'tab-mc' : '';
     return `<button class="card-tab ${cls}${c.id === activeCardId ? ' active' : ''}"
-              onclick="selectCard('${c.id}')">💳 ${esc(c.name)}</button>`;
+              onclick="selectCard('${c.id}')">${ico('card')}${esc(c.name)}</button>`;
   }).join('');
 
   renderCard(activeCardId);
@@ -900,7 +900,7 @@ function renderCard(cardId) {
           <div class="cc-stat-label">${t('card_current_balance')}</div>
           <div class="cc-stat-value" id="ccStatBalance">—</div>
           <button class="btn btn-primary btn-sm" style="margin-top:8px" onclick="openCardPaymentModal('${cardId}')">
-            ${t('btn_card_payment')}
+            ${ico('card')}${t('btn_card_payment')}
           </button>
         </div>
         <div class="cc-stat">
@@ -1253,7 +1253,7 @@ function renderSubscriptions() {
   grid.innerHTML = subs.map(s => `
     <div class="sub-card${s.paused ? ' sub-paused' : ''}" onclick="editSubscription('${s.id}')">
       <button class="sub-delete" onclick="event.stopPropagation();deleteSubscription('${s.id}')" title="${t('btn_delete')}" aria-label="${t('btn_delete')}">✕</button>
-      <button class="sub-gen-next" onclick="event.stopPropagation();generateNextMonthForSub('${s.id}')" title="${t('btn_gen_next_month')}" aria-label="${t('btn_gen_next_month')}">📅 +1</button>
+      <button class="sub-gen-next" onclick="event.stopPropagation();generateNextMonthForSub('${s.id}')" title="${t('btn_gen_next_month')}" aria-label="${t('btn_gen_next_month')}">${ico('inst')}+1</button>
       <div class="sub-icon">${s.icon || '📱'}</div>
       <div class="sub-name">${esc(s.name)}</div>
       <div class="sub-amount">${fmtEuro(s.amount)}</div>

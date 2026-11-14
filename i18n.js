@@ -176,7 +176,7 @@ const TRANSLATIONS = {
     btn_add_inst:         '+ Προσθήκη',
     card_tx_hdr:          'Κινήσεις',
     btn_add_card_tx:      '+ Κίνηση',
-    btn_card_payment:     '💳 Πληρωμή',
+    btn_card_payment:     'Πληρωμή',
     modal_card_payment:   'Πληρωμή Κάρτας',
     card_payment_prefix:  'Πληρωμή',
 
@@ -516,7 +516,7 @@ const TRANSLATIONS = {
     btn_add_inst:         '+ Add',
     card_tx_hdr:          'Transactions',
     btn_add_card_tx:      '+ Transaction',
-    btn_card_payment:     '💳 Payment',
+    btn_card_payment:     'Payment',
     modal_card_payment:   'Card Payment',
     card_payment_prefix:  'Payment',
 

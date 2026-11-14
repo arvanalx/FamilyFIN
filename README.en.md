@@ -401,7 +401,7 @@ For the selected card:
 - **Monthly Installments:** Total active & non-completed installments (/month)
 - **Monthly Transactions:** Transactions of the selected month (same as the table below)
 
-**Payment button:** Below the Current Balance a **💳 Payment** button is shown. Clicking it opens the new transaction form pre-filled with:
+**Payment button:** Below the Current Balance a {{card}} **Payment** button is shown. Clicking it opens the new transaction form pre-filled with:
 - Type: Expense
 - Date: Today
 - Amount: Current card balance (selected month transactions + installments)
@@ -518,7 +518,7 @@ Automatic creation runs **every time the app is opened**, covering all months re
 
 ### 9.4 Generate next month's transaction
 
-Each subscription card shows a **📅 +1** button (appears on hover on desktop, always visible on mobile). Tapping it:
+Each subscription card shows a {{inst}} **+1** button (appears on hover on desktop, always visible on mobile). Tapping it:
 - Immediately creates the subscription transaction for the **next month only**
 - If the transaction already exists, a message is shown without creating a duplicate
 - Useful for getting a **complete view of future balances** before the month ends
@@ -681,4 +681,4 @@ Card payments from an account (category "Κάρτες" or "Cards") are excluded 
 
 ---
 
-*Family FiN — Version 0.948 Beta | Last updated: November 2026*
+*Family FiN — Version 0.949 Beta | Last updated: November 2026*
