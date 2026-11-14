@@ -43,16 +43,8 @@ function foldCategories(catData) {
 }
 
 let _balanceData = [];
-let _balanceView = 'compare'; // 'compare' | 'delta'
 let _expChartOffset = 0;      // 0 = current month, -1 = previous, etc.
 let _expView = 'donut';       // 'donut' | 'bars'
-
-function setBalanceView(v) {
-  _balanceView = v;
-  document.querySelectorAll('[data-bal-view]').forEach(b =>
-    b.classList.toggle('chart-tog-active', b.dataset.balView === v));
-  renderBalanceChart(_balanceData);
-}
 
 function setExpView(v) {
   _expView = v;
@@ -205,19 +197,28 @@ function renderMonthlyExpenseChart() {
 
   const totals = Array.from({ length: 12 }, (_, i) => monthExpenseTotal(state, `${year}-${String(i + 1).padStart(2, '0')}`));
 
+  // Months that have already happened (all of them for past years) and have expenses
+  const lastIdx = year < curYear ? 11 : year === curYear ? curMon - 1 : -1;
+  const seen    = totals.slice(0, lastIdx + 1).map((v, i) => ({ v, i })).filter(m => m.v > 0);
+  const sum     = seen.reduce((s, m) => s + m.v, 0);
+  const avg     = seen.length ? sum / seen.length : 0;
+  const top     = seen.reduce((b, m) => (!b || m.v > b.v ? m : b), null);
+  const full    = t('months_full');
+  const months  = t('months');
+
   const W      = Math.max(wrap.clientWidth || 300, 300);
   const H      = 230;
-  const padL   = 46, padR = 10, padT = 26, padB = 34;
+  const padL   = 46, padR = avg ? 50 : 10, padT = 26, padB = 34;
   const cW     = W - padL - padR;
   const cH     = H - padT - padB;
   const dom    = niceDomain(0, Math.max(...totals, 1));
   const maxVal = dom.max;
   const slotW  = cW / 12;
-  const barW   = Math.max(6, slotW * 0.64);
+  const barW   = Math.max(6, slotW * 0.6);
   const gap    = (slotW - barW) / 2;
   const yOf    = v => padT + cH - (v / maxVal) * cH;
+  const curIdx = year === curYear ? curMon - 1 : -9;
 
-  // Gridlines on round values
   let svg = '';
   for (let v = dom.step; v <= maxVal + 1e-9; v += dom.step) {
     const yg = yOf(v).toFixed(1);
@@ -226,40 +227,58 @@ function renderMonthlyExpenseChart() {
   }
   svg += `<line x1="${padL}" y1="${(padT + cH).toFixed(1)}" x2="${W - padR}" y2="${(padT + cH).toFixed(1)}" stroke="${CHART.axis}" stroke-width="1.5"/>`;
 
-  const months = t('months');
-  const full   = t('months_full');
   totals.forEach((val, i) => {
-    const monthNum  = i + 1;
-    const isCurrent = year === curYear && monthNum === curMon;
-    const isFuture  = year > curYear || (year === curYear && monthNum > curMon);
+    const isCurrent = i === curIdx;
+    const isFuture  = i > lastIdx;
     const barH  = val > 0 ? Math.max(2, (val / maxVal) * cH) : 0;
     const x     = padL + i * slotW + gap;
     const y     = padT + cH - barH;
-    const fill  = isCurrent ? CHART.accent : mixHex(CHART.accent, CHART.bg, isFuture ? 0.22 : 0.5);
-    const lblCol = isCurrent ? CHART.strong : CHART.muted;
+    // Current month in the accent; months above average a shade stronger than the rest
+    const fill  = isCurrent ? CHART.accent
+                : mixHex(CHART.accent, CHART.bg, isFuture ? 0.2 : avg && val > avg ? 0.45 : 0.28);
 
     if (barH) svg += `<path d="M${x.toFixed(1)},${(padT + cH).toFixed(1)} V${(y + Math.min(4, barH)).toFixed(1)} q0,-4 4,-4 H${(x + barW - 4).toFixed(1)} q4,0 4,4 V${(padT + cH).toFixed(1)} Z" fill="${fill}"${isFuture ? ' opacity="0.6"' : ''}/>`;
 
-    // Compact value above the bar, only where there is room
-    if (val > 0 && barH > 18 && barW >= 26) {
-      svg += `<text x="${(x + barW / 2).toFixed(1)}" y="${(y - 5).toFixed(1)}" text-anchor="middle" font-size="11" fill="${isCurrent ? CHART.strong : CHART.text}" font-weight="${isCurrent ? 700 : 500}" font-family="${CHART.num}">${esc(fmtAxisVal(val))}</text>`;
-    }
-    // On narrow screens label every other month (and always the current one)
-    const curIdx = year === curYear ? curMon - 1 : -9;
-    if (slotW >= 32 || isCurrent || (i % 2 === 0 && Math.abs(i - curIdx) !== 1)) {
-      svg += `<text x="${(x + barW / 2).toFixed(1)}" y="${(padT + cH + 17).toFixed(1)}" text-anchor="middle" font-size="11" fill="${lblCol}" font-weight="${isCurrent ? 700 : 400}" font-family="${CHART.font}">${esc(months[i])}</text>`;
+    // Amounts only where they matter: the current month and the most expensive one
+    if (val > 0 && (isCurrent || (top && i === top.i))) {
+      const txt = slotW >= 52 ? fmtEuro(val).replace(/,\d\d €$/, ' €') : fmtAxisVal(val);
+      svg += `<text x="${(x + barW / 2).toFixed(1)}" y="${(y - 6).toFixed(1)}" text-anchor="middle" font-size="11" font-weight="700" fill="${isCurrent ? CHART.strong : CHART.text}" font-family="${CHART.num}">${esc(txt)}</text>`;
     }
 
-    // Full-height hit area so small bars are easy to tap
-    svg += `<rect x="${(padL + i * slotW).toFixed(1)}" y="${padT}" width="${slotW.toFixed(1)}" height="${cH}" fill="transparent" data-tip="${tipData([`${full[i]} ${year}`, [fill, t('stat_expense'), fmtEuro(val)]])}"/>`;
+    // On narrow screens label every other month (and always the current one)
+    if (slotW >= 32 || isCurrent || (i % 2 === 0 && Math.abs(i - curIdx) !== 1)) {
+      svg += `<text x="${(x + barW / 2).toFixed(1)}" y="${(padT + cH + 17).toFixed(1)}" text-anchor="middle" font-size="11" fill="${isCurrent ? CHART.strong : CHART.muted}" font-weight="${isCurrent ? 700 : 400}" font-family="${CHART.font}">${esc(months[i])}</text>`;
+    }
+
+    const lines = [`${full[i]} ${year}`, [fill, t('stat_expense'), fmtEuro(val)]];
+    if (avg && val > 0 && !isFuture) {
+      const diff = val - avg;
+      lines.push(`${diff >= 0 ? '+' : '−'}${fmtEuro(Math.abs(diff))} ${t('chart_vs_avg')}`);
+    }
+    svg += `<rect x="${(padL + i * slotW).toFixed(1)}" y="${padT}" width="${slotW.toFixed(1)}" height="${cH}" fill="transparent" data-tip="${tipData(lines)}"/>`;
   });
 
-  wrap.innerHTML = chartSvg(W, H, svg, t('dash_expense_by_month'));
+  // Average line
+  if (avg) {
+    const ya = yOf(avg).toFixed(1);
+    svg += `<line x1="${padL}" y1="${ya}" x2="${W - padR}" y2="${ya}" stroke="${CHART.strong}" stroke-width="1.25" stroke-dasharray="5,4" opacity="0.7" pointer-events="none"/>`;
+    svg += `<text x="${W - padR + 6}" y="${(+ya - 2).toFixed(1)}" font-size="11" font-weight="600" fill="${CHART.text}" font-family="${CHART.font}">${esc(t('chart_avg_short'))}</text>`;
+    svg += `<text x="${W - padR + 6}" y="${(+ya + 12).toFixed(1)}" font-size="11" fill="${CHART.muted}" font-family="${CHART.num}">${esc(fmtCompact(avg, true))}</text>`;
+  }
+
+  const summary = seen.length ? `<div class="chart-summary">
+      <span>${t('chart_year_total')} <b>${esc(fmtEuro(sum))}</b></span>
+      <span>${t('chart_avg')} <b>${esc(fmtEuro(avg))}</b>${t('per_month')}</span>
+      <span>${t('chart_highest')} <b>${esc(full[top.i])} · ${esc(fmtEuro(top.v))}</b></span>
+    </div>` : '';
+
+  wrap.innerHTML = summary + chartSvg(W, H, svg, t('dash_expense_by_month'));
   bindChartTips(wrap);
 }
 
-// ── SVG BALANCE CHART ─────────────────────────────────────────────────────────
-// Palette: [solid color, light extension color]
+// ── ACCOUNT CHANGES (today → forecast) ───────────────────────
+// One row per account on a shared axis: ring = today, dot = forecast, joined by a line
+// that is green when the balance rises and red when it falls. Zero is always on the axis.
 
 function renderBalanceChart(accounts) {
   _balanceData = accounts;
@@ -269,141 +288,76 @@ function renderBalanceChart(accounts) {
     wrap.innerHTML = `<p class="empty-state">${t('chart_no_accounts')}</p>`;
     return;
   }
-  _balanceView === 'delta'
-    ? _renderBalanceDelta(accounts, wrap)
-    : _renderBalanceCompare(accounts, wrap);
-}
 
-function _renderBalanceCompare(accounts, wrap) {
-  const W   = Math.max(wrap.clientWidth || 0, 280);
-  const LW  = Math.min(100, Math.floor(W * 0.27));  // label area
-  const RW  = 148;                                    // right values area
-  const BW  = Math.max(40, W - LW - RW - 20);        // bar area
-  const RH  = 62;                                     // row height
-  const PAD = 10;
-  const H   = accounts.length * RH + PAD * 2;
-  const maxV = Math.max(...accounts.flatMap(a => [Math.abs(a.now), Math.abs(a.future)]), 1);
+  const W      = Math.max(wrap.clientWidth || 0, 280);
+  const narrow = W < 520;
+  const LW     = narrow ? 0 : Math.min(130, Math.floor(W * 0.22));   // names column
+  const RW     = narrow ? 0 : 170;                                    // amount + change column
+  const RH     = narrow ? 62 : 52;
+  const TOP    = 6;
+  const plotB  = TOP + accounts.length * RH;
+  const H      = plotB + 26;
 
-  let rows = '';
+  const vals = accounts.flatMap(a => [a.now, a.future]);
+  const dom  = niceDomain(Math.min(0, ...vals), Math.max(0, ...vals), narrow ? 3 : 4);
+  const X0   = LW + 10, X1 = W - RW - 10;
+  const xOf  = v => X0 + (v - dom.min) / (dom.max - dom.min) * (X1 - X0);
+
+  const chip = (delta, x, y, anchor) => {
+    const flat = Math.abs(delta) < 0.005, up = delta > 0;
+    const col  = flat ? CHART.muted : up ? CHART.pos : CHART.neg;
+    const txt  = flat ? t('chart_no_change') : `${up ? '▲ +' : '▼ '}${fmtEuro(delta)}`;
+    const w    = txt.length * 6.4 + 16;
+    const x0   = anchor === 'end' ? x - w : x;
+    return `<rect x="${x0.toFixed(1)}" y="${(y - 13).toFixed(1)}" width="${w.toFixed(1)}" height="20" rx="10" fill="${col}" opacity="0.14"/>` +
+           `<text x="${(x0 + w / 2).toFixed(1)}" y="${(y + 1).toFixed(1)}" text-anchor="middle" font-size="11" font-weight="600" fill="${col}" font-family="${CHART.num}">${esc(txt)}</text>`;
+  };
+
+  // Vertical gridlines + axis values (zero emphasised)
+  let svg = '';
+  for (let v = dom.min; v <= dom.max + 1e-9; v += dom.step) {
+    const x = xOf(v).toFixed(1), zero = Math.abs(v) < 1e-9;
+    svg += `<line x1="${x}" y1="${TOP}" x2="${x}" y2="${plotB}" stroke="${zero ? CHART.axis : CHART.grid}" stroke-width="${zero ? 1.5 : 1}"/>`;
+    svg += `<text x="${x}" y="${plotB + 17}" text-anchor="middle" font-size="11" fill="${zero ? CHART.text : CHART.muted}" font-weight="${zero ? 600 : 400}" font-family="${CHART.num}">${fmtCompact(v, true)}</text>`;
+  }
+
   accounts.forEach((a, i) => {
-    const [baseCol, lightCol] = balPal(i);
-    const isNeg = a.now < 0;
-    const col   = isNeg ? CHART.neg : baseCol;
-    const ext   = isNeg ? mixHex(CHART.neg, CHART.bg, 0.45) : lightCol;
+    const delta = a.future - a.now;
+    const flat  = Math.abs(delta) < 0.005;
+    const col   = flat ? CHART.muted : delta > 0 ? CHART.pos : CHART.neg;
+    const y     = TOP + i * RH + (narrow ? 42 : RH / 2);
+    const xn    = xOf(a.now), xf = xOf(a.future);
+    const pct   = a.now !== 0 && !flat ? ` (${delta > 0 ? '+' : ''}${(delta / Math.abs(a.now) * 100).toFixed(1).replace('.', getLang() === 'en' ? '.' : ',')}%)` : '';
+    const amt   = fmtEuro(a.future);
 
-    const y0    = PAD + i * RH;
-    const barY  = y0 + 14;
-    const barH  = 26;
-    const nowPx = Math.max(0, (Math.abs(a.now)    / maxV) * BW);
-    const futPx = Math.max(0, (Math.abs(a.future) / maxV) * BW);
-    const delta  = a.future - a.now;
-    const pct    = a.now !== 0 ? (delta / Math.abs(a.now) * 100).toFixed(1) : null;
-    const up     = delta > 0;
-    const flat   = Math.abs(delta) < 0.005;
-    const arrow  = up ? '↑' : flat ? '→' : '↓';
-    const acol   = up ? CHART.pos : flat ? CHART.muted : CHART.neg;
-
-    // Background track
-    const track = `<rect x="${LW + 8}" y="${barY}" width="${BW}" height="${barH}" rx="5" fill="${CHART.track}"/>`;
-
-    // Today bar
-    const todayBar = nowPx > 0
-      ? `<rect x="${LW + 8}" y="${barY}" width="${nowPx}" height="${barH}" rx="5" fill="${esc(col)}" opacity="0.88"/>`
-      : '';
-
-    // Future delta overlay (gain extension or loss overlay)
-    let futOver = '';
-    if (!flat) {
-      const extX = LW + 8 + Math.min(nowPx, futPx);
-      const extW = Math.abs(futPx - nowPx);
-      if (extW > 1) {
-        const da = up ? `stroke="${esc(col)}" stroke-width="1" stroke-dasharray="4,2"` : '';
-        futOver = `<rect x="${extX}" y="${barY + 5}" width="${extW}" height="${barH - 10}" rx="3" fill="${esc(ext)}" opacity="${up ? '0.65' : '0.55'}" ${da}/>`;
-      }
+    if (narrow) {
+      svg += `<text x="${X0}" y="${y - 22}" font-size="12" font-weight="600" fill="${CHART.text}" font-family="${CHART.font}">${esc(a.label.length > 18 ? a.label.slice(0, 17) + '…' : a.label)}</text>`;
+      svg += `<text x="${X1}" y="${y - 22}" text-anchor="end" font-size="12" font-weight="700" fill="${CHART.strong}" font-family="${CHART.num}">${esc(amt)}</text>`;
+      svg += chip(delta, X1 - amt.length * 7.2 - 8, y - 22, 'end');
+    } else {
+      const lbl = a.label.length > 16 ? a.label.slice(0, 15) + '…' : a.label;
+      svg += `<text x="${LW}" y="${y + 4}" text-anchor="end" font-size="12" font-weight="500" fill="${CHART.text}" font-family="${CHART.font}">${esc(lbl)}</text>`;
+      svg += `<text x="${X1 + 18}" y="${y - 4}" font-size="12" font-weight="700" fill="${CHART.strong}" font-family="${CHART.num}">${esc(amt)}</text>`;
+      svg += chip(delta, X1 + 18, y + 15, 'start');
     }
 
-    // Future marker line (vertical dashed)
-    const futLine = `<line x1="${LW + 8 + futPx}" y1="${barY - 5}" x2="${LW + 8 + futPx}" y2="${barY + barH + 5}" stroke="${esc(acol)}" stroke-width="2.5" stroke-linecap="round"/>`;
+    svg += `<line x1="${xn.toFixed(1)}" y1="${y}" x2="${xf.toFixed(1)}" y2="${y}" stroke="${col}" stroke-width="3" stroke-linecap="round" opacity="0.55"/>`;
+    svg += `<circle cx="${xn.toFixed(1)}" cy="${y}" r="6" fill="${CHART.bg}" stroke="${CHART.muted}" stroke-width="2"/>`;
+    svg += `<circle cx="${xf.toFixed(1)}" cy="${y}" r="6.5" fill="${col}" stroke="${CHART.bg}" stroke-width="2"/>`;
 
-    // Account name
-    const lbl  = a.label.length > 13 ? a.label.slice(0, 12) + '…' : a.label;
-    const nameEl = `<text x="${LW + 4}" y="${barY + barH / 2 + 4}" text-anchor="end" font-size="12" fill="${CHART.text}" font-family="${CHART.font}" font-weight="500">${esc(lbl)}</text>`;
-
-    // Right column
-    const rx = LW + BW + 18;
-    const todayTxt  = `<text x="${rx}" y="${barY + 10}"  font-size="11" fill="${CHART.muted}" font-family="${CHART.font}">${t('chart_today')}: ${esc(fmtEuro(a.now))}</text>`;
-    const futureTxt = `<text x="${rx}" y="${barY + barH - 2}" font-size="11" fill="${esc(acol)}" font-weight="600" font-family="${CHART.font}">${esc(arrow)} ${esc(fmtEuro(a.future))}${pct ? ' (' + (up ? '+' : '') + esc(pct) + '%)' : ''}</text>`;
-
-    const hit = `<rect x="0" y="${y0}" width="${W}" height="${RH}" fill="transparent" data-tip="${tipData([a.label,
-      [col, t('chart_today'), fmtEuro(a.now)],
-      [acol, t('chart_forecast'), fmtEuro(a.future) + (pct ? ' (' + (up ? '+' : '') + pct + '%)' : '')]])}"/>`;
-
-    rows += `<g>${track}${todayBar}${futOver}${futLine}${nameEl}${todayTxt}${futureTxt}${hit}</g>\n`;
+    svg += `<rect x="0" y="${TOP + i * RH}" width="${W}" height="${RH}" fill="transparent" data-tip="${tipData([a.label,
+      [CHART.muted, t('chart_today'), fmtEuro(a.now)],
+      [col, t('chart_forecast'), amt],
+      [col, t('chart_change'), (delta > 0 ? '+' : '') + fmtEuro(delta) + pct]])}"/>`;
   });
 
-  // Legend (HTML, so it wraps instead of overflowing)
   const legend = `<div class="chart-legend">
-    <span><i style="background:${CHART.cats[0]}"></i>${t('chart_today')}</span>
-    <span><i style="background:${mixHex(CHART.cats[0], CHART.bg, 0.5)};outline:1px dashed ${CHART.cats[0]};outline-offset:-1px"></i>${t('chart_increase')}</span>
-    <span><i style="background:${mixHex(CHART.neg, CHART.bg, 0.45)}"></i>${t('chart_decrease')}</span>
-    <span><i class="line" style="background:${CHART.pos}"></i>${t('chart_forecast')}</span>
+    <span><i class="ring" style="border-color:${CHART.muted}"></i>${t('chart_today')}</span>
+    <span><i class="dot" style="background:${CHART.pos}"></i>${t('chart_forecast')} · ${t('chart_increase')}</span>
+    <span><i class="dot" style="background:${CHART.neg}"></i>${t('chart_forecast')} · ${t('chart_decrease')}</span>
   </div>`;
 
-  wrap.innerHTML = chartSvg(W, H, rows, t('dash_balance_chart')) + legend;
-  bindChartTips(wrap);
-}
-
-function _renderBalanceDelta(accounts, wrap) {
-  const W    = Math.max(wrap.clientWidth || 0, 280);
-  const LW   = Math.min(100, Math.floor(W * 0.27));
-  const RW   = 140;
-  const BW   = Math.max(40, W - LW - RW - 20);
-  const RH   = 52;
-  const PAD  = 16;
-  const H    = accounts.length * RH + PAD * 2;
-  const midX = LW + 8 + BW / 2;
-
-  const maxD = Math.max(...accounts.map(a => Math.abs(a.future - a.now)), 1);
-
-  let rows = '';
-  accounts.forEach((a, i) => {
-    const y0    = PAD + i * RH;
-    const barY  = y0 + 6;
-    const barH  = 32;
-    const delta = a.future - a.now;
-    const pct   = a.now !== 0 ? (delta / Math.abs(a.now) * 100).toFixed(1) : null;
-    const up    = delta >= 0;
-    const flat  = Math.abs(delta) < 0.005;
-    const col   = flat ? CHART.muted : up ? CHART.pos : CHART.neg;
-    const hw    = flat ? 0 : (Math.abs(delta) / maxD) * (BW / 2);
-    const sign  = delta > 0 ? '+' : '';
-
-    const track = `<rect x="${LW + 8}" y="${barY + 8}" width="${BW}" height="${barH - 16}" rx="3" fill="${CHART.track}"/>`;
-    const zline = `<line x1="${midX}" y1="${barY}" x2="${midX}" y2="${barY + barH}" stroke="${CHART.axis}" stroke-width="1.5"/>`;
-    const bar   = flat
-      ? `<circle cx="${midX}" cy="${barY + barH / 2}" r="5" fill="${CHART.muted}"/>`
-      : `<rect x="${up ? midX : midX - hw}" y="${barY + 5}" width="${hw}" height="${barH - 10}" rx="3" fill="${esc(col)}" opacity="0.82"/>`;
-
-    const lbl    = a.label.length > 13 ? a.label.slice(0, 12) + '…' : a.label;
-    const nameEl = `<text x="${LW + 4}" y="${barY + barH / 2 + 5}" text-anchor="end" font-size="12" fill="${CHART.text}" font-family="${CHART.font}" font-weight="500">${esc(lbl)}</text>`;
-
-    const rx     = LW + BW + 18;
-    const valTxt = `<text x="${rx}" y="${barY + barH / 2 - 2}" font-size="11" fill="${esc(col)}" font-weight="600" font-family="${CHART.font}">${esc(sign + fmtEuro(delta))}</text>`;
-    const pctTxt = pct
-      ? `<text x="${rx}" y="${barY + barH / 2 + 13}" font-size="11" fill="${esc(col)}" font-family="${CHART.font}">${esc(sign + pct + '%')}</text>`
-      : '';
-
-    const hit = `<rect x="0" y="${y0}" width="${W}" height="${RH}" fill="transparent" data-tip="${tipData([a.label,
-      [col, t('chart_change'), sign + fmtEuro(delta) + (pct ? ' (' + sign + pct + '%)' : '')],
-      [CHART.muted, t('chart_today'), fmtEuro(a.now)],
-      [CHART.muted, t('chart_forecast'), fmtEuro(a.future)]])}"/>`;
-
-    rows += `<g>${track}${zline}${bar}${nameEl}${valTxt}${pctTxt}${hit}</g>\n`;
-  });
-
-  const zeroLbl = `<text x="${midX}" y="${PAD - 4}" text-anchor="middle" font-size="11" fill="${CHART.axis}" font-family="${CHART.font}">${t('chart_change')}</text>`;
-
-  wrap.innerHTML = chartSvg(W, H, zeroLbl + rows, t('dash_balance_chart'));
+  wrap.innerHTML = chartSvg(W, H, svg, t('dash_balance_chart')) + legend;
   bindChartTips(wrap);
 }
 

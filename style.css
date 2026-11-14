@@ -805,6 +805,13 @@ body.privacy-mode .chart-tip { display: none; }
 .chart-legend span { display: inline-flex; align-items: center; gap: 7px; }
 .chart-legend i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; }
 .chart-legend i.line { width: 16px; height: 3px; border-radius: 2px; }
+.chart-legend i.dot  { width: 11px; height: 11px; border-radius: 50%; }
+.chart-legend i.ring { width: 11px; height: 11px; border-radius: 50%; border: 2px solid; background: var(--card-bg); box-sizing: border-box; }
+.chart-summary {
+  display: flex; flex-wrap: wrap; gap: 4px 20px;
+  padding: 0 4px 10px; font-size: .82rem; color: var(--text-muted);
+}
+.chart-summary b { color: var(--text); font-family: var(--font-num); font-weight: 600; font-variant-numeric: tabular-nums; }
 
 .exp-donut { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 16px 28px; }
 .exp-donut > svg { width: 200px; height: 200px; flex-shrink: 0; }

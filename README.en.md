@@ -160,11 +160,13 @@ Bank accounts show the bank name in parentheses in smaller text (e.g. *Payroll (
 
 ### 4.2 Account Changes
 
-A bar chart that visually shows the balances of all accounts:
-- **Solid colour** = current balance (today)
-- **Light colour** = future balance
+A chart showing, for each account, where it stands **today** and where it will be at the **forecast** date, on a shared scale:
+- **Ring** (hollow) = current balance
+- **Dot** (filled) = forecast balance
+- The **line** joining them is **green** when the balance rises and **red** when it falls
+- The vertical **0 €** line is always shown, so an account heading below zero stands out at once
 
-Each account uses the same colour pair (e.g. dark blue / light blue) for easy identification. Available views: **Comparison** (Today vs Forecast) and **Change** (percentage difference).
+On the right (or on top, on a phone) you see the forecast amount and the change in euros (e.g. **▲ +860 €** or **▼ -530 €**). Tap an account to see today, forecast and the change with its percentage.
 
 ### 4.3 Daily Balances
 
@@ -215,10 +217,14 @@ A **vertical bar chart** displaying total expenses for each month of the selecte
 
 **Colour coding:**
 - **Blue** (accent): current month
-- **Light blue**: past months
-- **Grey**: future months
+- **Light blue**: past months (a shade stronger when above the average)
+- **Very light**: future months
 
-A shortened amount (e.g. "1.2k" = €1,200) appears above each bar where space allows. Tap or hover over a month for the exact amount. On narrow screens every other month is labelled so the names don't overlap.
+**Summary** above the chart: year total, monthly average and the highest month (only months that have passed and have expenses are counted).
+
+**Average line (Avg):** a dashed horizontal line — months above it are a shade stronger, so you can spot at once which month went over.
+
+An amount is written only above the **current** and the **highest** month. Tap or hover over any month for the exact amount and its difference from the average. On narrow screens every other month is labelled so the names don't overlap.
 
 ### 4.8 Recent Transactions
 
@@ -675,4 +681,4 @@ Card payments from an account (category "Κάρτες" or "Cards") are excluded 
 
 ---
 
-*Family FiN — Version 0.947 Beta | Last updated: November 2026*
+*Family FiN — Version 0.948 Beta | Last updated: November 2026*

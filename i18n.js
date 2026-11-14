@@ -282,6 +282,12 @@ const TRANSLATIONS = {
     chart_increase:    'Αύξηση',
     chart_decrease:    'Μείωση',
     chart_change:      'Μεταβολή',
+    chart_no_change:   'χωρίς αλλαγή',
+    chart_year_total:  'Σύνολο έτους',
+    chart_avg:         'Μέσος όρος',
+    chart_avg_short:   'Μ.Ο.',
+    chart_highest:     'Ακριβότερος μήνας',
+    chart_vs_avg:      'από τον μέσο όρο',
 
     // Transactions report
     report_title:      'Αναφορά Κινήσεων',
@@ -616,6 +622,12 @@ const TRANSLATIONS = {
     chart_increase:    'Increase',
     chart_decrease:    'Decrease',
     chart_change:      'Change',
+    chart_no_change:   'no change',
+    chart_year_total:  'Year total',
+    chart_avg:         'Average',
+    chart_avg_short:   'Avg',
+    chart_highest:     'Highest month',
+    chart_vs_avg:      'vs average',
 
     // Transactions report
     report_title:      'Transactions Report',
