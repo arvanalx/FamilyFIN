@@ -6,11 +6,15 @@
    data-style: navy (default) | sage | graphite   ·   data-theme: light | dark
    Styles differ only in tokens (colours, fonts, radius, heading treatment), never in layout. */
 
-/* Fonts: used when installed locally (or once served from /fonts); otherwise the system fallbacks below */
-@font-face { font-family: 'Inter';         src: local('Inter'), local('Inter Variable'), local('Inter-Regular'); font-weight: 100 900; font-display: swap; }
-@font-face { font-family: 'Manrope';       src: local('Manrope'), local('Manrope-Regular'); font-weight: 200 800; font-display: swap; }
-@font-face { font-family: 'IBM Plex Sans'; src: local('IBM Plex Sans'), local('IBMPlexSans'); font-weight: 100 700; font-display: swap; }
-@font-face { font-family: 'IBM Plex Mono'; src: local('IBM Plex Mono'), local('IBMPlexMono'); font-weight: 100 700; font-display: swap; }
+/* Fonts — served from /fonts (Latin + Greek subsets, SIL Open Font License, via Google Fonts) */
+@font-face { font-family: 'IBM Plex Mono'; font-style: normal; font-weight: 500; font-display: swap; src: url('fonts/ibm-plex-mono-500-latin.woff2') format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: 'IBM Plex Mono'; font-style: normal; font-weight: 600; font-display: swap; src: url('fonts/ibm-plex-mono-600-latin.woff2') format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: 'IBM Plex Sans'; font-style: normal; font-weight: 400 700; font-display: swap; src: url('fonts/ibm-plex-sans-400-700-greek.woff2') format('woff2'); unicode-range: U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF; }
+@font-face { font-family: 'IBM Plex Sans'; font-style: normal; font-weight: 400 700; font-display: swap; src: url('fonts/ibm-plex-sans-400-700-latin.woff2') format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: 'Inter'; font-style: normal; font-weight: 400 700; font-display: swap; src: url('fonts/inter-400-700-greek.woff2') format('woff2'); unicode-range: U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF; }
+@font-face { font-family: 'Inter'; font-style: normal; font-weight: 400 700; font-display: swap; src: url('fonts/inter-400-700-latin.woff2') format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: 'Manrope'; font-style: normal; font-weight: 500 800; font-display: swap; src: url('fonts/manrope-500-800-greek.woff2') format('woff2'); unicode-range: U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF; }
+@font-face { font-family: 'Manrope'; font-style: normal; font-weight: 500 800; font-display: swap; src: url('fonts/manrope-500-800-latin.woff2') format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
 
 :root {
   --bottom-nav-h:   62px;
@@ -384,7 +388,7 @@ body {
 
 .logo-icon { width: 28px; height: 28px; object-fit: contain; flex-shrink: 0; }
 .logo-text { font-family: var(--font-head); font-weight: 600; }
-.logo-text strong { color: var(--logo-accent); font-weight: 800; }
+.logo-text strong { color: var(--logo-accent); font-weight: 700; }
 
 .sidebar-toggle {
   background: none; border: none; color: var(--sidebar-muted);
@@ -815,6 +819,8 @@ body.privacy-mode .pv {
 .amount, .amount-cell, .tx-amount, .cc-balance, .cc-inst, .inst-footer .pv,
 #txTotalIncome, #txTotalExpense, #txBalance { font-family: var(--font-num); font-variant-numeric: tabular-nums; }
 .stat-value, .cc-stat-value, .sub-amount { font-family: var(--font-figure); }
+/* IBM Plex Mono ships in 500/600 only — avoid synthetic bold on Graphite amounts */
+[data-style="graphite"] :is(.stat-value, .cc-stat-value, .sub-amount, .amount, .amount-cell, .tx-amount, .cc-balance) { font-weight: 600; }
 .page-title { font-family: var(--font-head); }
 
 /* ============================================================

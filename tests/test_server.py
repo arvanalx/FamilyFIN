@@ -34,6 +34,15 @@ class ServerTests(unittest.TestCase):
         for path in server.STATIC_FILES.values():
             self.assertTrue((Path(server.__file__).parent / path).exists(), path)
 
+    def test_font_files_are_woff2_and_referenced(self):
+        fonts = sorted(server.FONTS_DIR.glob('*'))
+        self.assertTrue(fonts)
+        css = (Path(server.__file__).parent / 'style.css').read_text(encoding='utf-8')
+        for f in fonts:
+            self.assertEqual(f.suffix, '.woff2', f.name)
+            self.assertEqual(f.read_bytes()[:4], b'wOF2', f.name)
+            self.assertIn(f"url('fonts/{f.name}')", css, f.name)
+
     def test_revision_conflict_rejects_stale_save(self):
         ok, rev, _ = server.db_save({'accounts': [1]}, 0)
         self.assertTrue(ok)

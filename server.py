@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Family FiN — Local server with SQLite persistence (v0.940 Beta)
+Family FiN — Local server with SQLite persistence (v0.941 Beta)
 Serves the app's static files + provides /api/data for read/write via SQLite.
 No external dependencies (stdlib only).
 
@@ -23,6 +23,7 @@ BASE_DIR   = Path(__file__).parent.resolve()
 DB_FILE    = BASE_DIR / 'familyfin.db'
 DATA_FILE  = BASE_DIR / 'data.json'   # legacy — used only for one-time migration
 BACKUP_DIR = BASE_DIR / 'backups'
+FONTS_DIR  = BASE_DIR / 'fonts'
 
 KEEP_DAILY_BACKUPS    = 30
 KEEP_SNAPSHOT_BACKUPS = 10
@@ -225,6 +226,8 @@ def host_allowed(host_header: str) -> bool:
 
 class FamilyFinHandler(SimpleHTTPRequestHandler):
 
+    extensions_map = {**SimpleHTTPRequestHandler.extensions_map, '.woff2': 'font/woff2'}
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=str(BASE_DIR), **kwargs)
 
@@ -250,6 +253,11 @@ class FamilyFinHandler(SimpleHTTPRequestHandler):
         if path in STATIC_FILES:
             self.path = '/' + STATIC_FILES[path]
             return 'static'
+        if path.startswith('/fonts/') and path.endswith('.woff2'):
+            name = path[len('/fonts/'):]
+            if '/' not in name and (FONTS_DIR / name).is_file():
+                self.path = '/fonts/' + name
+                return 'static'
         self._error(404, 'Not found')
         return None
 
