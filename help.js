@@ -14,7 +14,41 @@ function renderHelp() {
   fetch(file)
     .then(r => r.ok ? r.text() : Promise.reject('not found'))
     .then(md => { cont.innerHTML = mdToHtml(md); cont.dataset.loaded = '1'; })
+    .then(initHelpNav)
     .catch(() => { cont.innerHTML = `<p class="muted" style="padding:24px">${t('help_not_found')}</p>`; });
+}
+
+// GitHub-style heading anchor: "10. Ρυθμίσεις" → "10-ρυθμίσεις"
+function helpSlug(text) {
+  return text.replace(/\{\{[a-z-]+\}\}/g, '').replace(/[`*]/g, '').trim().toLowerCase()
+    .replace(/[^\p{L}\p{N}\s-]/gu, '').replace(/\s/g, '-');
+}
+
+// Table-of-contents links scroll inside the app (no hash change); a floating button returns to the top
+let helpNavReady = false;
+function initHelpNav() {
+  if (helpNavReady) return;
+  helpNavReady = true;
+  document.getElementById('helpContent').addEventListener('click', e => {
+    const a = e.target.closest('a.help-link');
+    if (!a) return;
+    e.preventDefault();
+    let id = a.dataset.anchor;
+    try { id = decodeURIComponent(id); } catch (_) {}
+    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+  const btn = document.getElementById('helpTop');
+  const onScroll = () => {
+    const y = window.scrollY || document.documentElement.scrollTop;
+    btn.hidden = !(y > 700 && document.getElementById('page-help').classList.contains('active'));
+  };
+  window.addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
+}
+
+function helpScrollTop() {
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  document.getElementById('helpTop').hidden = true;
 }
 
 // Lightweight Markdown → HTML converter (supports the subset used in README.md)
@@ -34,7 +68,9 @@ function mdToHtml(md) {
     .replace(/`([^`]+)`/g,        (_, c) => `<code>${esc(c)}</code>`)
     .replace(/\*\*([^*]+)\*\*/g,  '<strong>$1</strong>')
     .replace(/\*([^*]+)\*/g,      '<em>$1</em>')
-    .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')    // strip links → plain text
+    .replace(/\[([^\]]+)\]\(#([^)]+)\)/g, (_, txt, a) =>       // in-page links (table of contents)
+      `<a class="help-link" href="#${a}" data-anchor="${a}">${txt}</a>`)
+    .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')    // other links → plain text
     .replace(/\{\{([a-z][a-z-]*)\}\}/g, (_, n) => HELP_ICONS.has(n)       // {{edit}} → app SVG icon
       ? `<svg class="help-ico" aria-hidden="true"><use href="#i-${n}"/></svg>` : _);
 
@@ -86,7 +122,7 @@ function mdToHtml(md) {
     if ((m = line.match(/^(#{1,4}) (.+)/))) {
       flushLists();
       const lvl = m[1].length;
-      out.push(`<h${lvl}>${inline(m[2])}</h${lvl}>`);
+      out.push(`<h${lvl} id="${esc(helpSlug(m[2]))}">${inline(m[2])}</h${lvl}>`);
       continue;
     }
 
