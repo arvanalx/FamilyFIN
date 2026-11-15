@@ -149,14 +149,14 @@ The home page provides a comprehensive view of your financial situation.
 
 ### 4.1 Account Balances
 
-A table with two columns for each account:
+The two **totals** across all accounts are shown in large type at the top:
 
 - **Today:** The current balance as entered in Settings (includes all settled transactions)
-- **Forecast:** Calculated balance that takes into account **only unsettled transactions** (up to the end of next month)
+- **Forecast:** Calculated balance that takes into account **only unsettled transactions**. It turns **green** when it is higher than today and **red** when it is lower. Below it, a small badge with an arrow shows the difference (e.g. *+1,121.27 €*)
 
-> 💡 The max date for "Forecast" is calculated automatically as the latest transaction date, capped at the end of next month.
+A table with the same two columns for each account follows. **Cash** always comes first, then the accounts in the order they were created. Bank accounts show the bank name on a second, smaller line. Zero amounts are dimmed and negative ones are red.
 
-Bank accounts show the bank name in parentheses in smaller text (e.g. *Payroll (Alpha Bank)*).
+> 💡 The forecast date is shown at the top right (*Forecast to …*). It is calculated automatically as the latest transaction date, capped at the end of next month.
 
 ### 4.2 Account Changes
 
@@ -665,4 +665,4 @@ Card payments from an account (category "Κάρτες" or "Cards") are excluded 
 
 ---
 
-*Family FiN — Version 0.953 Beta | Last updated: November 2026*
+*Family FiN — Version 0.954 Beta | Last updated: November 2026*

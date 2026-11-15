@@ -437,7 +437,7 @@ function renderDailyBalanceChart() {
   const fd       = calcFutureDate(state);
   const DAY      = 86400000;
 
-  const series = state.accounts.map((acc, idx) => ({
+  const series = orderedAccounts().map((acc, idx) => ({
     label:  acc.name,
     color:  balPal(idx)[0],
     points: dailyBalancePoints(acc, state.transactions, todayStr, fd),

@@ -261,6 +261,12 @@ function renderPage(name) {
 
 // ── DASHBOARD ───────────────────────────────────────────────
 
+// Display order for accounts: cash first, then the rest in creation order.
+function orderedAccounts() {
+  const accs = state.accounts || [];
+  return [...accs.filter(a => a.type === 'cash'), ...accs.filter(a => a.type !== 'cash')];
+}
+
 function renderDashboard() {
   // Auto-calculated future date
   const fd = calcFutureDate(state);
@@ -271,27 +277,33 @@ function renderDashboard() {
 
   // Build balance table rows dynamically
   const tbody = document.getElementById('balanceTbody');
-  const rowCls = { cash: 'highlight-cash', alpha: 'highlight-alpha', winbank: 'highlight-win' };
   let totalNow = 0, totalFut = 0;
-  const rows = state.accounts.map(acc => {
+  const amtCls = v => 'amount' + (Math.abs(v) < 0.005 ? ' zero' : v < 0 ? ' negative' : '');
+  tbody.innerHTML = orderedAccounts().map(acc => {
     const now = acc.balance || 0;
     const fut = futureMap[acc.id];
     totalNow += now; totalFut += fut;
-    const cls = rowCls[acc.id] || '';
     const bankSub = (acc.type === 'bank' && acc.bank)
-      ? ` <span class="acc-bank-sub">(${esc(acc.bank)})</span>` : '';
-    return `<tr class="account-row ${cls}">
-      <td class="account-name">${esc(acc.name)}${bankSub}</td>
-      <td class="amount">${fmtEuro(now)}</td>
-      <td class="amount future-amount${fut < 0 ? ' negative' : ''}">${fmtEuro(fut)}</td>
+      ? `<span class="acc-bank-sub">${esc(acc.bank)}</span>` : '';
+    return `<tr class="account-row">
+      <td class="account-name"><span class="acc-name-main">${esc(acc.name)}</span>${bankSub}</td>
+      <td class="${amtCls(now)}">${fmtEuro(now)}</td>
+      <td class="${amtCls(fut)}">${fmtEuro(fut)}</td>
     </tr>`;
-  });
-  rows.push(`<tr class="total-row">
-    <td class="account-name"><strong>${t('dash_total')}</strong></td>
-    <td class="amount"><strong>${fmtEuro(totalNow)}</strong></td>
-    <td class="amount"><strong>${fmtEuro(totalFut)}</strong></td>
-  </tr>`);
-  tbody.innerHTML = rows.join('');
+  }).join('');
+
+  // Hero totals: today, forecast and the change between them
+  totalNow = round2(totalNow); totalFut = round2(totalFut);
+  const delta = round2(totalFut - totalNow);
+  document.getElementById('balTotalNow').textContent = fmtEuro(totalNow);
+  const futEl = document.getElementById('balTotalFut');
+  futEl.textContent = fmtEuro(totalFut);
+  futEl.className = 'bal-big' + (delta > 0 ? ' up' : delta < 0 ? ' down' : '');
+  const dEl = document.getElementById('balDelta');
+  dEl.className = 'bal-delta' + (delta > 0 ? ' up' : delta < 0 ? ' down' : '');
+  dEl.innerHTML = delta === 0 ? '' :
+    `<svg class="btn-ico" aria-hidden="true"><use href="#i-arrow-${delta > 0 ? 'up' : 'down'}"/></svg>${delta > 0 ? '+' : ''}${fmtEuro(delta)}`;
+  dEl.hidden = delta === 0;
 
   // Monthly stats (Fix 5: Δόσεις Καρτών removed)
   const month = thisMonth();
@@ -346,7 +358,7 @@ function renderDashboard() {
   renderMonthlyExpenseChart();
 
   // Balance chart (SVG)
-  renderBalanceChart(state.accounts.map(a => ({
+  renderBalanceChart(orderedAccounts().map(a => ({
     label: a.name, now: a.balance || 0, future: futureMap[a.id],
   })));
 
@@ -1441,7 +1453,7 @@ function renderAccountsSettings() {
   if (!container) return;
   const total = round2(state.accounts.reduce((sum, a) => sum + (+a.balance || 0), 0));
   document.getElementById('accountsMeta').innerHTML = `${t('acc_total')} <b>${fmtEuro(total)}</b>`;
-  container.innerHTML = state.accounts.length ? state.accounts.map(acc => setListRow({
+  container.innerHTML = state.accounts.length ? orderedAccounts().map(acc => setListRow({
     id: acc.id, icon: acc.type === 'cash' ? 'wallet' : 'bank', title: acc.name,
     sub: acc.type === 'cash' ? t('acc_type_cash')
        : acc.bank ? `<span class="set-sm-hide">${t('acc_type_bank')} · </span>${esc(acc.bank)}` : t('acc_type_bank'),

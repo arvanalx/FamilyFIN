@@ -555,7 +555,7 @@ body.privacy-mode .btn-privacy .ico-eye-off { display: block; }
    ============================================================ */
 
 /* Smooth transition for all blurrable elements */
-.stat-value, .cc-stat-value, .cc-balance, .cc-inst,
+.stat-value, .cc-stat-value, .cc-balance, .cc-inst, .bal-big, .bal-delta,
 .cc-total-debt strong, td.amount, .amount-cell,
 .sub-amount, .tx-amount, canvas,
 #txTotalIncome, #txTotalExpense, #txBalance,
@@ -567,6 +567,8 @@ body.privacy-mode .btn-privacy .ico-eye-off { display: block; }
 }
 
 body.privacy-mode .stat-value,
+body.privacy-mode .bal-big,
+body.privacy-mode .bal-delta,
 body.privacy-mode .cc-stat-value,
 body.privacy-mode .cc-balance,
 body.privacy-mode .cc-inst,
@@ -672,34 +674,85 @@ body.privacy-mode .pv {
   border-bottom: 1px solid var(--border);
 }
 
+.balance-table tbody tr:last-child td { border-bottom: none; }
+
 .account-name {
   font-weight: 600;
-  font-size: .9rem;
+  font-size: .95rem;
 }
+.acc-name-main { display: block; }
 
 .acc-bank-sub {
+  display: block;
   font-weight: 400;
   font-size: .78rem;
   color: var(--text-muted);
-  margin-left: 2px;
+  margin-top: 1px;
 }
 
 .balance-table .amount {
   text-align: right;
   font-variant-numeric: tabular-nums;
-  font-size: .95rem;
+  font-size: 1.125rem;
+  font-weight: 600;
+  white-space: nowrap;
 }
+.balance-table .amount.zero { color: var(--text-muted); font-weight: 500; }
+.balance-table .amount.negative { color: var(--danger); }
 
-.total-row td {
-  background: var(--bg);
-  border-bottom: none;
+/* Hero totals above the table (v0.954) */
+.bal-hero {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px;
+  background: var(--border);
+  border-bottom: 1px solid var(--border);
 }
+.bal-hero-cell { background: var(--card-bg); padding: 18px 20px 20px; min-width: 0; }
+.bal-hero-label {
+  font-size: .78rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: var(--label-case);
+  letter-spacing: var(--label-track);
+}
+.bal-big {
+  font-family: var(--font-figure);
+  font-size: 2rem;
+  font-weight: 800;
+  line-height: 1.15;
+  margin-top: 6px;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+.bal-big.up { color: var(--success); }
+.bal-big.down { color: var(--danger); }
+.bal-delta {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 8px;
+  padding: 3px 9px 3px 7px;
+  border-radius: 999px;
+  font-size: .8rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.bal-delta .btn-ico { width: 13px; height: 13px; }
+.bal-delta.up { background: var(--success-light); color: var(--success); }
+.bal-delta.down { background: var(--danger-light); color: var(--danger); }
+[data-style="graphite"] .bal-big { font-weight: 600; }
 
-.highlight-cash .account-name { color: var(--text-muted); }
-.highlight-alpha .account-name { color: var(--hl-alpha); }
-.highlight-win .account-name { color: var(--primary); }
-
-.future-amount.negative { color: var(--danger); }
+@media (max-width: 560px) {
+  .bal-hero-cell { padding: 14px 14px 16px; }
+  .bal-big { font-size: 1.45rem; }
+  .balance-table th, .balance-table td { padding-left: 14px; padding-right: 14px; }
+  .balance-table .amount { font-size: 1rem; }
+}
+@media (max-width: 340px) {
+  .bal-hero { grid-template-columns: 1fr; }
+}
 
 /* ============================================================
    CHART CONTROLS (toggle buttons + nav)

@@ -41,7 +41,8 @@ const TRANSLATIONS = {
     dash_total_colon:      'Σύνολο:',
     dash_subtotal:         'σύνολο',
     dash_today_label:      'σήμερα',
-    dash_future_label:     'μέγιστη ημ/νία',
+    dash_future_label:     'Πρόβλεψη έως',
+    dash_account:          'Λογαριασμός',
 
     // Transactions page
     filter_all_accounts:   'Όλοι οι λογαριασμοί',
@@ -425,7 +426,8 @@ const TRANSLATIONS = {
     dash_total_colon:      'Total:',
     dash_subtotal:         'total',
     dash_today_label:      'today',
-    dash_future_label:     'max date',
+    dash_future_label:     'Forecast to',
+    dash_account:          'Account',
 
     // Transactions page
     filter_all_accounts:   'All accounts',
