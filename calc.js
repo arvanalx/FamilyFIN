@@ -220,6 +220,23 @@ function expensesByCategory(s, month, labels, currentMonth = thisMonth()) {
     .sort((a, b) => b.amount - a.amount);
 }
 
+// From money that left the accounts (cash flow) to spending (by category), step by step.
+// The result always equals monthExpenseTotal, because it is built from the same rules.
+function spendingBridge(s, month, currentMonth = thisMonth()) {
+  const acctExp = s.transactions.filter(tx => tx.type === 'expense' && tx.date.startsWith(month) && !tx.transferId);
+  const paidOut     = round2(acctExp.reduce((sum, tx) => sum + tx.amount, 0));
+  const cardPayment = round2(acctExp.filter(tx => isCardPaymentCat(tx.category)).reduce((sum, tx) => sum + tx.amount, 0));
+  const cardSpend   = round2(s.cardTransactions.filter(tx => tx.date.startsWith(month)).reduce((sum, tx) => sum + tx.amount, 0));
+  const installments = month === currentMonth
+    ? round2(s.installments.filter(i => installmentDue(i, month)).reduce((sum, i) => sum + i.monthlyAmount, 0))
+    : 0;
+  return {
+    paidOut, cardPayment, cardSpend, installments,
+    installmentsCounted: month === currentMonth,
+    spending: round2(paidOut - cardPayment + cardSpend + installments),
+  };
+}
+
 // ── INCOME ───────────────────────────────────────────────────
 // Average monthly income over the 12 months ending at `month` (counting only months
 // that had income, so a short history isn't diluted), projected to a full year
@@ -243,7 +260,7 @@ if (typeof module !== 'undefined') {
     round2, txDelta, isCardPaymentCat,
     installmentDue, subscriptionBillingMonths, subscriptionCosts,
     calcFutureDate, accountForecast, dailyBalancePoints,
-    monthExpenseItems, monthExpenseTotal, expensesByCategory,
+    monthExpenseItems, monthExpenseTotal, expensesByCategory, spendingBridge,
     estimateYearlyIncome,
   };
 }

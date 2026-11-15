@@ -339,9 +339,13 @@ function renderDashMonth() {
   const mtx = state.transactions.filter(tx => tx.date.startsWith(month) && !tx.transferId);
   const income   = round2(mtx.filter(tx => tx.type === 'income').reduce((s, tx) => s + tx.amount, 0));
   const expenses = round2(mtx.filter(tx => tx.type === 'expense').reduce((s, tx) => s + tx.amount, 0));
+  const cardPay  = round2(mtx.filter(tx => tx.type === 'expense' && isCardPaymentCat(tx.category)).reduce((s, tx) => s + tx.amount, 0));
   const bal = round2(income - expenses);
   document.getElementById('monthlyIncome').textContent   = fmtEuro(income);
   document.getElementById('monthlyExpenses').textContent = fmtEuro(expenses);
+  document.getElementById('monthlyCardPay').textContent  = fmtEuro(cardPay);
+  document.getElementById('monthlyCardPay').hidden    = !cardPay;
+  document.getElementById('monthlyCardPayRow').hidden = !cardPay;
   const balEl = document.getElementById('monthlyBalance');
   balEl.textContent = (bal > 0 ? '+' : '') + fmtEuro(bal);
   balEl.className = 'bal-big' + (bal > 0 ? ' up' : bal < 0 ? ' down' : '');
@@ -361,7 +365,7 @@ function renderDashMonth() {
   const base = Math.max(income, expenses);
   if (!base) { bar.innerHTML = ''; return; }
   const segs = [
-    { cls: 'dm-exp', v: expenses, lbl: t('stat_expense') },
+    { cls: 'dm-exp', v: expenses, lbl: t('dash_cf_out') },
     { cls: 'dm-inc', v: Math.max(bal, 0), lbl: t('dash_month_result') },
   ].filter(s => s.v > 0);
   bar.innerHTML = segs.map(s => `<span class="${s.cls}" style="width:${(s.v / base * 100).toFixed(2)}%"
@@ -414,6 +418,45 @@ function renderDashCards() {
       </div>`;
   }).join('') : `<div class="empty-state">${t('cards_not_set')}</div>`;
   ccDiv.querySelectorAll('.dc-bar').forEach(b => bindChartTips(b));
+}
+
+// Step-by-step reconciliation: money out of accounts → spending by category
+function openSpendingBridge(month = thisMonth()) {
+  const b = spendingBridge(state, month);
+  const [y, m] = month.split('-');
+  const row = (sign, label, note, value, cls = '') => `
+    <div class="br-row ${cls}">
+      <span class="br-sign" aria-hidden="true">${sign}</span>
+      <span class="br-lbl">${esc(label)}${note ? `<small>${esc(note)}</small>` : ''}</span>
+      <span class="br-val">${value}</span>
+    </div>`;
+  document.getElementById('bridgeBody').innerHTML = `
+    <div class="br-month">${t('months_full')[+m - 1]} ${y}</div>
+    <p class="br-intro">${esc(t('bridge_intro'))}</p>
+    <div class="br-list">
+      ${row('', t('bridge_paid_out'), month === thisMonth() ? t('bridge_paid_out_note') : '', fmtEuro(b.paidOut))}
+      ${row('−', t('bridge_card_payment'), t('bridge_card_payment_note'), (b.cardPayment ? '−' : '') + fmtEuro(b.cardPayment), b.cardPayment ? '' : 'br-zero')}
+      ${row('+', t('bridge_card_spend'), t('bridge_card_spend_note'), (b.cardSpend ? '+' : '') + fmtEuro(b.cardSpend), b.cardSpend ? '' : 'br-zero')}
+      ${b.installmentsCounted
+        ? row('+', t('bridge_installments'), '', (b.installments ? '+' : '') + fmtEuro(b.installments), b.installments ? '' : 'br-zero')
+        : row('+', t('bridge_installments'), t('bridge_inst_past'), '—', 'br-zero')}
+      ${row('=', t('bridge_spending'), '', fmtEuro(b.spending), 'br-total')}
+    </div>
+    <p class="br-foot">${esc(t('bridge_spending_note'))}</p>`;
+  openModal('bridgeModal');
+}
+
+function openBridgeHelp() {
+  closeModal('bridgeModal');
+  showPage('help');
+  // Help is fetched on first open, so wait for the heading to appear (up to ~3 s)
+  let tries = 0;
+  const go = () => {
+    const h = [...document.querySelectorAll('#helpContent h3')].find(el => /^4\.9\b/.test(el.textContent.trim()));
+    if (h) h.scrollIntoView({ block: 'start' });
+    else if (++tries < 30) setTimeout(go, 100);
+  };
+  go();
 }
 
 function openCardFromDash(id) {

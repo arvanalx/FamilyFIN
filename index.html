@@ -26,7 +26,7 @@
       document.documentElement.dataset.style = style;
     })();
   </script>
-  <link rel="stylesheet" href="style.css?v=0.955">
+  <link rel="stylesheet" href="style.css?v=0.956">
 </head>
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -105,7 +105,7 @@
   </ul>
   <div class="sidebar-footer">
     <button id="langToggle" class="lang-toggle" onclick="toggleLang()">EN</button>
-    <span class="version">v0.955 Beta</span>
+    <span class="version">v0.956 Beta</span>
   </div>
 </nav>
 
@@ -181,10 +181,13 @@
       <!-- Quick Stats + Credit Cards (full-width 2-col row) -->
       <div class="dash-two-col">
 
-      <!-- Month balance (v0.955) -->
+      <!-- Month balance (v0.956) -->
       <div class="card dash-month">
         <div class="card-header">
-          <h2 data-i18n="dash_monthly_stats">Ισοζύγιο Κινήσεων Μήνα</h2>
+          <div class="dm-title">
+            <h2 data-i18n="dash_monthly_stats">Ισοζύγιο Κινήσεων Μήνα</h2>
+            <span class="flow-tag" data-i18n="dash_cashflow_tag">Ταμειακή ροή</span>
+          </div>
           <span class="card-date" id="dashMonthLabel"></span>
         </div>
         <div class="dm-body">
@@ -194,16 +197,21 @@
           <div class="dm-bar chart-tips" id="monthlyBar"></div>
           <div class="dm-legend">
             <span class="dm-dot dm-inc"></span>
-            <span class="dm-lbl"><svg class="btn-ico" aria-hidden="true"><use href="#i-arrow-up"/></svg><span data-i18n="stat_income">Έσοδα</span></span>
+            <span class="dm-lbl"><svg class="btn-ico" aria-hidden="true"><use href="#i-arrow-up"/></svg><span data-i18n="dash_cf_in">Μπήκαν στους λογαριασμούς</span></span>
             <span class="dm-val" id="monthlyIncome">0,00 €</span>
             <span class="dm-dot dm-exp"></span>
-            <span class="dm-lbl"><svg class="btn-ico" aria-hidden="true"><use href="#i-arrow-down"/></svg><span data-i18n="stat_expense">Έξοδα</span></span>
+            <span class="dm-lbl"><svg class="btn-ico" aria-hidden="true"><use href="#i-arrow-down"/></svg><span data-i18n="dash_cf_out">Βγήκαν από τους λογαριασμούς</span></span>
             <span class="dm-val" id="monthlyExpenses">0,00 €</span>
+            <span class="dm-sub" id="monthlyCardPayRow" hidden><span data-i18n="dash_cf_cardpay">εκ των οποίων εξόφληση καρτών</span></span>
+            <span class="dm-val dm-sub-val" id="monthlyCardPay" hidden>0,00 €</span>
           </div>
+          <button type="button" class="dm-why" onclick="openSpendingBridge()">
+            <svg class="btn-ico" aria-hidden="true"><use href="#i-info"/></svg><span data-i18n="dash_why_diff_spending">Γιατί διαφέρει από τις δαπάνες;</span>
+          </button>
         </div>
       </div>
 
-      <!-- Credit cards (v0.955) -->
+      <!-- Credit cards (v0.956) -->
       <div class="card dash-cards">
         <div class="card-header"><h2 data-i18n="dash_credit_cards">Πιστωτικές Κάρτες</h2></div>
         <div class="dc-total" id="cardsTotalBlock">
@@ -223,7 +231,7 @@
       <!-- Expenses by Category Chart -->
       <div class="card card-wide">
         <div class="card-header">
-          <h2 data-i18n="dash_expense_by_cat">Έξοδα ανά Κατηγορία</h2>
+          <h2 data-i18n="dash_expense_by_cat">Δαπάνες ανά Κατηγορία</h2>
           <div class="chart-controls">
             <button class="chart-nav-btn" id="expChartPrev" onclick="navigateExpChart(-1)" title="Προηγούμενος μήνας">‹</button>
             <span class="card-date" id="expChartMonth"></span>
@@ -234,6 +242,12 @@
             </div>
           </div>
         </div>
+        <div class="chart-note">
+          <span data-i18n="dash_spending_note">Λογαριασμοί + κάρτες + δόσεις, χωρίς εξοφλήσεις καρτών και μεταφορές.</span>
+          <button type="button" class="dm-why" onclick="openSpendingBridge(expChartMonthKey())">
+            <svg class="btn-ico" aria-hidden="true"><use href="#i-info"/></svg><span data-i18n="dash_why_diff_cashflow">Γιατί διαφέρει από το Ισοζύγιο;</span>
+          </button>
+        </div>
         <div class="donut-chart-container">
           <div id="expenseCategoryChart"></div>
         </div>
@@ -242,10 +256,13 @@
       <!-- Monthly Expenses Bar Chart -->
       <div class="card card-wide">
         <div class="card-header">
-          <h2 data-i18n="dash_expense_by_month">Έξοδα ανά Μήνα</h2>
+          <h2 data-i18n="dash_expense_by_month">Δαπάνες ανά Μήνα</h2>
           <div class="chart-controls">
             <select id="monthlyExpYearSel" class="form-control monthly-exp-year-sel" onchange="renderMonthlyExpenseChart()"></select>
           </div>
+        </div>
+        <div class="chart-note">
+          <span data-i18n="dash_spending_note_month">Λογαριασμοί + κάρτες, χωρίς εξοφλήσεις καρτών και μεταφορές. Οι δόσεις μετράνε μόνο στον τρέχοντα μήνα.</span>
         </div>
         <div class="monthly-exp-wrap" id="monthlyExpWrapper"></div>
       </div>
@@ -994,6 +1011,21 @@
   </div>
 </div>
 
+<!-- Cash flow → spending bridge (v0.956) -->
+<div class="modal-overlay" id="bridgeModal">
+  <div class="modal modal-sm" role="dialog" aria-modal="true" aria-labelledby="bridgeTitle">
+    <div class="modal-header">
+      <h3 id="bridgeTitle" data-i18n="bridge_title">Από τις πληρωμές στις δαπάνες</h3>
+      <button class="modal-close" data-i18n-aria="btn_close" aria-label="Κλείσιμο" onclick="closeModal('bridgeModal')">✕</button>
+    </div>
+    <div class="modal-body" id="bridgeBody"></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="openBridgeHelp()" data-i18n="bridge_more">Περισσότερα στη Βοήθεια</button>
+      <button class="btn btn-primary" onclick="closeModal('bridgeModal')" data-i18n="btn_close">Κλείσιμο</button>
+    </div>
+  </div>
+</div>
+
 <!-- PWA Install Banner (Android/Chrome) -->
 <div class="pwa-install-bar" id="pwaInstallBar">
   <p>Εγκατάσταση Family FiN στην αρχική οθόνη</p>
@@ -1071,11 +1103,11 @@
   </div>
 </div>
 
-<script src="i18n.js?v=0.955"></script>
-<script src="calc.js?v=0.955"></script>
-<script src="charts.js?v=0.955"></script>
-<script src="help.js?v=0.955"></script>
-<script src="report.js?v=0.955"></script>
-<script src="app.js?v=0.955"></script>
+<script src="i18n.js?v=0.956"></script>
+<script src="calc.js?v=0.956"></script>
+<script src="charts.js?v=0.956"></script>
+<script src="help.js?v=0.956"></script>
+<script src="report.js?v=0.956"></script>
+<script src="app.js?v=0.956"></script>
 </body>
 </html>

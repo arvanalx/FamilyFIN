@@ -58,10 +58,15 @@ function navigateExpChart(dir) {
   renderExpChartForOffset();
 }
 
+// Month (YYYY-MM) currently shown in the category chart
+function expChartMonthKey() {
+  const now = new Date();
+  const d   = new Date(now.getFullYear(), now.getMonth() + _expChartOffset, 1);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+}
+
 function renderExpChartForOffset() {
-  const now   = new Date();
-  const d     = new Date(now.getFullYear(), now.getMonth() + _expChartOffset, 1);
-  const month = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+  const month = expChartMonthKey();
 
   const nextBtn = document.getElementById('expChartNext');
   if (nextBtn) nextBtn.disabled = _expChartOffset >= 0;

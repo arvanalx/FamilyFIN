@@ -131,6 +131,26 @@ test('monthly expenses exclude transfers and card payments, include installments
   ]);
 });
 
+test('spendingBridge goes from cash flow to spending and matches monthExpenseTotal', () => {
+  const s = baseState({
+    transactions: [
+      { type: 'expense', amount: 40, date: '2026-11-05', category: 'Σούπερ μάρκετ' },
+      { type: 'expense', amount: 300, date: '2026-11-06', category: 'Κάρτες' },
+      { type: 'expense', amount: 200, date: '2026-11-07', transferId: 't1', category: 'Μεταφορά' },
+      { type: 'income',  amount: 1500, date: '2026-11-01' },
+    ],
+    cardTransactions: [{ amount: 25, date: '2026-11-09', category: '' }],
+    installments: [{ active: true, monthlyAmount: 30, paidCount: 0, totalCount: 5, startMonth: '2026-01' }],
+  });
+  const b = C.spendingBridge(s, '2026-11', '2026-11');
+  assert.deepEqual(b, { paidOut: 340, cardPayment: 300, cardSpend: 25, installments: 30, installmentsCounted: true, spending: 95 });
+  assert.equal(b.spending, C.monthExpenseTotal(s, '2026-11', '2026-11'));
+  const past = C.spendingBridge(s, '2026-11', '2026-12');
+  assert.equal(past.installments, 0);
+  assert.equal(past.installmentsCounted, false);
+  assert.equal(past.spending, C.monthExpenseTotal(s, '2026-11', '2026-12'));
+});
+
 test('estimateYearlyIncome averages the months that had income in the last 12', () => {
   const tx = (date, amount, extra = {}) => ({ type: 'income', date, amount, ...extra });
   const txs = [

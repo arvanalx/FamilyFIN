@@ -181,12 +181,14 @@ A chart showing how each account balance evolves day by day, from **today** (lef
 
 ### 4.4 Monthly Transaction Balance
 
-A summary for the **current month** (transfers between accounts excluded). The month is shown at the top right.
+The **cash flow** of the **current month**: how much money came into your accounts and how much went out (transfers between accounts excluded). The month is shown at the top right and a **Cash flow** badge sits next to the title.
 
-- **Month balance** (large figure): Income − Expenses, green if positive and red if negative
+- **Month balance** (large figure): money in − money out, green if positive and red if negative
 - Below it, a badge shows what share of income is left over (e.g. *34% of income left over*) or, if expenses are higher, by how much they exceeded income
 - **Bar:** the red part is expenses and the green part is what was left over. Tap or hover over it to see the amount
-- **Income / Expenses:** the two monthly totals, each on its own line
+- **Into / Out of your accounts:** the two monthly totals, each on its own line
+- **of which card payments:** if you paid a card from an account (a transaction with the "Cards" category), the amount appears on a small line under money out
+- **Why is this different from spending?** opens the bridge that explains the difference step by step (see [4.9 Payments or Spending?](#49-payments-or-spending))
 
 ### 4.5 Credit Cards (summary)
 
@@ -195,20 +197,20 @@ A summary for the **current month** (transfers between accounts excluded). The m
 - The **bar** under each card shows how much of the total is **transactions** (purple) and how much is **installments** (yellow). Tap or hover over it to see both amounts
 - Tapping anywhere else on a card's row opens its page
 
-### 4.6 Expenses by Category
+### 4.6 Spending by Category
 
-A **donut chart** showing the distribution of expenses for the current month from:
+A **donut chart** showing what you spent the month on, whatever way you paid. Spending is made up of:
 - Account transactions (excluding transactions with category "Cards")
 - Credit card transactions
 - Monthly installments (active)
 
-Next to the chart (or below it, on a phone) a list shows category, percentage (%) and amount in €. The **total expenses amount** appears in the centre. Use **‹ ›** to change month and the two buttons on the right to switch between the **donut** and **horizontal bars**.
+Next to the chart (or below it, on a phone) a list shows category, percentage (%) and amount in €. The month's **total spending** appears in the centre. Below the title, a small line reminds you what is included, with the link **Why is this different from the balance?**, which opens the bridge for the month you are viewing. Use **‹ ›** to change month and the two buttons on the right to switch between the **donut** and **horizontal bars**.
 
 Up to 8 categories are shown; if there are more, the smallest are grouped into "Other".
 
-### 4.7 Monthly Expenses
+### 4.7 Monthly Spending
 
-A **vertical bar chart** displaying total expenses for each month of the selected year.
+A **vertical bar chart** displaying total spending for each month of the selected year.
 
 **Year selector:** Dropdown at the top right of the card — defaults to the current year. Available years are populated automatically from your data.
 
@@ -231,6 +233,34 @@ An amount is written only above the **current** and the **highest** month. Tap o
 ### 4.8 Recent Transactions
 
 The 6 most recent transactions. Click **"All →"** to go to the Transactions page.
+
+### 4.9 Payments or Spending?
+
+The dashboard shows two different "expense" amounts, because they answer two different questions:
+
+| | Balance (cash flow) | Spending by Category / Monthly |
+|---|---|---|
+| Question | How much money **left your accounts**? | How much did you **spend**, and on what? |
+| Account expenses | ✔ | ✔ |
+| Card payment ("Cards" category) | ✔ | ✘ |
+| Card purchases | ✘ | ✔ by category |
+| Installments this month | ✘ | ✔ (current month only) |
+
+When you pay your card from your account, the money leaves the account, so it counts in the balance. The purchases it pays for, though, were already counted in spending, by category, in the month they were made. If both counted, the same spending would appear twice. Since a month's card payment usually covers the previous month's purchases, the two amounts almost always differ.
+
+**The bridge.** The *Why is this different…* links open a dialog that goes from one amount to the other:
+
+```
+  Out of your accounts             (balance)
+− Card payments
++ Card purchases this month
++ Installments this month          (current month only)
+= Spending this month              (centre of the category chart)
+```
+
+The result is always exactly the amount in the centre of "Spending by Category" and in the same month's bar in "Monthly Spending".
+
+> 💡 For this to work, record the card payment from an account with the **Cards** category. The **Payment** button on the card's page fills it in automatically.
 
 ---
 
@@ -656,7 +686,7 @@ Card Total (month) = Current month transactions
                    + Monthly installments (active, non-completed, already started)
 ```
 
-### Expenses by Category Chart
+### Spending by Category Chart
 
 Calculates for the **current month**:
 1. Expense-type transactions (excluding category "Cards")
@@ -667,4 +697,4 @@ Card payments from an account (category "Κάρτες" or "Cards") are excluded 
 
 ---
 
-*Family FiN — Version 0.955 Beta | Last updated: November 2026*
+*Family FiN — Version 0.956 Beta | Last updated: November 2026*
