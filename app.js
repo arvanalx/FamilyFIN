@@ -1423,80 +1423,124 @@ function renderSettings() {
   renderAccountsSettings();
   renderCardsSettings();
   renderCategoriesList();
-  renderIncomeCategoriesList();
   renderNotificationSettings();
+  renderResetControl();
+  const lang = getLang();
+  document.querySelectorAll('[data-lang-pref]').forEach(b => b.setAttribute('aria-pressed', b.dataset.langPref === lang));
+}
+
+function setListRow({ icon, title, sub, subMuted, amount, editFn, delFn, id }) {
+  return `
+    <li class="set-list-row">
+      <span class="set-tile" aria-hidden="true">${ico(icon)}</span>
+      <div class="set-row-main">
+        <div class="set-row-title">${esc(title)}</div>
+        <div class="set-row-sub${subMuted ? ' muted' : ''}">${sub}</div>
+      </div>
+      ${amount != null ? `<span class="set-amount${amount < 0 ? ' neg' : ''}">${fmtEuro(amount)}</span>` : ''}
+      <span class="set-row-actions">
+        <button class="btn-icon" onclick="${editFn}('${id}')" title="${t('btn_edit')}" aria-label="${t('btn_edit')}: ${esc(title)}">${ico('edit')}</button>
+        <button class="btn-icon danger" onclick="${delFn}('${id}')" title="${t('btn_delete')}" aria-label="${t('btn_delete')}: ${esc(title)}">${ico('trash')}</button>
+      </span>
+    </li>`;
 }
 
 function renderAccountsSettings() {
   const container = document.getElementById('accountsSettingsContainer');
   if (!container) return;
-  container.innerHTML = state.accounts.map(acc => `
-    <div class="acc-setting-block">
-      <div class="acc-setting-fields">
-        <div class="form-group">
-          <label>${t('acc_label_name')}</label>
-          <input type="text" id="accName_${acc.id}" class="form-control" value="${esc(acc.name)}">
-        </div>
-        <div class="form-group">
-          <label>${t('acc_label_type')}</label>
-          <select id="accType_${acc.id}" class="form-control" onchange="toggleBankField('${acc.id}')">
-            <option value="cash" ${acc.type === 'cash' ? 'selected' : ''}>${t('acc_type_cash')}</option>
-            <option value="bank" ${acc.type === 'bank' ? 'selected' : ''}>${t('acc_type_bank')}</option>
-          </select>
-        </div>
-        <div class="form-group" id="accBankGroup_${acc.id}" ${acc.type === 'cash' ? 'style="display:none"' : ''}>
-          <label>${t('acc_label_bank')}</label>
-          <input type="text" id="accBank_${acc.id}" class="form-control" value="${esc(acc.bank || '')}" placeholder="${t('placeholder_bank')}">
-        </div>
-        <div class="form-group">
-          <label>${t('acc_label_balance')}</label>
-          <input type="number" id="accBalance_${acc.id}" class="form-control" step="0.01" value="${acc.balance || 0}">
-        </div>
-      </div>
-      <div class="acc-setting-actions">
-        <button class="btn btn-sm btn-primary" onclick="saveAccountSetting('${acc.id}')">${t('btn_save')}</button>
-        <button class="btn btn-sm btn-danger" onclick="deleteAccount('${acc.id}')" title="${t('btn_delete')}" aria-label="${t('btn_delete')}">${ico('trash')}</button>
-      </div>
-    </div>
-  `).join('');
+  const total = round2(state.accounts.reduce((sum, a) => sum + (+a.balance || 0), 0));
+  document.getElementById('accountsMeta').innerHTML = `${t('acc_total')} <b>${fmtEuro(total)}</b>`;
+  container.innerHTML = state.accounts.length ? state.accounts.map(acc => setListRow({
+    id: acc.id, icon: acc.type === 'cash' ? 'wallet' : 'bank', title: acc.name,
+    sub: acc.type === 'cash' ? t('acc_type_cash')
+       : acc.bank ? `<span class="set-sm-hide">${t('acc_type_bank')} · </span>${esc(acc.bank)}` : t('acc_type_bank'),
+    amount: +acc.balance || 0, editFn: 'openAccountModal', delFn: 'deleteAccount',
+  })).join('') : `<li class="set-empty">${t('acc_empty')}</li>`;
 }
 
 function renderCardsSettings() {
   const container = document.getElementById('cardsSettingsContainer');
   if (!container) return;
-  const accOptions = (state.accounts || []).map(a =>
-    `<option value="${a.id}">${esc(a.name)}</option>`
-  ).join('');
-  container.innerHTML = (state.cards || []).map(card => `
-    <div class="acc-setting-block">
-      <div class="acc-setting-fields">
-        <div class="form-group">
-          <label>${t('card_label_name')}</label>
-          <input type="text" id="cardName_${card.id}" class="form-control" value="${esc(card.name)}">
-        </div>
-        <div class="form-group">
-          <label>${t('card_label_bank')}</label>
-          <input type="text" id="cardBank_${card.id}" class="form-control" value="${esc(card.bank || '')}" placeholder="${t('placeholder_bank')}">
-        </div>
-        <div class="form-group">
-          <label>${t('card_label_linked')}</label>
-          <select id="cardLinkedAcc_${card.id}" class="form-control">
-            <option value="">${t('card_none_linked')}</option>
-            ${accOptions}
-          </select>
-        </div>
-      </div>
-      <div class="acc-setting-actions">
-        <button class="btn btn-sm btn-primary" onclick="saveCardSetting('${card.id}')">${t('btn_save')}</button>
-        <button class="btn btn-sm btn-danger"  onclick="deleteCard('${card.id}')">${ico('trash')}${t('btn_delete_card')}</button>
-      </div>
-    </div>
-  `).join('');
-  // Set current linkedAccount value for each card
-  (state.cards || []).forEach(card => {
-    const sel = document.getElementById(`cardLinkedAcc_${card.id}`);
-    if (sel) sel.value = card.linkedAccount || '';
-  });
+  const cards  = state.cards || [];
+  const linked = cards.filter(c => state.accounts.some(a => a.id === c.linkedAccount)).length;
+  document.getElementById('cardsMeta').textContent =
+    `${cards.length} ${t(cards.length === 1 ? 'card_one' : 'card_many')} · ${tf(linked === 1 ? 'cards_linked_one' : 'cards_linked', linked)}`;
+  container.innerHTML = cards.length ? cards.map(card => {
+    const acc = state.accounts.find(a => a.id === card.linkedAccount);
+    return setListRow({
+      id: card.id, icon: 'card', title: card.name, subMuted: !acc,
+      sub: (card.bank ? esc(card.bank) + ' · ' : '') + (acc ? esc(tf('card_paid_from', acc.name)) : t('card_not_linked')),
+      editFn: 'openCardModal', delFn: 'deleteCard',
+    });
+  }).join('') : `<li class="set-empty">${t('cards_empty')}</li>`;
+}
+
+// ── Account / card edit dialogs ──
+function setAccModalType(type) {
+  document.querySelectorAll('#accountModal [data-acc-type]').forEach(b => b.setAttribute('aria-pressed', b.dataset.accType === type));
+  document.getElementById('accBankGroup').hidden = type === 'cash';
+  document.getElementById('accountModal').dataset.type = type;
+}
+
+function openAccountModal(id) {
+  const acc = id ? state.accounts.find(a => a.id === id) : null;
+  document.getElementById('accountModalTitle').textContent = t(acc ? 'modal_edit_account' : 'modal_new_account');
+  document.getElementById('accEditId').value  = acc ? acc.id : '';
+  document.getElementById('accName').value    = acc ? acc.name : '';
+  document.getElementById('accBank').value    = acc ? (acc.bank || '') : '';
+  document.getElementById('accBalance').value = acc ? (acc.balance || 0) : '';
+  setAccModalType(acc ? acc.type : 'bank');
+  openModal('accountModal');
+}
+
+function saveAccountModal() {
+  const id   = document.getElementById('accEditId').value;
+  const name = document.getElementById('accName').value.trim();
+  const type = document.getElementById('accountModal').dataset.type || 'bank';
+  const bank = type === 'bank' ? document.getElementById('accBank').value.trim() : '';
+  const raw  = document.getElementById('accBalance').value;
+  const bal  = raw === '' ? 0 : readAmount('accBalance');
+  if (!name) { showToast(t('toast_enter_acc_name'), 'error'); document.getElementById('accName').focus(); return; }
+  if (isNaN(bal)) { showToast(t('toast_invalid_balance'), 'error'); return; }
+  const acc = id && state.accounts.find(a => a.id === id);
+  if (acc) Object.assign(acc, { name, type, bank, balance: bal });
+  else state.accounts.push({ id: 'acc_' + uid(), name, type, bank, balance: bal });
+  saveState();
+  closeModal('accountModal');
+  renderAccountsSettings();
+  renderCardsSettings();
+  populateAllDropdowns();
+  showToast(t('toast_saved'), 'success');
+}
+
+function openCardModal(id) {
+  const card = id ? (state.cards || []).find(c => c.id === id) : null;
+  document.getElementById('cardModalTitle').textContent = t(card ? 'modal_edit_card' : 'modal_new_card');
+  document.getElementById('cardEditId').value    = card ? card.id : '';
+  document.getElementById('cardNameInput').value = card ? card.name : '';
+  document.getElementById('cardBankInput').value = card ? (card.bank || '') : '';
+  const sel = document.getElementById('cardLinkedInput');
+  sel.innerHTML = `<option value="">${t('card_none_linked')}</option>` +
+    state.accounts.map(a => `<option value="${a.id}">${esc(a.name)}</option>`).join('');
+  sel.value = card && state.accounts.some(a => a.id === card.linkedAccount) ? card.linkedAccount : '';
+  openModal('cardModal');
+}
+
+function saveCardModal() {
+  const id     = document.getElementById('cardEditId').value;
+  const name   = document.getElementById('cardNameInput').value.trim();
+  const bank   = document.getElementById('cardBankInput').value.trim();
+  const linked = document.getElementById('cardLinkedInput').value;
+  if (!name) { showToast(t('toast_enter_card_name'), 'error'); document.getElementById('cardNameInput').focus(); return; }
+  state.cards = state.cards || [];
+  const card = id && state.cards.find(c => c.id === id);
+  if (card) Object.assign(card, { name, bank, linkedAccount: linked });
+  else state.cards.push({ id: 'card_' + uid(), name, bank, linkedAccount: linked });
+  saveState();
+  closeModal('cardModal');
+  renderCardsSettings();
+  populateAllDropdowns();
+  showToast(t('toast_saved'), 'success');
 }
 
 function deleteCard(id) {
@@ -1522,124 +1566,73 @@ function deleteCard(id) {
   });
 }
 
-function toggleBankField(accId) {
-  const type = document.getElementById(`accType_${accId}`).value;
-  const grp  = document.getElementById(`accBankGroup_${accId}`);
-  if (grp) grp.style.display = type === 'cash' ? 'none' : '';
-}
-
-function saveAccountSetting(id) {
-  const acc = state.accounts.find(a => a.id === id);
-  if (!acc) return;
-  const name = document.getElementById(`accName_${id}`).value.trim();
-  const type = document.getElementById(`accType_${id}`).value;
-  const bank = type === 'bank' ? (document.getElementById(`accBank_${id}`).value.trim()) : '';
-  const bal  = readAmount(`accBalance_${id}`);
-  if (!name) { showToast(t('toast_enter_acc_name'), 'error'); return; }
-  if (isNaN(bal)) { showToast(t('toast_invalid_balance'), 'error'); return; }
-  acc.name = name; acc.type = type; acc.bank = bank; acc.balance = bal;
-  saveState();
-  populateAllDropdowns();
-  showToast(t('toast_saved'), 'success');
-}
-
 function deleteAccount(id) {
   const linked = state.transactions.filter(tx => tx.account === id).length
                + state.subscriptions.filter(s => s.card === id).length;
   const msg = linked ? tf('confirm_del_acc_msg_linked', linked) : t('confirm_del_acc_msg');
   showConfirm(t('confirm_del_acc'), msg, () => {
     state.accounts = state.accounts.filter(a => a.id !== id);
+    // Cards paid from this account become unlinked instead of pointing at a missing account
+    (state.cards || []).forEach(c => { if (c.linkedAccount === id) c.linkedAccount = ''; });
     saveState();
     renderAccountsSettings();
+    renderCardsSettings();
     populateAllDropdowns();
     showToast(t('toast_acc_deleted'), 'success');
   });
 }
 
-function addAccount() {
-  const newId = 'acc_' + uid();
-  state.accounts.push({ id: newId, name: t('account_new'), type: 'bank', bank: '', balance: 0 });
-  saveState();
-  renderAccountsSettings();
-  populateAllDropdowns();
+// ── Categories (one card, Expenses / Income tabs) ──
+let categoryTab = 'expense';
+
+function categoryListFor(tab) { return tab === 'income' ? state.incomeCategories : state.categories; }
+
+function setCategoryTab(tab) { categoryTab = tab; renderCategoriesList(); }
+
+function renderCategoriesList(adding = false) {
+  const box = document.getElementById('categoriesList');
+  if (!box) return;
+  document.getElementById('catCountExp').textContent = state.categories.length;
+  document.getElementById('catCountInc').textContent = state.incomeCategories.length;
+  document.querySelectorAll('[data-cat-tab]').forEach(b => b.setAttribute('aria-pressed', b.dataset.catTab === categoryTab));
+  const list = categoryListFor(categoryTab);
+  box.innerHTML = list.map(c => `
+    <span class="chip">${esc(c)}<button type="button" onclick="removeCategoryChip(${esc(JSON.stringify(c))})" title="${t('btn_delete')}" aria-label="${esc(tf('cat_remove', c))}">${ico('x')}</button></span>`).join('') +
+    (adding
+      ? `<input type="text" class="chip-input" id="newCategoryInput" placeholder="${t('cat_name_placeholder')}" aria-label="${t('cat_name_placeholder')}">`
+      : `<button type="button" class="chip-add" onclick="renderCategoriesList(true)">${ico('plus')}<span>${t('cat_new')}</span></button>`);
+  if (!adding) return;
+  const inp = document.getElementById('newCategoryInput');
+  inp.focus();
+  inp.addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); addCategoryChip(inp.value); }
+    if (e.key === 'Escape') { e.stopPropagation(); renderCategoriesList(); }
+  });
+  inp.addEventListener('blur', () => { if (inp.value.trim()) addCategoryChip(inp.value); else renderCategoriesList(); });
 }
 
-function saveCardSetting(id) {
-  const card = (state.cards || []).find(c => c.id === id);
-  if (!card) return;
-  const name      = document.getElementById(`cardName_${id}`).value.trim();
-  const bank      = document.getElementById(`cardBank_${id}`).value.trim();
-  const linkedAcc = document.getElementById(`cardLinkedAcc_${id}`).value;
-  if (!name) { showToast(t('toast_enter_card_name'), 'error'); return; }
-  card.name = name; card.bank = bank; card.linkedAccount = linkedAcc;
-  saveState();
-  populateAllDropdowns();
-  showToast(t('toast_saved'), 'success');
-}
-
-function addCard() {
-  const newId = 'card_' + uid();
-  state.cards = state.cards || [];
-  state.cards.push({ id: newId, name: t('card_new'), bank: '', linkedAccount: '' });
-  saveState();
-  renderCardsSettings();
-  populateAllDropdowns();
-}
-
-function renderCategoriesList() {
-  document.getElementById('categoriesList').innerHTML = state.categories.map(c => `
-    <span class="tag">
-      ${esc(c)}
-      <button class="tag-remove" onclick="removeCategory(${esc(JSON.stringify(c))})">✕</button>
-    </span>
-  `).join('');
-}
-
-function addCategory() {
-  const val = document.getElementById('newCategory').value.trim();
-  if (!val) return;
-  if (!state.categories.includes(val)) {
-    state.categories.push(val);
+function addCategoryChip(raw) {
+  const val  = raw.trim();
+  const list = categoryListFor(categoryTab);
+  if (val && !list.includes(val)) {
+    list.push(val);
     saveState();
-    renderCategoriesList();
-    document.getElementById('newCategory').value = '';
+    if (categoryTab === 'income') populateIncomeCategorySelect('incCategory');
     showToast(t('toast_cat_added'), 'success');
   }
+  renderCategoriesList();
+  if (val) document.querySelector('#categoriesList .chip-add')?.focus();
 }
 
-function removeCategory(cat) {
-  state.categories = state.categories.filter(c => c !== cat);
+function removeCategoryChip(cat) {
+  if (categoryTab === 'income') {
+    state.incomeCategories = state.incomeCategories.filter(c => c !== cat);
+    populateIncomeCategorySelect('incCategory');
+  } else {
+    state.categories = state.categories.filter(c => c !== cat);
+  }
   saveState();
   renderCategoriesList();
-}
-
-function renderIncomeCategoriesList() {
-  document.getElementById('incomeCategoriesList').innerHTML = state.incomeCategories.map(c => `
-    <span class="tag">
-      ${esc(c)}
-      <button class="tag-remove" onclick="removeIncomeCategory(${esc(JSON.stringify(c))})">✕</button>
-    </span>
-  `).join('');
-}
-
-function addIncomeCategory() {
-  const val = document.getElementById('newIncomeCategory').value.trim();
-  if (!val) return;
-  if (!state.incomeCategories.includes(val)) {
-    state.incomeCategories.push(val);
-    saveState();
-    renderIncomeCategoriesList();
-    populateIncomeCategorySelect('incCategory');
-    document.getElementById('newIncomeCategory').value = '';
-    showToast(t('toast_cat_added'), 'success');
-  }
-}
-
-function removeIncomeCategory(cat) {
-  state.incomeCategories = state.incomeCategories.filter(c => c !== cat);
-  saveState();
-  renderIncomeCategoriesList();
-  populateIncomeCategorySelect('incCategory');
 }
 
 // Γεμίζει το txCategory με Εξόδων ή Εσόδων ανάλογα με τον επιλεγμένο τύπο
@@ -1705,14 +1698,28 @@ function handleImport(event) {
   event.target.value = '';
 }
 
-function confirmReset() {
-  showConfirm(t('confirm_reset'), t('confirm_reset_msg'), () => {
-    state = cloneDefaults();
-    saveState('reset');
-    populateAllDropdowns();
-    renderPage(currentPage());
-    showToast(t('toast_reset_done'), 'success');
-  });
+// Reset lives in the "Danger zone" card and asks for confirmation inline
+let resetAsking = false;
+function renderResetControl() {
+  const box = document.getElementById('resetControl');
+  if (!box) return;
+  box.innerHTML = resetAsking
+    ? `<div class="reset-confirm"><span>${t('reset_sure')}</span>
+         <button class="btn btn-sm btn-secondary" id="resetCancelBtn" onclick="cancelReset()">${t('btn_cancel')}</button>
+         <button class="btn btn-sm btn-danger" onclick="doReset()">${ico('trash')}${t('reset_confirm_btn')}</button></div>`
+    : `<button class="btn btn-sm btn-outline-danger" id="resetAskBtn" onclick="confirmReset()">${ico('trash')}${t('btn_reset')}</button>`;
+}
+
+function confirmReset() { resetAsking = true; renderResetControl(); document.getElementById('resetCancelBtn')?.focus(); }
+function cancelReset()  { resetAsking = false; renderResetControl(); document.getElementById('resetAskBtn')?.focus(); }
+
+function doReset() {
+  resetAsking = false;
+  state = cloneDefaults();
+  saveState('reset');
+  populateAllDropdowns();
+  renderPage(currentPage());
+  showToast(t('toast_reset_done'), 'success');
 }
 
 // ── UTILITIES ────────────────────────────────────────────────
@@ -1927,7 +1934,7 @@ function updateDueBadge() {
 }
 
 function checkDailyNotifications() {
-  if (!('Notification' in window) || Notification.permission !== 'granted') return;
+  if (!('Notification' in window) || Notification.permission !== 'granted' || notifMuted()) return;
   const key = 'familyfin_notified_date';
   if (localStorage.getItem(key) === today()) return;
   const due = getDueTransactions();
@@ -1964,35 +1971,46 @@ function testNotification() {
   new Notification(t('notif_test_title'), { body: t('notif_test_body'), icon: 'icon-192.png' });
 }
 
+const NOTIF_OFF_KEY = 'familyfin_notif_off';
+function notifMuted() { try { return localStorage.getItem(NOTIF_OFF_KEY) === '1'; } catch (_) { return false; } }
+
 function renderNotificationSettings() {
   const container = document.getElementById('notifSettingsContainer');
   if (!container) return;
   const supported = 'Notification' in window;
   const perm = supported ? Notification.permission : 'unsupported';
-  let statusText, statusClass;
-  if (!supported)        { statusText = '—';                           statusClass = ''; }
-  else if (perm === 'granted') { statusText = t('notif_status_granted'); statusClass = 'badge-green'; }
-  else if (perm === 'denied')  { statusText = t('notif_status_denied');  statusClass = 'badge-red'; }
-  else                         { statusText = t('notif_status_default'); statusClass = 'badge-yellow'; }
-
+  const on   = perm === 'granted' && !notifMuted();
+  let status;
+  if (!supported)            status = `<div class="set-status off">${t('notif_unsupported')}</div>`;
+  else if (perm === 'denied') status = `<div class="set-status blocked">${t('notif_blocked')}</div><div class="set-desc">${t('notif_denied_hint')}</div>`;
+  else if (on)               status = `<div class="set-status on">${t('notif_on')}<button type="button" class="set-link" onclick="testNotification()">${t('notif_test_link')}</button></div>`;
+  else                       status = `<div class="set-status off">${t('notif_off')}</div>`;
   container.innerHTML = `
-    <div class="notif-settings-row">
-      <span>${t('notif_status_label')}</span>
-      <span class="badge ${statusClass}">${statusText}</span>
-    </div>
-    ${perm === 'default' && supported ? `
-    <div class="notif-settings-row" style="margin-top:8px">
-      <button class="btn btn-primary btn-sm" onclick="enableNotifications()">${t('notif_enable_btn')}</button>
-    </div>` : ''}
-    ${perm === 'denied' ? `
-    <div style="margin-top:10px;font-size:.83rem;color:var(--text-muted);line-height:1.5">
-      ${t('notif_denied_hint')}
-    </div>` : ''}
-    ${perm === 'granted' ? `
-    <div class="notif-settings-row" style="margin-top:8px">
-      <button class="btn btn-secondary btn-sm" onclick="testNotification()">${t('notif_test_btn')}</button>
-    </div>` : ''}
-  `;
+    <div class="set-row">
+      <div class="set-text">
+        <div class="set-title" id="notifSwitchLbl">${t('notif_reminders')}</div>
+        <div class="set-desc">${t('notif_reminders_desc')}</div>
+        ${status}
+      </div>
+      <button type="button" class="switch" role="switch" aria-checked="${on}" aria-labelledby="notifSwitchLbl"
+        ${!supported || perm === 'denied' ? 'disabled' : ''} onclick="toggleNotifications()"></button>
+    </div>`;
+}
+
+async function toggleNotifications() {
+  if (!('Notification' in window)) return;
+  if (Notification.permission === 'default') {
+    try { localStorage.removeItem(NOTIF_OFF_KEY); } catch (_) {}
+    await enableNotifications();
+  } else if (Notification.permission === 'granted') {
+    try {
+      if (notifMuted()) localStorage.removeItem(NOTIF_OFF_KEY);
+      else localStorage.setItem(NOTIF_OFF_KEY, '1');
+    } catch (_) {}
+    if (!notifMuted()) checkDailyNotifications();
+  }
+  renderNotificationSettings();
+  document.querySelector('#notifSettingsContainer .switch')?.focus();
 }
 
 // ── CONFIRM DIALOG ───────────────────────────────────────────

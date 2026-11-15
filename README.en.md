@@ -42,7 +42,7 @@ http://localhost:8765
 Data is saved **automatically** on every change:
 - **Primary storage:** SQLite database (`familyfin.db`) in the app folder — reliable, crash-safe
 - **Local copy:** browser `localStorage` (shown only if the server is unavailable)
-- **Automatic backups:** in the server's `backups/` folder — one per day (last 30 kept) and one before every Import or Reset (last 10 kept). Restore them via **Settings → Import JSON**.
+- **Automatic backups:** in the server's `backups/` folder — one per day (last 30 kept) and one before every Import or Reset (last 10 kept). Restore them via **Settings → Data → Import**.
 
 #### Using multiple devices
 
@@ -87,7 +87,7 @@ At the top of each page a toolbar shows:
 
 ### Appearance: Style and Theme
 
-**Settings → Appearance** has two independent choices.
+**Settings → Appearance** lets you choose Style, Theme and Language. Each style shows a small preview in the current theme.
 
 **Style** — the overall look of the app:
 - **Navy** (default) — dark blue menu, blue for actions
@@ -105,7 +105,7 @@ Style and theme are saved **per device** (e.g. dark on your phone, light on your
 
 ### Language
 
-The **EN / EL** button switches the language across the whole app — menus, forms, charts, month pickers and the PDF Report.
+The **EN / EL** button in the menu, or **Settings → Appearance → Language**, switches the language across the whole app — menus, forms, charts, month pickers and the PDF Report.
 
 ---
 
@@ -541,103 +541,87 @@ In the subscription edit form there is a **"Paused"** option:
 
 ## 10. Settings
 
-Central configuration of the app. **Changes here affect all sections.**
+Central configuration of the app, in four groups: **Finances**, **Categories**, **App** and **Data**. **Changes here affect every section.**
 
 ### 10.1 Accounts
 
-Manage bank accounts and cash.
+A list of your bank accounts and cash. Each row shows the name, type or bank, and balance. The header shows the **total** across all accounts.
 
-**Add:** Click **"+ New"**.
+- **Add:** {{plus}} **New** — opens a dialog for the new account
+- **Edit:** {{edit}} on the account's row
+- **Delete:** {{trash}} — asks for confirmation. Cards paid from that account are left with no linked account.
 
-Each account has:
-- **Name** — Display name (e.g. "Payroll")
-- **Type** — `Bank` or `Cash`
-- **Bank** — Shown only for bank accounts (e.g. "Alpha Bank")
+In the dialog you set:
+- **Name** — The display name (e.g. "Payroll")
+- **Type** — {{wallet}} `Cash` or {{bank}} `Bank`
+- **Bank** — Bank accounts only (e.g. "Alpha Bank")
 - **Balance** — Current balance in €
 
-**Save:** Click **"Save"** for each account individually.
-
-**Delete:** Click **"Delete"** (shown only if more than one account exists).
-
-> ⚠️ Changing an account balance immediately updates the Dashboard.
+> ⚠️ Changing an account balance updates the Dashboard immediately.
 
 ### 10.2 Cards
 
-Manage credit cards.
+A list of your credit cards. Each row shows the bank and which account pays the card.
 
-**Add a new card:** Click the **"+ New"** button in the section header. A new card is created with a default name which you can edit immediately.
-
-Each card has:
-- **Name** — Display name (e.g. "VISA Gold")
-- **Bank** — Issuing bank (e.g. "Alpha Bank")
-- **Linked Account** — The account from which the card is settled
-
-**Save:** Click **"Save"** after each change.
-
-**Delete:** Click {{trash}} **"Delete"**. If the card has linked transactions, installments, or subscriptions, the system notifies you and deletes everything together after confirmation.
+- **Add:** {{plus}} **New**
+- **Edit:** {{edit}} — Name (e.g. "VISA Gold"), Issuing Bank and **Linked Account**, from which the card is paid off
+- **Delete:** {{trash}} — if the card has transactions, installments or subscriptions, you are told and they are all deleted together after confirmation
 
 Cards appear as **tabs** on the Credit Cards page.
 
-### 10.3 Expense Categories
+### 10.3 Categories
 
-List of categories used in transactions of type **Expense**, in installments, and in subscriptions.
+One card with an **Expenses / Income** switch (each shows how many categories it has).
 
-**Add:** Type a name in the field and click **"Add"** (or press Enter).
+- **Expenses:** used in Expense transactions, installments and subscriptions
+- **Income:** used for income
+- **Add:** tap {{plus}} **New**, type the name and press Enter (Esc to cancel)
+- **Remove:** tap the {{x}} on the category
 
-**Delete:** Click the **✕** next to the category.
+> ℹ️ Default expense categories include: Supermarket, Restaurant/Café, Transport, Health, Clothing, Electronics, Entertainment, Telecommunications, Energy/Water, Rent, Insurance, Loan, Children, etc. Income: Salary, Freelance, Pension, Rent (received), Allowance, Other.
 
-> ℹ️ Default categories include: Supermarket, Restaurant/Café, Transport, Health, Clothing, Electronics, Entertainment, Telecommunications, Energy/Water, Rent, Insurance, Loan, Children, etc.
+### 10.4 Appearance
 
-### 10.4 Income Categories
-
-List of categories for transactions of type **Income**.
-
-Works exactly like Expense Categories.
-
-> ℹ️ Defaults: Salary, Freelance, Pension, Rent (received), Allowance, Other.
+Style, Theme and Language — see Section 2. They are saved on the device you are using only.
 
 ### 10.5 Notifications
 
-Manage browser notifications for pending expenses.
+The **Pending expense reminders** switch turns browser notifications on or off. Below it you see the status:
+- **On for this device** — with a **Test** link that sends a test notification
+- **Off** — turning it on the first time asks the browser for permission
+- **Blocked by the browser** — the switch is disabled; allow notifications in your browser settings
 
-**Status:** Shows the current browser permission:
-- 🟢 **Enabled** — Notifications are working normally
-- 🔴 **Blocked** — Browser has blocked them (requires change in browser settings)
-- 🟡 **Not configured** — No decision has been made yet
+If you turn the switch off, that choice is kept on this device only.
 
-**Enable:** Click **"Enable"** — the browser will ask for permission.
+#### How they work
 
-**Test:** Once enabled, a **"Send Test"** button appears to verify notifications work.
+- **Every time you open the app**, if there are pending expenses (not completed, dated today or earlier), **one** notification is sent per day
+- A **red number (badge)** appears next to **Transactions** in the menu, showing how many expenses are pending
+- If nothing is pending, no notification is sent and the badge is hidden
 
-#### How it works
-
-- **Each time you open the app**, if there are pending expenses (unsettled, with date ≤ today), **one** notification is sent per day
-- A **red badge** appears next to the **Transactions** section in the menu, showing the count of pending expenses
-- If there are no pending expenses, no notification is sent and the badge is not shown
-
-> ℹ️ If you closed the enable banner with **"Later"**, you can still enable notifications here at any time.
+> ℹ️ If you dismiss the enable banner with **"Later"**, you can turn notifications on here at any time.
 
 ---
 
 ## 11. Data Management
 
-In the **Settings → Data** section there are three options:
+The **Settings → Data** group has two cards: **Backups** and **Danger zone**.
 
-### Export JSON
+### {{export}} Export
 
 Downloads a `familyfin_backup_YYYYMMDD.json` file with **all** app data (accounts, transactions, installments, subscriptions, etc.).
 
 > ✅ Recommended periodically as a backup.
 
-### Import JSON
+### {{import}} Import
 
-Loads a previously exported backup file or a file from the server's `backups/` folder. **Completely replaces** current data after asking for confirmation. Files from older versions are converted automatically.
+Loads a backup file exported earlier, or a file from the server's `backups/` folder. It **fully replaces** the current data after asking for confirmation. Files from older versions are converted automatically.
 
 > 💾 Before importing, the server automatically keeps a copy of the current data (`backups/before-import-…json`).
 
-### Reset
+### {{alert}} Reset (Danger zone)
 
-Deletes **all** data and restores factory defaults. Asks for confirmation before executing, and the server automatically keeps a copy (`backups/before-reset-…json`).
+Deletes **all** data and restores the factory defaults. Tapping **Reset** shows "Are you sure?" with **Cancel** and **Delete everything**; nothing is deleted until you press the second button. The server automatically keeps a copy (`backups/before-reset-…json`).
 
 ---
 
@@ -681,4 +665,4 @@ Card payments from an account (category "Κάρτες" or "Cards") are excluded 
 
 ---
 
-*Family FiN — Version 0.950 Beta | Last updated: November 2026*
+*Family FiN — Version 0.951 Beta | Last updated: November 2026*

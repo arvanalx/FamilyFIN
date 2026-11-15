@@ -26,7 +26,7 @@
       document.documentElement.dataset.style = style;
     })();
   </script>
-  <link rel="stylesheet" href="style.css?v=0.950">
+  <link rel="stylesheet" href="style.css?v=0.951">
 </head>
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -57,6 +57,12 @@
     <symbol id="i-monitor" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="12.5" rx="2"/><path d="M8.5 20.5h7M12 16.5v4"/></symbol>
     <symbol id="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"/></symbol>
     <symbol id="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></symbol>
+    <symbol id="i-bank" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5 12 4l9 5.5M5 10.5v7M9.7 10.5v7M14.3 10.5v7M19 10.5v7M3.5 20.5h17"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/></symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 4.2 2.8 17.5A2 2 0 0 0 4.5 20.5h15a2 2 0 0 0 1.7-3L13.7 4.2a2 2 0 0 0-3.4 0zM12 9.5v4.5M12 17.2h.01"/></symbol>
+    <symbol id="i-tick" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></symbol>
+    <symbol id="i-info" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.5M12 7.8h.01"/></symbol>
     <symbol id="i-help" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.6 2.6 0 0 1 5 1c0 1.7-2.5 2.2-2.5 3.7M12 17.3h.01"/></symbol>
   </defs>
 </svg>
@@ -98,7 +104,7 @@
   </ul>
   <div class="sidebar-footer">
     <button id="langToggle" class="lang-toggle" onclick="toggleLang()">EN</button>
-    <span class="version">v0.950 Beta</span>
+    <span class="version">v0.951 Beta</span>
   </div>
 </nav>
 
@@ -444,87 +450,104 @@
 
   <!-- SETTINGS PAGE -->
   <section class="page" id="page-settings">
-    <div class="dashboard-grid">
-      <div class="card">
-        <div class="card-header">
-          <h2 data-i18n="settings_accounts">Λογαριασμοί</h2>
-          <button class="btn btn-sm btn-primary" onclick="addAccount()" data-i18n="btn_new_account">+ Νέος</button>
-        </div>
-        <div class="settings-section" id="accountsSettingsContainer"></div>
-      </div>
+    <div class="settings-page">
 
-      <div class="card">
-        <div class="card-header">
-          <h2 data-i18n="settings_cards">Κάρτες</h2>
-          <button class="btn btn-sm btn-primary" onclick="addCard()" data-i18n="btn_new_card_lbl">+ Νέα</button>
-        </div>
-        <div class="settings-section" id="cardsSettingsContainer"></div>
-      </div>
-
-      <div class="card">
-        <div class="card-header"><h2 data-i18n="settings_expense_cats">Κατηγορίες Εξόδων</h2></div>
-        <div class="settings-section">
-          <div id="categoriesList" class="tags-list"></div>
-          <div class="input-group mt-1">
-            <input type="text" id="newCategory" class="form-control" data-i18n-placeholder="new_cat_placeholder" placeholder="Νέα κατηγορία...">
-            <button class="btn btn-sm btn-primary" onclick="addCategory()" data-i18n="btn_add">Προσθήκη</button>
+      <section class="settings-group" aria-labelledby="setGrpFinance">
+        <h2 class="settings-group-label" id="setGrpFinance" data-i18n="set_group_finance">Οικονομικά</h2>
+        <div class="settings-grid">
+          <div class="card">
+            <div class="card-header set-card-head">
+              <div><h3 data-i18n="settings_accounts">Λογαριασμοί</h3><div class="set-meta" id="accountsMeta"></div></div>
+              <button class="btn btn-sm btn-outline-accent" onclick="openAccountModal()"><svg class="btn-ico" aria-hidden="true"><use href="#i-plus"/></svg><span data-i18n="btn_new_account">Νέος</span></button>
+            </div>
+            <ul class="set-list" id="accountsSettingsContainer"></ul>
+          </div>
+          <div class="card">
+            <div class="card-header set-card-head">
+              <div><h3 data-i18n="settings_cards">Κάρτες</h3><div class="set-meta" id="cardsMeta"></div></div>
+              <button class="btn btn-sm btn-outline-accent" onclick="openCardModal()"><svg class="btn-ico" aria-hidden="true"><use href="#i-plus"/></svg><span data-i18n="btn_new_card_lbl">Νέα</span></button>
+            </div>
+            <ul class="set-list" id="cardsSettingsContainer"></ul>
           </div>
         </div>
-      </div>
+      </section>
 
-      <div class="card">
-        <div class="card-header"><h2 data-i18n="settings_income_cats">Κατηγορίες Εσόδων</h2></div>
-        <div class="settings-section">
-          <div id="incomeCategoriesList" class="tags-list"></div>
-          <div class="input-group mt-1">
-            <input type="text" id="newIncomeCategory" class="form-control" data-i18n-placeholder="new_cat_placeholder" placeholder="Νέα κατηγορία...">
-            <button class="btn btn-sm btn-primary" onclick="addIncomeCategory()" data-i18n="btn_add">Προσθήκη</button>
+      <section class="settings-group" aria-labelledby="setGrpCats">
+        <h2 class="settings-group-label" id="setGrpCats" data-i18n="set_group_categories">Κατηγορίες</h2>
+        <div class="card">
+          <div class="card-header set-card-head set-card-head-wrap">
+            <div><h3 data-i18n="settings_categories">Κατηγορίες κινήσεων</h3><div class="set-meta" data-i18n="cat_hint">Οι κατηγορίες εμφανίζονται στις φόρμες νέων κινήσεων.</div></div>
+            <div class="seg" role="group" data-i18n-aria="settings_categories" aria-label="Κατηγορίες κινήσεων">
+              <button type="button" data-cat-tab="expense" onclick="setCategoryTab('expense')"><span data-i18n="cat_tab_exp">Έξοδα</span> <span class="seg-count" id="catCountExp"></span></button>
+              <button type="button" data-cat-tab="income" onclick="setCategoryTab('income')"><span data-i18n="cat_tab_inc">Έσοδα</span> <span class="seg-count" id="catCountInc"></span></button>
+            </div>
+          </div>
+          <div class="chips" id="categoriesList"></div>
+        </div>
+      </section>
+
+      <section class="settings-group" aria-labelledby="setGrpApp">
+        <h2 class="settings-group-label" id="setGrpApp" data-i18n="set_group_app">Εφαρμογή</h2>
+        <div class="settings-grid">
+          <div class="card">
+            <div class="card-header set-card-head"><h3 data-i18n="settings_appearance">Εμφάνιση</h3></div>
+            <div class="set-row set-row-stack">
+              <div class="set-text"><div class="set-title" data-i18n="appearance_style">Στυλ</div></div>
+              <div class="style-picker" role="group" data-i18n-aria="appearance_style" aria-label="Στυλ">
+                <button type="button" class="style-opt" data-style-pref="navy" onclick="setStylePref('navy')"><span class="style-mini navy" aria-hidden="true"><span class="sm-side"><i></i><i></i><i></i></span><span class="sm-main"><span class="sm-card"><i class="a"></i><i></i><i></i></span></span></span><span class="style-lbl"><span data-i18n="style_navy">Ναυτικό</span><span class="style-tick" aria-hidden="true"><svg><use href="#i-tick"/></svg></span></span></button>
+                <button type="button" class="style-opt" data-style-pref="sage" onclick="setStylePref('sage')"><span class="style-mini sage" aria-hidden="true"><span class="sm-side"><i></i><i></i><i></i></span><span class="sm-main"><span class="sm-card"><i class="a"></i><i></i><i></i></span></span></span><span class="style-lbl"><span data-i18n="style_sage">Φασκόμηλο</span><span class="style-tick" aria-hidden="true"><svg><use href="#i-tick"/></svg></span></span></button>
+                <button type="button" class="style-opt" data-style-pref="graphite" onclick="setStylePref('graphite')"><span class="style-mini graphite" aria-hidden="true"><span class="sm-side"><i></i><i></i><i></i></span><span class="sm-main"><span class="sm-card"><i class="a"></i><i></i><i></i></span></span></span><span class="style-lbl"><span data-i18n="style_graphite">Γραφίτης</span><span class="style-tick" aria-hidden="true"><svg><use href="#i-tick"/></svg></span></span></button>
+              </div>
+            </div>
+            <div class="set-row set-row-stack">
+              <div class="set-text"><div class="set-title" data-i18n="appearance_theme">Θέμα</div><div class="set-desc" data-i18n="theme_hint">Το «Αυτόματο» ακολουθεί τη ρύθμιση της συσκευής.</div></div>
+              <div class="seg seg-theme" role="group" data-i18n-aria="appearance_theme" aria-label="Θέμα">
+                <button type="button" data-theme-pref="auto" onclick="setThemePref('auto')"><svg class="btn-ico" aria-hidden="true"><use href="#i-monitor"/></svg><span data-i18n="theme_auto">Αυτόματο</span></button>
+                <button type="button" data-theme-pref="light" onclick="setThemePref('light')"><svg class="btn-ico" aria-hidden="true"><use href="#i-sun"/></svg><span data-i18n="theme_light">Φωτεινό</span></button>
+                <button type="button" data-theme-pref="dark" onclick="setThemePref('dark')"><svg class="btn-ico" aria-hidden="true"><use href="#i-moon"/></svg><span data-i18n="theme_dark">Σκοτεινό</span></button>
+              </div>
+            </div>
+            <div class="set-row set-row-wrap">
+              <div class="set-text"><div class="set-title" data-i18n="appearance_lang">Γλώσσα</div><div class="set-desc" data-i18n="lang_hint">Στυλ, θέμα και γλώσσα αποθηκεύονται μόνο σε αυτή τη συσκευή.</div></div>
+              <div class="seg" role="group" data-i18n-aria="appearance_lang" aria-label="Γλώσσα">
+                <button type="button" data-lang-pref="el" onclick="setLang('el')" lang="el">Ελληνικά</button>
+                <button type="button" data-lang-pref="en" onclick="setLang('en')" lang="en">English</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header set-card-head"><h3 data-i18n="settings_notifications">Ειδοποιήσεις</h3></div>
+            <div id="notifSettingsContainer"></div>
           </div>
         </div>
-      </div>
+      </section>
 
-      <div class="card">
-        <div class="card-header"><h2 data-i18n="settings_appearance">Εμφάνιση</h2></div>
-        <div class="settings-section">
-          <div class="appearance-label" data-i18n="appearance_style">Στυλ</div>
-          <div class="style-picker" role="group" data-i18n-aria="appearance_style" aria-label="Στυλ">
-            <button class="style-opt" data-style-pref="navy" onclick="setStylePref('navy')">
-              <span class="style-dots"><i style="background:#13274a"></i><i style="background:#2a6fdb"></i><i style="background:#f2f5f9"></i></span>
-              <span data-i18n="style_navy">Ναυτικό</span>
-            </button>
-            <button class="style-opt" data-style-pref="sage" onclick="setStylePref('sage')">
-              <span class="style-dots"><i style="background:#ffffff"></i><i style="background:#0f8a7e"></i><i style="background:#f3f6f5"></i></span>
-              <span data-i18n="style_sage">Φασκόμηλο</span>
-            </button>
-            <button class="style-opt" data-style-pref="graphite" onclick="setStylePref('graphite')">
-              <span class="style-dots"><i style="background:#18181b"></i><i style="background:#4049c4"></i><i style="background:#f4f4f5"></i></span>
-              <span data-i18n="style_graphite">Γραφίτης</span>
-            </button>
+      <section class="settings-group" aria-labelledby="setGrpData">
+        <h2 class="settings-group-label" id="setGrpData" data-i18n="settings_data">Δεδομένα</h2>
+        <div class="settings-grid">
+          <div class="card">
+            <div class="card-header set-card-head"><h3 data-i18n="data_backups">Αντίγραφα</h3></div>
+            <div class="set-row">
+              <div class="set-text"><div class="set-title" data-i18n="data_export_title">Εξαγωγή</div><div class="set-desc" data-i18n="data_export_desc">Όλα τα δεδομένα σε ένα αρχείο JSON.</div></div>
+              <button class="btn btn-sm btn-secondary" onclick="exportData()"><svg class="btn-ico" aria-hidden="true"><use href="#i-export"/></svg><span data-i18n="data_export_title">Εξαγωγή</span></button>
+            </div>
+            <div class="set-row">
+              <div class="set-text"><div class="set-title" data-i18n="data_import_title">Εισαγωγή</div><div class="set-desc" data-i18n="data_import_desc">Αντικαθιστά τα τρέχοντα δεδομένα με αυτά του αρχείου.</div></div>
+              <button class="btn btn-sm btn-secondary" onclick="importData()"><svg class="btn-ico" aria-hidden="true"><use href="#i-import"/></svg><span data-i18n="data_import_title">Εισαγωγή</span></button>
+              <input type="file" id="importFile" accept=".json" style="display:none" onchange="handleImport(event)">
+            </div>
+            <div class="set-info"><svg class="btn-ico" aria-hidden="true"><use href="#i-info"/></svg><span data-i18n="data_auto_backup">Ο server κρατά αυτόματα ένα αντίγραφο κάθε μέρα, καθώς και πριν από κάθε εισαγωγή ή επαναφορά, στον φάκελο backups.</span></div>
           </div>
-          <div class="appearance-label" data-i18n="appearance_theme">Θέμα</div>
-          <div class="chart-toggle-group theme-toggle" role="group" data-i18n-aria="appearance_theme" aria-label="Θέμα">
-            <button class="chart-tog" data-theme-pref="auto"  onclick="setThemePref('auto')"><svg class="btn-ico" aria-hidden="true"><use href="#i-monitor"/></svg><span data-i18n="theme_auto">Αυτόματο</span></button>
-            <button class="chart-tog" data-theme-pref="light" onclick="setThemePref('light')"><svg class="btn-ico" aria-hidden="true"><use href="#i-sun"/></svg><span data-i18n="theme_light">Φωτεινό</span></button>
-            <button class="chart-tog" data-theme-pref="dark"  onclick="setThemePref('dark')"><svg class="btn-ico" aria-hidden="true"><use href="#i-moon"/></svg><span data-i18n="theme_dark">Σκοτεινό</span></button>
+          <div class="card set-danger">
+            <div class="card-header set-card-head"><h3><svg class="btn-ico" aria-hidden="true"><use href="#i-alert"/></svg><span data-i18n="danger_zone">Επικίνδυνη ζώνη</span></h3></div>
+            <div class="set-row set-row-wrap">
+              <div class="set-text"><div class="set-title" data-i18n="reset_title">Επαναφορά δεδομένων</div><div class="set-desc" data-i18n="reset_desc">Διαγράφει λογαριασμούς, κάρτες, κινήσεις, δόσεις και συνδρομές. Ένα αντίγραφο μένει στον server.</div></div>
+              <div id="resetControl"></div>
+            </div>
           </div>
-          <p class="settings-hint" data-i18n="theme_hint">Το «Αυτόματο» ακολουθεί τη ρύθμιση της συσκευής. Στυλ και θέμα αποθηκεύονται μόνο σε αυτή τη συσκευή.</p>
         </div>
-      </div>
-
-      <div class="card">
-        <div class="card-header"><h2 data-i18n="settings_notifications">Ειδοποιήσεις</h2></div>
-        <div class="settings-section" id="notifSettingsContainer"></div>
-      </div>
-
-      <div class="card">
-        <div class="card-header"><h2 data-i18n="settings_data">Δεδομένα</h2></div>
-        <div class="settings-section settings-actions">
-          <button class="btn btn-secondary" onclick="exportData()"><svg class="btn-ico" aria-hidden="true"><use href="#i-export"/></svg><span data-i18n="btn_export">Εξαγωγή JSON</span></button>
-          <button class="btn btn-secondary" onclick="importData()"><svg class="btn-ico" aria-hidden="true"><use href="#i-import"/></svg><span data-i18n="btn_import">Εισαγωγή JSON</span></button>
-          <input type="file" id="importFile" accept=".json" style="display:none" onchange="handleImport(event)">
-          <button class="btn btn-danger" onclick="confirmReset()"><svg class="btn-ico" aria-hidden="true"><use href="#i-trash"/></svg><span data-i18n="btn_reset">Επαναφορά</span></button>
-        </div>
-      </div>
+      </section>
 
     </div>
   </section>
@@ -874,6 +897,71 @@
 <div class="toast" id="toast"></div>
 
 <!-- Confirm dialog -->
+<!-- Account Modal (Settings) -->
+<div class="modal-overlay" id="accountModal">
+  <div class="modal modal-sm" role="dialog" aria-modal="true" aria-labelledby="accountModalTitle">
+    <div class="modal-header">
+      <h3 id="accountModalTitle"></h3>
+      <button class="modal-close" data-i18n-aria="btn_close" aria-label="Κλείσιμο" onclick="closeModal('accountModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="accEditId">
+      <div class="form-group">
+        <label for="accName" data-i18n="acc_label_name">Όνομα</label>
+        <input type="text" id="accName" class="form-control" required>
+      </div>
+      <div class="form-group">
+        <label id="accTypeLbl" data-i18n="acc_label_type">Τύπος</label>
+        <div class="seg seg-full" role="group" aria-labelledby="accTypeLbl">
+          <button type="button" data-acc-type="cash" onclick="setAccModalType('cash')"><svg class="btn-ico" aria-hidden="true"><use href="#i-wallet"/></svg><span data-i18n="acc_type_cash">Μετρητά</span></button>
+          <button type="button" data-acc-type="bank" onclick="setAccModalType('bank')"><svg class="btn-ico" aria-hidden="true"><use href="#i-bank"/></svg><span data-i18n="acc_type_bank">Τραπεζικός</span></button>
+        </div>
+      </div>
+      <div class="form-group" id="accBankGroup">
+        <label for="accBank" data-i18n="acc_label_bank">Τράπεζα</label>
+        <input type="text" id="accBank" class="form-control" data-i18n-placeholder="placeholder_bank" placeholder="π.χ. Alpha Bank">
+      </div>
+      <div class="form-group">
+        <label for="accBalance" data-i18n="acc_label_balance">Υπόλοιπο (€)</label>
+        <input type="number" id="accBalance" class="form-control" step="0.01" placeholder="0,00">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('accountModal')" data-i18n="btn_cancel">Άκυρο</button>
+      <button class="btn btn-primary" onclick="saveAccountModal()" data-i18n="btn_save">Αποθήκευση</button>
+    </div>
+  </div>
+</div>
+
+<!-- Card Modal (Settings) -->
+<div class="modal-overlay" id="cardModal">
+  <div class="modal modal-sm" role="dialog" aria-modal="true" aria-labelledby="cardModalTitle">
+    <div class="modal-header">
+      <h3 id="cardModalTitle"></h3>
+      <button class="modal-close" data-i18n-aria="btn_close" aria-label="Κλείσιμο" onclick="closeModal('cardModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="cardEditId">
+      <div class="form-group">
+        <label for="cardNameInput" data-i18n="card_label_name">Όνομα Κάρτας</label>
+        <input type="text" id="cardNameInput" class="form-control" required>
+      </div>
+      <div class="form-group">
+        <label for="cardBankInput" data-i18n="card_label_bank">Τράπεζα Έκδοσης</label>
+        <input type="text" id="cardBankInput" class="form-control" data-i18n-placeholder="placeholder_bank" placeholder="π.χ. Alpha Bank">
+      </div>
+      <div class="form-group">
+        <label for="cardLinkedInput" data-i18n="card_label_linked">Συνδεδεμένος Λογαριασμός</label>
+        <select id="cardLinkedInput" class="form-control"></select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('cardModal')" data-i18n="btn_cancel">Άκυρο</button>
+      <button class="btn btn-primary" onclick="saveCardModal()" data-i18n="btn_save">Αποθήκευση</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="confirmModal">
   <div class="modal modal-sm">
     <div class="modal-header">
@@ -966,11 +1054,11 @@
   </div>
 </div>
 
-<script src="i18n.js?v=0.950"></script>
-<script src="calc.js?v=0.950"></script>
-<script src="charts.js?v=0.950"></script>
-<script src="help.js?v=0.950"></script>
-<script src="report.js?v=0.950"></script>
-<script src="app.js?v=0.950"></script>
+<script src="i18n.js?v=0.951"></script>
+<script src="calc.js?v=0.951"></script>
+<script src="charts.js?v=0.951"></script>
+<script src="help.js?v=0.951"></script>
+<script src="report.js?v=0.951"></script>
+<script src="app.js?v=0.951"></script>
 </body>
 </html>
