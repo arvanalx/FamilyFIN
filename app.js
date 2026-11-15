@@ -305,43 +305,8 @@ function renderDashboard() {
     `<svg class="btn-ico" aria-hidden="true"><use href="#i-arrow-${delta > 0 ? 'up' : 'down'}"/></svg>${delta > 0 ? '+' : ''}${fmtEuro(delta)}`;
   dEl.hidden = delta === 0;
 
-  // Monthly stats (Fix 5: Δόσεις Καρτών removed)
-  const month = thisMonth();
-  const mtx = state.transactions.filter(t => t.date.startsWith(month) && !t.transferId);
-  const income   = mtx.filter(t => t.type === 'income').reduce((s,t) => s + t.amount, 0);
-  const expenses = mtx.filter(t => t.type === 'expense').reduce((s,t) => s + t.amount, 0);
-  document.getElementById('monthlyIncome').textContent = fmtEuro(income);
-  document.getElementById('monthlyExpenses').textContent = fmtEuro(expenses);
-  const balEl = document.getElementById('monthlyBalance');
-  balEl.textContent = fmtEuro(income - expenses);
-  balEl.className = 'stat-value ' + (income - expenses >= 0 ? 'positive' : 'negative');
-
-  // Credit cards summary
-  const ccDiv  = document.getElementById('creditCardsSummary');
-  const curMon = thisMonth();
-  ccDiv.innerHTML = (state.cards || []).map(card => {
-    const txAmt   = state.cardTransactions
-      .filter(t => t.card === card.id && t.date.startsWith(curMon))
-      .reduce((s, t) => s + t.amount, 0);
-    const instAmt = state.installments
-      .filter(i => i.card === card.id && installmentDue(i, curMon))
-      .reduce((s, i) => s + i.monthlyAmount, 0);
-    const total     = txAmt + instAmt;
-    const logoClass = card.id === 'mastercard' ? 'mc-logo' : 'visa-logo';
-    const logoText  = card.id === 'mastercard' ? 'MC' : card.name.substring(0, 4);
-    return `
-      <div class="credit-card-item">
-        <div class="cc-logo ${logoClass}">${esc(logoText)}</div>
-        <div class="cc-info">
-          <div class="cc-bank">${esc(card.bank)}</div>
-        </div>
-        <div class="cc-extra">
-          <div class="cc-balance">${fmtEuro(total)}</div>
-          <div class="cc-inst">${fmtEuro(txAmt)} ${t('dash_tx_pm')}</div>
-          ${instAmt > 0 ? `<div class="cc-inst">${fmtEuro(instAmt)} ${t('dash_installments_pm')}</div>` : ''}
-        </div>
-      </div>`;
-  }).join('');
+  renderDashMonth();
+  renderDashCards();
 
   // Recent transactions (last 6)
   const recent = [...state.transactions]
@@ -364,6 +329,96 @@ function renderDashboard() {
 
   // Daily balance line chart
   renderDailyBalanceChart();
+}
+
+// Month balance card: result first, then income vs expenses on one bar
+function renderDashMonth() {
+  const month = thisMonth();
+  const [y, m] = month.split('-');
+  document.getElementById('dashMonthLabel').textContent = `${t('months_full')[+m - 1]} ${y}`;
+  const mtx = state.transactions.filter(tx => tx.date.startsWith(month) && !tx.transferId);
+  const income   = round2(mtx.filter(tx => tx.type === 'income').reduce((s, tx) => s + tx.amount, 0));
+  const expenses = round2(mtx.filter(tx => tx.type === 'expense').reduce((s, tx) => s + tx.amount, 0));
+  const bal = round2(income - expenses);
+  document.getElementById('monthlyIncome').textContent   = fmtEuro(income);
+  document.getElementById('monthlyExpenses').textContent = fmtEuro(expenses);
+  const balEl = document.getElementById('monthlyBalance');
+  balEl.textContent = (bal > 0 ? '+' : '') + fmtEuro(bal);
+  balEl.className = 'bal-big' + (bal > 0 ? ' up' : bal < 0 ? ' down' : '');
+
+  const ratio = document.getElementById('monthlyRatio');
+  ratio.hidden = !(income > 0 || bal < 0);
+  if (bal < 0) {
+    ratio.className = 'bal-delta down';
+    ratio.textContent = tf('dash_month_over', fmtEuro(-bal));
+  } else if (income > 0) {
+    ratio.className = 'bal-delta up';
+    ratio.textContent = tf('dash_month_left', Math.round(bal / income * 100));
+  }
+
+  // Bar: expenses + what is left, as shares of the larger of income/expenses
+  const bar = document.getElementById('monthlyBar');
+  const base = Math.max(income, expenses);
+  if (!base) { bar.innerHTML = ''; return; }
+  const segs = [
+    { cls: 'dm-exp', v: expenses, lbl: t('stat_expense') },
+    { cls: 'dm-inc', v: Math.max(bal, 0), lbl: t('dash_month_result') },
+  ].filter(s => s.v > 0);
+  bar.innerHTML = segs.map(s => `<span class="${s.cls}" style="width:${(s.v / base * 100).toFixed(2)}%"
+    data-tip="${tipData([[getComputedStyle(document.documentElement).getPropertyValue(s.cls === 'dm-exp' ? '--danger' : '--success').trim(), s.lbl, fmtEuro(s.v)]])}"></span>`).join('');
+  bindChartTips(bar);
+}
+
+// Credit cards card: total owed, then each card with a transactions/installments bar
+function renderDashCards() {
+  const curMon = thisMonth();
+  const cards = state.cards || [];
+  const rows = cards.map(card => {
+    const tx = round2(state.cardTransactions
+      .filter(x => x.card === card.id && x.date.startsWith(curMon))
+      .reduce((s, x) => s + x.amount, 0));
+    const inst = round2(state.installments
+      .filter(i => i.card === card.id && installmentDue(i, curMon))
+      .reduce((s, i) => s + i.monthlyAmount, 0));
+    return { card, tx, inst, total: round2(tx + inst) };
+  });
+  const sumTx = round2(rows.reduce((s, r) => s + r.tx, 0));
+  const sumInst = round2(rows.reduce((s, r) => s + r.inst, 0));
+  document.getElementById('cardsTotalBlock').hidden = !cards.length;
+  document.getElementById('cardsLegend').hidden = !cards.length;
+  document.getElementById('cardsTotal').textContent = fmtEuro(sumTx + sumInst);
+  document.getElementById('cardsSplit').textContent = tf('dash_cards_split', fmtEuro(sumTx), fmtEuro(sumInst));
+
+  const cs = getComputedStyle(document.documentElement);
+  const cTx = cs.getPropertyValue('--cat-7').trim(), cInst = cs.getPropertyValue('--cat-4').trim();
+  const ccDiv = document.getElementById('creditCardsSummary');
+  ccDiv.innerHTML = cards.length ? rows.map(({ card, tx, inst, total }) => {
+    const tip = tipData([card.name, [cTx, t('dash_cards_tx'), fmtEuro(tx)], [cInst, t('dash_cards_inst'), fmtEuro(inst)]]);
+    const bar = total > 0
+      ? `<div class="dm-bar dc-bar" data-tip="${tip}">
+          ${tx > 0 ? `<span class="dc-tx" style="width:${(tx / total * 100).toFixed(2)}%"></span>` : ''}
+          ${inst > 0 ? `<span class="dc-inst" style="width:${(inst / total * 100).toFixed(2)}%"></span>` : ''}
+        </div>`
+      : `<div class="dm-bar dc-bar"></div>`;
+    return `
+      <div class="dc-row" role="button" tabindex="0" aria-label="${esc(tf('dash_cards_open', card.name))}"
+           onclick="if(!event.target.closest('.dc-bar'))openCardFromDash('${card.id}')"
+           onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openCardFromDash('${card.id}')}">
+        <div class="dc-head">
+          <span class="dc-name">${esc(card.name)}</span>
+          <span class="dc-bank">${esc(card.bank || '')}</span>
+          <span class="dc-amt${total === 0 ? ' zero' : ''}">${fmtEuro(total)}</span>
+          <svg class="dc-chev" aria-hidden="true"><use href="#i-chevron"/></svg>
+        </div>
+        ${bar}
+      </div>`;
+  }).join('') : `<div class="empty-state">${t('cards_not_set')}</div>`;
+  ccDiv.querySelectorAll('.dc-bar').forEach(b => bindChartTips(b));
+}
+
+function openCardFromDash(id) {
+  activeCardId = id;
+  showPage('cards');
 }
 
 function renderRecentTransactions(txs) {

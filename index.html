@@ -26,7 +26,7 @@
       document.documentElement.dataset.style = style;
     })();
   </script>
-  <link rel="stylesheet" href="style.css?v=0.954">
+  <link rel="stylesheet" href="style.css?v=0.955">
 </head>
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -50,6 +50,7 @@
     <symbol id="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="8.5" y="8.5" width="12" height="12" rx="2.5"/><path d="M15.5 8.5V6a2.5 2.5 0 0 0-2.5-2.5H6A2.5 2.5 0 0 0 3.5 6v7A2.5 2.5 0 0 0 6 15.5h2.5"/></symbol>
     <symbol id="i-arrow-up" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M6 11l6-6 6 6"/></symbol>
     <symbol id="i-arrow-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M6 13l6 6 6-6"/></symbol>
+    <symbol id="i-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></symbol>
     <symbol id="i-scale" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v16M8 20h8M5 7h14M5 7l-2.5 6a2.5 2.5 0 0 0 5 0L5 7ZM19 7l-2.5 6a2.5 2.5 0 0 0 5 0L19 7Z"/></symbol>
     <symbol id="i-wallet" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M19 7V5.5A1.5 1.5 0 0 0 17.5 4H5.5A2.5 2.5 0 0 0 3 6.5v11A2.5 2.5 0 0 0 5.5 20h13a1.5 1.5 0 0 0 1.5-1.5V15M3 6.5A2.5 2.5 0 0 0 5.5 9h13A1.5 1.5 0 0 1 20 10.5V15h-4a2 2 0 0 1 0-4h4"/></symbol>
     <symbol id="i-cal-year" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M8 3v4M16 3v4M3.5 10h17M7.5 17l3-3 2 2 4-4"/></symbol>
@@ -104,7 +105,7 @@
   </ul>
   <div class="sidebar-footer">
     <button id="langToggle" class="lang-toggle" onclick="toggleLang()">EN</button>
-    <span class="version">v0.954 Beta</span>
+    <span class="version">v0.955 Beta</span>
   </div>
 </nav>
 
@@ -180,37 +181,41 @@
       <!-- Quick Stats + Credit Cards (full-width 2-col row) -->
       <div class="dash-two-col">
 
-      <div class="card stats-card">
-        <div class="card-header"><h2 data-i18n="dash_monthly_stats">Στατιστικά Μήνα</h2></div>
-        <div class="stats-grid">
-          <div class="stat-item stat-income">
-            <span class="stat-icon"><svg aria-hidden="true"><use href="#i-arrow-up"/></svg></span>
-            <div>
-              <div class="stat-label" data-i18n="stat_income">Έσοδα</div>
-              <div class="stat-value" id="monthlyIncome">0,00 €</div>
-            </div>
-          </div>
-          <div class="stat-item stat-expense">
-            <span class="stat-icon"><svg aria-hidden="true"><use href="#i-arrow-down"/></svg></span>
-            <div>
-              <div class="stat-label" data-i18n="stat_expense">Έξοδα</div>
-              <div class="stat-value" id="monthlyExpenses">0,00 €</div>
-            </div>
-          </div>
-          <div class="stat-item stat-balance stat-full">
-            <span class="stat-icon"><svg aria-hidden="true"><use href="#i-scale"/></svg></span>
-            <div>
-              <div class="stat-label" data-i18n="stat_balance">Υπόλοιπο</div>
-              <div class="stat-value" id="monthlyBalance">0,00 €</div>
-            </div>
+      <!-- Month balance (v0.955) -->
+      <div class="card dash-month">
+        <div class="card-header">
+          <h2 data-i18n="dash_monthly_stats">Ισοζύγιο Κινήσεων Μήνα</h2>
+          <span class="card-date" id="dashMonthLabel"></span>
+        </div>
+        <div class="dm-body">
+          <div class="bal-hero-label" data-i18n="dash_month_result">Υπόλοιπο μήνα</div>
+          <div class="bal-big" id="monthlyBalance">0,00 €</div>
+          <span class="bal-delta" id="monthlyRatio" hidden></span>
+          <div class="dm-bar chart-tips" id="monthlyBar"></div>
+          <div class="dm-legend">
+            <span class="dm-dot dm-inc"></span>
+            <span class="dm-lbl"><svg class="btn-ico" aria-hidden="true"><use href="#i-arrow-up"/></svg><span data-i18n="stat_income">Έσοδα</span></span>
+            <span class="dm-val" id="monthlyIncome">0,00 €</span>
+            <span class="dm-dot dm-exp"></span>
+            <span class="dm-lbl"><svg class="btn-ico" aria-hidden="true"><use href="#i-arrow-down"/></svg><span data-i18n="stat_expense">Έξοδα</span></span>
+            <span class="dm-val" id="monthlyExpenses">0,00 €</span>
           </div>
         </div>
       </div>
 
-      <!-- Credit Cards Summary -->
-      <div class="card">
+      <!-- Credit cards (v0.955) -->
+      <div class="card dash-cards">
         <div class="card-header"><h2 data-i18n="dash_credit_cards">Πιστωτικές Κάρτες</h2></div>
+        <div class="dc-total" id="cardsTotalBlock">
+          <div class="bal-hero-label" data-i18n="dash_cards_total">Συνολική οφειλή</div>
+          <div class="bal-big" id="cardsTotal">0,00 €</div>
+          <div class="dc-split" id="cardsSplit"></div>
+        </div>
         <div class="credit-cards-summary" id="creditCardsSummary"></div>
+        <div class="dc-legend" id="cardsLegend">
+          <span class="dm-dot dc-tx"></span><span data-i18n="dash_cards_tx">Κινήσεις μήνα</span>
+          <span class="dm-dot dc-inst"></span><span data-i18n="dash_cards_inst">Δόσεις μήνα</span>
+        </div>
       </div>
 
       </div><!-- end dash-two-col -->
@@ -1066,11 +1071,11 @@
   </div>
 </div>
 
-<script src="i18n.js?v=0.954"></script>
-<script src="calc.js?v=0.954"></script>
-<script src="charts.js?v=0.954"></script>
-<script src="help.js?v=0.954"></script>
-<script src="report.js?v=0.954"></script>
-<script src="app.js?v=0.954"></script>
+<script src="i18n.js?v=0.955"></script>
+<script src="calc.js?v=0.955"></script>
+<script src="charts.js?v=0.955"></script>
+<script src="help.js?v=0.955"></script>
+<script src="report.js?v=0.955"></script>
+<script src="app.js?v=0.955"></script>
 </body>
 </html>

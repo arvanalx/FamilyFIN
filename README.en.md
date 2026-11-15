@@ -181,17 +181,19 @@ A chart showing how each account balance evolves day by day, from **today** (lef
 
 ### 4.4 Monthly Transaction Balance
 
-A summary for the **current month** (transfers between accounts excluded):
-- **Income:** Total income from transactions of type "Income"
-- **Expenses:** Total expenses from transactions of type "Expense"
-- **Balance:** Income − Expenses (green if positive, red if negative)
+A summary for the **current month** (transfers between accounts excluded). The month is shown at the top right.
 
-### 4.5 Credit Card Balances (summary)
+- **Month balance** (large figure): Income − Expenses, green if positive and red if negative
+- Below it, a badge shows what share of income is left over (e.g. *34% of income left over*) or, if expenses are higher, by how much they exceeded income
+- **Bar:** the red part is expenses and the green part is what was left over. Tap or hover over it to see the amount
+- **Income / Expenses:** the two monthly totals, each on its own line
 
-For each card:
-- **Monthly total** (bold red) = current month transactions + monthly installments
-- **xxx.xx € transactions/mo** — transactions for the current month
-- **xxx.xx € installments/mo** — monthly amount of active installments (shown only if > 0)
+### 4.5 Credit Cards (summary)
+
+- **Total owed** (large figure): the sum of all cards for the current month, with a small line splitting it into transactions and installments
+- For each card: the name, the bank and the **monthly total** (current month transactions + monthly installments)
+- The **bar** under each card shows how much of the total is **transactions** (purple) and how much is **installments** (yellow). Tap or hover over it to see both amounts
+- Tapping anywhere else on a card's row opens its page
 
 ### 4.6 Expenses by Category
 
@@ -665,4 +667,4 @@ Card payments from an account (category "Κάρτες" or "Cards") are excluded 
 
 ---
 
-*Family FiN — Version 0.954 Beta | Last updated: November 2026*
+*Family FiN — Version 0.955 Beta | Last updated: November 2026*
