@@ -747,7 +747,8 @@ body.privacy-mode .pv {
 .style-dots { display: flex; gap: 4px; }
 .style-dots i { width: 18px; height: 18px; border-radius: 5px; border: 1px solid rgba(0,0,0,.15); }
 .theme-toggle { display: flex; flex-wrap: wrap; gap: 8px; }
-.theme-toggle .chart-tog { font-size: .88rem; padding: 7px 16px; }
+.theme-toggle .chart-tog { font-size: .88rem; padding: 7px 16px; display: inline-flex; align-items: center; gap: 7px; }
+.theme-toggle .btn-ico { width: 16px; height: 16px; flex: none; }
 .settings-hint { font-size: .8rem; color: var(--text-muted); margin-top: 10px; line-height: 1.5; }
 
 .chart-controls {

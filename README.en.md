@@ -97,9 +97,9 @@ At the top of each page a toolbar shows:
 All three share the same layout and features; only colours, fonts and details change. The **logo** (the three bars at the top left) takes the style's colour too. The app icon on the phone's home screen and in the browser tab stays fixed, because the device keeps a single icon.
 
 **Theme**:
-- **🖥️ Auto** (default) — follows the device setting (e.g. on macOS: System Settings → Appearance) and switches together with it
-- **☀️ Light** — always light
-- **🌙 Dark** — always dark
+- **{{monitor}} Auto** (default) — follows the device setting (e.g. on macOS: System Settings → Appearance) and switches together with it
+- **{{sun}} Light** — always light
+- **{{moon}} Dark** — always dark
 
 Style and theme are saved **per device** (e.g. dark on your phone, light on your computer). All charts adapt.
 
@@ -681,4 +681,4 @@ Card payments from an account (category "Κάρτες" or "Cards") are excluded 
 
 ---
 
-*Family FiN — Version 0.949 Beta | Last updated: November 2026*
+*Family FiN — Version 0.950 Beta | Last updated: November 2026*

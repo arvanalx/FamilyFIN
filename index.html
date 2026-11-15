@@ -26,7 +26,7 @@
       document.documentElement.dataset.style = style;
     })();
   </script>
-  <link rel="stylesheet" href="style.css?v=0.949">
+  <link rel="stylesheet" href="style.css?v=0.950">
 </head>
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -54,6 +54,9 @@
     <symbol id="i-wallet" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M19 7V5.5A1.5 1.5 0 0 0 17.5 4H5.5A2.5 2.5 0 0 0 3 6.5v11A2.5 2.5 0 0 0 5.5 20h13a1.5 1.5 0 0 0 1.5-1.5V15M3 6.5A2.5 2.5 0 0 0 5.5 9h13A1.5 1.5 0 0 1 20 10.5V15h-4a2 2 0 0 1 0-4h4"/></symbol>
     <symbol id="i-cal-year" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M8 3v4M16 3v4M3.5 10h17M7.5 17l3-3 2 2 4-4"/></symbol>
     <symbol id="i-hourglass" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 3h11M6.5 21h11M7.5 3v3.5a4.5 4.5 0 0 0 9 0V3M7.5 21v-3.5a4.5 4.5 0 0 1 9 0V21"/></symbol>
+    <symbol id="i-monitor" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="12.5" rx="2"/><path d="M8.5 20.5h7M12 16.5v4"/></symbol>
+    <symbol id="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"/></symbol>
+    <symbol id="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></symbol>
     <symbol id="i-help" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.6 2.6 0 0 1 5 1c0 1.7-2.5 2.2-2.5 3.7M12 17.3h.01"/></symbol>
   </defs>
 </svg>
@@ -95,7 +98,7 @@
   </ul>
   <div class="sidebar-footer">
     <button id="langToggle" class="lang-toggle" onclick="toggleLang()">EN</button>
-    <span class="version">v0.949 Beta</span>
+    <span class="version">v0.950 Beta</span>
   </div>
 </nav>
 
@@ -500,9 +503,9 @@
           </div>
           <div class="appearance-label" data-i18n="appearance_theme">Θέμα</div>
           <div class="chart-toggle-group theme-toggle" role="group" data-i18n-aria="appearance_theme" aria-label="Θέμα">
-            <button class="chart-tog" data-theme-pref="auto"  onclick="setThemePref('auto')"  data-i18n="theme_auto">🖥️ Αυτόματο</button>
-            <button class="chart-tog" data-theme-pref="light" onclick="setThemePref('light')" data-i18n="theme_light">☀️ Φωτεινό</button>
-            <button class="chart-tog" data-theme-pref="dark"  onclick="setThemePref('dark')"  data-i18n="theme_dark">🌙 Σκοτεινό</button>
+            <button class="chart-tog" data-theme-pref="auto"  onclick="setThemePref('auto')"><svg class="btn-ico" aria-hidden="true"><use href="#i-monitor"/></svg><span data-i18n="theme_auto">Αυτόματο</span></button>
+            <button class="chart-tog" data-theme-pref="light" onclick="setThemePref('light')"><svg class="btn-ico" aria-hidden="true"><use href="#i-sun"/></svg><span data-i18n="theme_light">Φωτεινό</span></button>
+            <button class="chart-tog" data-theme-pref="dark"  onclick="setThemePref('dark')"><svg class="btn-ico" aria-hidden="true"><use href="#i-moon"/></svg><span data-i18n="theme_dark">Σκοτεινό</span></button>
           </div>
           <p class="settings-hint" data-i18n="theme_hint">Το «Αυτόματο» ακολουθεί τη ρύθμιση της συσκευής. Στυλ και θέμα αποθηκεύονται μόνο σε αυτή τη συσκευή.</p>
         </div>
@@ -963,11 +966,11 @@
   </div>
 </div>
 
-<script src="i18n.js?v=0.949"></script>
-<script src="calc.js?v=0.949"></script>
-<script src="charts.js?v=0.949"></script>
-<script src="help.js?v=0.949"></script>
-<script src="report.js?v=0.949"></script>
-<script src="app.js?v=0.949"></script>
+<script src="i18n.js?v=0.950"></script>
+<script src="calc.js?v=0.950"></script>
+<script src="charts.js?v=0.950"></script>
+<script src="help.js?v=0.950"></script>
+<script src="report.js?v=0.950"></script>
+<script src="app.js?v=0.950"></script>
 </body>
 </html>

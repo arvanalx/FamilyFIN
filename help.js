@@ -19,7 +19,7 @@ function renderHelp() {
 
 // Lightweight Markdown → HTML converter (supports the subset used in README.md)
 const HELP_ICONS = new Set(['edit','trash','check','box','copy','eye','eye-off','export','import',
-  'home','tx','income','card','inst','sub','gear','help','logo']);
+  'home','tx','income','card','inst','sub','gear','help','logo','monitor','sun','moon']);
 
 function mdToHtml(md) {
   const lines = md.split('\n');
