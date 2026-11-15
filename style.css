@@ -1234,22 +1234,8 @@ body.privacy-mode .chart-tip { display: none; }
 }
 
 /* ============================================================
-   CREDIT CARD PAGE HEADER
+   CREDIT CARD PAGE SUMMARY
    ============================================================ */
-.cc-header {
-  padding: 20px 20px 12px;
-  border-radius: var(--radius) var(--radius) 0 0;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.visa-header { background: linear-gradient(135deg, #0f2347, #1a3a6b); color: #fff; }
-.mc-header { background: linear-gradient(135deg, #660000, #cc0000); color: #fff; }
-
-.cc-title { font-size: 1.1rem; font-weight: 800; letter-spacing: 4px; }
-.cc-bank-label { font-size: .8rem; opacity: .8; }
-
 .cc-summary {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;

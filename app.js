@@ -883,18 +883,9 @@ function selectCard(cardId) {
 function renderCard(cardId) {
   const cardData = (state.cards || []).find(c => c.id === cardId);
   const name = cardData?.name || cardId.toUpperCase();
-  const bank = cardData?.bank || '';
-  const n    = (cardId + ' ' + name).toLowerCase();
-  const hdr  = n.includes('visa') ? 'visa-header' : 'mc-header';
 
   document.getElementById('cardPageContent').innerHTML = `
     <div class="card">
-      <div class="card-header">
-        <div class="cc-header ${hdr}">
-          <span class="cc-title">${esc(name)}</span>
-          <span class="cc-bank-label">${esc(bank)}</span>
-        </div>
-      </div>
       <div class="cc-summary">
         <div class="cc-stat">
           <div class="cc-stat-label">${t('card_current_balance')}</div>
