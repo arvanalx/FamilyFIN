@@ -1,6 +1,6 @@
 # Family FiN — User Guide
 
-> **Family FiN** is a personal family finance management app. It tracks accounts, transactions, income, credit cards, installments, and subscriptions — all in one place.
+> **Family FiN** is a personal family finance management app. It tracks accounts, transactions, income, credit cards, installments, and recurring payments — all in one place.
 
 ---
 
@@ -14,7 +14,7 @@
 6. [Income](#6-income)
 7. [Credit Cards](#7-credit-cards)
 8. [Installments](#8-installments)
-9. [Subscriptions](#9-subscriptions)
+9. [Recurring](#9-recurring)
 10. [Settings](#10-settings)
 11. [Data Management](#11-data-management)
 12. [Keyboard Shortcuts](#12-keyboard-shortcuts)
@@ -73,7 +73,7 @@ The left sidebar contains all sections of the app:
 | {{income}} | **Income** | Dedicated income view |
 | {{card}} | **Credit Cards** | Card transactions and installments |
 | {{inst}} | **Installments** | All active card installments |
-| {{sub}} | **Subscriptions** | Monthly/annual subscriptions |
+| {{sub}} | **Recurring** | Monthly/annual recurring payments (rent, insurance, subscriptions, etc.) |
 | {{gear}} | **Settings** | Accounts, cards, categories |
 
 **On mobile:** tap ☰ at the top left to open the menu.
@@ -147,7 +147,7 @@ On **all pages**, the following blur automatically:
 | **Income** | Monthly & annual summary, row amounts |
 | **Credit Cards** | Current balance, installments/month, monthly transactions, transaction amounts |
 | **Installments** | Monthly charge, remaining amount, monthly installment per entry |
-| **Subscriptions** | Monthly/annual cost, amount per subscription |
+| **Recurring** | Monthly/annual cost, amount per recurring payment |
 
 > 💡 Account **names**, categories, descriptions and dates remain visible — only **€ amounts** are hidden.
 
@@ -317,7 +317,7 @@ Each account transaction can be marked as **Settled**, meaning the money has act
 
 Clicking {{check}} again → {{box}} reverses the effect on the balance.
 
-> ℹ️ Transactions created automatically by Subscriptions ({{sub}}) can also be marked as settled and edited normally.
+> ℹ️ Transactions created automatically by Recurring payments ({{sub}}) can also be marked as settled and edited normally.
 
 ### 5.3 Editing / Deleting a transaction
 
@@ -477,11 +477,11 @@ A list of card transactions, sorted by date (most recent first).
 **Add card transaction:** Click **"+ Transaction"** and fill in:
 - Date, amount, description, category
 
-> 📌 Transactions created automatically by **Subscriptions** are shown with the {{sub}} icon.
+> 📌 Transactions created automatically by **Recurring** payments are shown with the {{sub}} icon.
 
 **Desktop — Transaction actions:**
 - {{edit}} — Opens the edit form (date, amount, description, category)
-- {{trash}} — Deletes immediately, with **Undo** available — if the transaction belongs to a subscription, it **prevents** automatic recreation
+- {{trash}} — Deletes immediately, with **Undo** available — if the transaction belongs to a recurring payment, it **prevents** automatic recreation
 
 **Mobile** (tap on a card transaction row):
 - Opens an action menu with **Edit** and **Delete** options.
@@ -525,20 +525,20 @@ Each installment shows a visual progress bar indicating the completion percentag
 
 ---
 
-## 9. Subscriptions
+## 9. Recurring
 
-Manage **monthly and annual subscriptions** with automatic transaction creation.
+Manage **monthly and annual recurring payments** (rent, insurance, bills, subscriptions, etc.) with automatic transaction creation.
 
 ### 9.1 Cost summary
 
-- **Monthly:** Total of monthly subscriptions
+- **Monthly:** Total of monthly recurring payments
 - **Yearly:** Total annual cost (monthly × 12 + annual)
 
-> **Paused** subscriptions are not included.
+> **Paused** recurring payments are not included.
 
-### 9.2 Adding a new subscription
+### 9.2 Adding a new recurring payment
 
-Click **"+ New Subscription"** and fill in:
+Click **"+ New Recurring Payment"** and fill in:
 
 | Field | Description |
 |-------|-------------|
@@ -548,40 +548,40 @@ Click **"+ New Subscription"** and fill in:
 | **Frequency** | Monthly or Yearly |
 | **Card/Account** | Where it is charged |
 | **Billing day** | Day of the month (1–31) |
-| **Billing month** | Yearly subscriptions only — the month of the year when you are charged |
-| **Expense Category** | Category applied to generated transactions |
+| **Billing month** | Yearly payments only — the month of the year when you are charged |
+| **Expense Category** | Category applied to generated transactions. If left empty, they get the "Συνδρομές" category |
 | **Paused** | When checked, automatic transaction generation is suspended |
 
 ### 9.3 Automatic transaction creation
 
-Each subscription **automatically creates** transactions for each month:
+Each recurring payment **automatically creates** transactions for each month:
 - If charged to a **card** → a transaction is created in Card Transactions
 - If charged to an **account** → a transaction is created in Account Transactions
 
-Automatic creation runs **every time the app is opened**, covering all months retroactively from the subscription's start date up to the current month. Automatic transactions are identified by the {{sub}} icon. If you delete such a transaction, it **will not** be recreated automatically for that month.
+Automatic creation runs **every time the app is opened**, covering all months retroactively from the payment's start date up to the current month. Automatic transactions are identified by the {{sub}} icon. If you delete such a transaction, it **will not** be recreated automatically for that month.
 
-> 💡 Changing the **category** of a subscription automatically updates **all existing** automatic transactions associated with it.
+> 💡 Changing the **category** of a recurring payment automatically updates **all existing** automatic transactions associated with it.
 
 ### 9.4 Generate next month's transaction
 
-Each subscription card shows a {{inst}} **+1** button (appears on hover on desktop, always visible on mobile). Tapping it:
-- Immediately creates the subscription transaction for the **next month only**
+Each recurring payment card shows a {{inst}} **+1** button (appears on hover on desktop, always visible on mobile). Tapping it:
+- Immediately creates the payment's transaction for the **next month only**
 - If the transaction already exists, a message is shown without creating a duplicate
 - Useful for getting a **complete view of future balances** before the month ends
 
-### 9.5 Pausing a Subscription
+### 9.5 Pausing a Recurring Payment
 
-In the subscription edit form there is a **"Paused"** option:
+In the recurring payment edit form there is a **"Paused"** option:
 - While active, **no automatic transactions** are generated for future months
-- The subscription remains in the list with a visual **⏸ Paused** indicator (dimmed appearance)
+- The payment remains in the list with a visual **⏸ Paused** indicator (dimmed appearance)
 - When unchecked, automatic transaction generation resumes normally
 
-> ℹ️ Useful for subscriptions that are temporarily suspended (e.g. a streaming service on pause).
+> ℹ️ Useful for payments that are temporarily suspended (e.g. a streaming service on pause).
 
-### 9.6 Subscription actions
+### 9.6 Recurring payment actions
 
 - {{edit}} — Edit
-- {{trash}} — Delete the subscription. Transactions already recorded are **kept** and converted to regular independent transactions
+- {{trash}} — Delete the recurring payment. Transactions already recorded are **kept** and converted to regular independent transactions
 
 ---
 
@@ -611,7 +611,7 @@ A list of your credit cards. Each row shows the bank and which account pays the 
 
 - **Add:** {{plus}} **New**
 - **Edit:** {{edit}} — Name (e.g. "VISA Gold"), Issuing Bank and **Linked Account**, from which the card is paid off
-- **Delete:** {{trash}} — if the card has transactions, installments or subscriptions, you are told and they are all deleted together after confirmation
+- **Delete:** {{trash}} — if the card has transactions, installments or recurring payments, you are told and they are all deleted together after confirmation
 
 Cards appear as **tabs** on the Credit Cards page.
 
@@ -619,7 +619,7 @@ Cards appear as **tabs** on the Credit Cards page.
 
 One card with an **Expenses / Income** switch (each shows how many categories it has).
 
-- **Expenses:** used in Expense transactions, installments and subscriptions
+- **Expenses:** used in Expense transactions, installments and recurring payments
 - **Income:** used for income
 - **Add:** tap {{plus}} **New**, type the name and press Enter (Esc to cancel)
 - **Remove:** tap the {{x}} on the category
@@ -655,7 +655,7 @@ The **Settings → Data** group has two cards: **Backups** and **Danger zone**.
 
 ### {{export}} Export
 
-Downloads a `familyfin_backup_YYYYMMDD.json` file with **all** app data (accounts, transactions, installments, subscriptions, etc.).
+Downloads a `familyfin_backup_YYYYMMDD.json` file with **all** app data (accounts, transactions, installments, recurring payments, etc.).
 
 > ✅ Recommended periodically as a backup.
 
@@ -711,4 +711,4 @@ Card payments from an account (category "Κάρτες" or "Cards") are excluded 
 
 ---
 
-*Family FiN — Version 0.957 Beta | Last updated: November 2026*
+*Family FiN — Version 0.958 Beta | Last updated: November 2026*
