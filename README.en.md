@@ -83,7 +83,21 @@ The left sidebar contains all sections of the app:
 At the top of each page a toolbar shows:
 - **Page title** — The name of the current section
 - **Sync indicator** — ⟳ saving, ✓ saved to the server (fades after a moment), **⚠ save failed**. On ⚠ your changes are kept and resent automatically every 15″ — tap ⚠ to retry immediately
+- **{{plus}} New entry** — Quick entry from any page (see below)
 - **Privacy button (eye icon)** — On the right, to blur all numbers (see Section 3)
+
+### Quick entry
+
+The **{{plus}} New entry** button in the top bar is on **every page**. On a phone it is a round **+** next to the eye icon. It opens a small menu (from the bottom of the screen on a phone) with four options:
+
+| Option | What it opens |
+|--------|---------------|
+| **Expense** | The transaction form, set to Expense |
+| **Income** | The income form |
+| **Card purchase** | The card transaction form. If you have more than one card, you pick the card first |
+| **Transfer** | The transfer form between accounts |
+
+The date is set to today and the cursor goes straight to the **amount**. The form remembers the **last account** you used (per device). After saving you stay on the page you were on. *Card purchase* appears only if you have cards, and *Transfer* only if you have at least two accounts.
 
 ### Appearance: Style and Theme
 
@@ -661,7 +675,7 @@ Deletes **all** data and restores the factory defaults. Tapping **Reset** shows 
 
 | Shortcut | Function |
 |----------|----------|
-| `Ctrl + N` | Open new transaction form |
+| `Ctrl + N` | Open the **New entry** menu |
 | `Escape` | Close the open dialog or action menu |
 | `Tab` / `Shift + Tab` | Move between fields — when a form opens, the cursor is placed in its first field automatically |
 
@@ -697,4 +711,4 @@ Card payments from an account (category "Κάρτες" or "Cards") are excluded 
 
 ---
 
-*Family FiN — Version 0.956 Beta | Last updated: November 2026*
+*Family FiN — Version 0.957 Beta | Last updated: November 2026*

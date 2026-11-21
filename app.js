@@ -579,6 +579,7 @@ function openNewTransactionModal() {
   document.getElementById('txSettled').checked = false;
   document.getElementById('txDeleteBtn').style.display = 'none';
   populateTxCategorySelect();
+  applyLastAccount('txAccount');
   openModal('addTransactionModal');
 }
 
@@ -627,6 +628,100 @@ function deleteTransaction(id) {
     if (tx.settled) adjustBalance(tx.account, -txDelta(tx));
     state.transactions = state.transactions.filter(x => x.id !== id);
   }, t('toast_tx_deleted'));
+}
+
+// ── QUICK ADD (top bar "+") ───────────────────────────────────
+const LAST_ACC_KEY = 'familyfin_last_account';
+
+function rememberLastAccount(id) {
+  try { localStorage.setItem(LAST_ACC_KEY, id); } catch (_) {}
+}
+function applyLastAccount(selectId) {
+  let id = null;
+  try { id = localStorage.getItem(LAST_ACC_KEY); } catch (_) {}
+  const sel = document.getElementById(selectId);
+  if (id && sel && [...sel.options].some(o => o.value === id)) sel.value = id;
+}
+
+// Put the cursor on the amount once the form is open (openModal focuses the first field first)
+function focusAmount(id) {
+  setTimeout(() => document.getElementById(id)?.focus({ preventScroll: true }), 90);
+}
+
+function toggleQuickAdd() {
+  document.getElementById('quickAddSheet').classList.contains('open') ? closeQuickAdd() : openQuickAdd();
+}
+
+function openQuickAdd() {
+  const sheet = document.getElementById('quickAddSheet');
+  const btn   = document.getElementById('quickAddBtn');
+  document.getElementById('qaCardBtn').hidden     = !(state.cards || []).length;
+  document.getElementById('qaTransferBtn').hidden = (state.accounts || []).length < 2;
+  showQuickAddMain();
+  // Desktop: drop the menu just under the button, aligned to its right edge
+  const r = btn.getBoundingClientRect();
+  sheet.style.setProperty('--qa-top', Math.round(r.bottom + 8) + 'px');
+  sheet.style.setProperty('--qa-right', Math.round(document.documentElement.clientWidth - r.right) + 'px');
+  sheet.classList.add('open');
+  btn.setAttribute('aria-expanded', 'true');
+  setTimeout(() => sheet.querySelector('#qaMain .qa-btn:not([hidden])')?.focus({ preventScroll: true }), 30);
+}
+
+function closeQuickAdd(restoreFocus = true) {
+  const sheet = document.getElementById('quickAddSheet');
+  if (!sheet.classList.contains('open')) return;
+  sheet.classList.remove('open');
+  const btn = document.getElementById('quickAddBtn');
+  btn.setAttribute('aria-expanded', 'false');
+  if (restoreFocus) btn.focus({ preventScroll: true });
+}
+
+function showQuickAddMain() {
+  document.getElementById('qaTitle').textContent = t('qa_new');
+  document.getElementById('qaMain').hidden  = false;
+  document.getElementById('qaCards').hidden = true;
+}
+
+function quickAdd(kind) {
+  if (kind === 'card') {
+    const cards = state.cards || [];
+    if (cards.length > 1) { showQuickAddCards(); return; }
+    if (cards.length === 1) quickAddCard(cards[0].id);
+    return;
+  }
+  closeQuickAdd(false);
+  if (kind === 'expense') {
+    openNewTransactionModal();
+    focusAmount('txAmount');
+  } else if (kind === 'income') {
+    openIncomeModal();
+    focusAmount('incAmount');
+  } else if (kind === 'transfer') {
+    openTransferModal();
+    focusAmount('transferAmount');
+  }
+}
+
+function showQuickAddCards() {
+  const box = document.getElementById('qaCards');
+  box.innerHTML = (state.cards || []).map(c => `
+    <button type="button" role="menuitem" class="action-sheet-btn qa-btn" onclick="quickAddCard('${c.id}')">
+      <span class="qa-tile"><svg class="btn-ico" aria-hidden="true"><use href="#i-card"/></svg></span>
+      <span class="qa-txt"><span>${esc(c.name)}</span>${c.bank ? `<small>${esc(c.bank)}</small>` : ''}</span>
+    </button>`).join('') + `
+    <button type="button" class="action-sheet-btn qa-back" onclick="showQuickAddMain();document.querySelector('#qaMain .qa-btn:not([hidden])')?.focus()">
+      <svg class="btn-ico" aria-hidden="true"><use href="#i-chevron"/></svg><span>${t('qa_back')}</span>
+    </button>`;
+  document.getElementById('qaTitle').textContent = t('qa_pick_card');
+  document.getElementById('qaMain').hidden = true;
+  box.hidden = false;
+  box.querySelector('.qa-btn')?.focus({ preventScroll: true });
+}
+
+function quickAddCard(cardId) {
+  closeQuickAdd(false);
+  openCardTransactionModal(cardId);
+  focusAmount('cardTxAmount');
 }
 
 // ── TRANSFERS ─────────────────────────────────────────────────
@@ -774,6 +869,7 @@ function saveTransaction() {
     const newTx = { id: uid(), type, date, amount, desc, category: cat, account, notes, settled };
     state.transactions.push(newTx);
     if (settled) adjustBalance(account, txDelta(newTx));
+    rememberLastAccount(account);
   }
 
   saveState();
@@ -950,6 +1046,7 @@ function saveIncome() {
   }
 
   state.transactions.push({ id: uid(), type: 'income', date, amount, desc, category: cat, account, notes: '' });
+  rememberLastAccount(account);
   saveState();
   closeModal('addIncomeModal');
   showToast(t('toast_income_saved'), 'success');
@@ -1463,7 +1560,7 @@ function deleteSubscription(id) {
 function openCardTransactionModal(card) {
   document.getElementById('cardTxCard').value = card;
   document.getElementById('editCardTransactionId').value = '';
-  document.getElementById('cardTxModalTitle').textContent = t('modal_card_tx') + ' ' + card.toUpperCase();
+  document.getElementById('cardTxModalTitle').textContent = t('modal_card_tx') + ' ' + ((state.cards || []).find(c => c.id === card)?.name || card.toUpperCase());
   document.getElementById('cardTxDate').value = today();
   document.getElementById('cardTxAmount').value = '';
   document.getElementById('cardTxDesc').value = '';
@@ -1760,6 +1857,7 @@ function openIncomeModal() {
   document.getElementById('incAmount').value = '';
   document.getElementById('incDesc').value = '';
   populateIncomeCategorySelect('incCategory');
+  applyLastAccount('incAccount');
   openModal('addIncomeModal');
 }
 
@@ -2205,12 +2303,13 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Keyboard shortcuts
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape') {
+      if (document.getElementById('quickAddSheet').classList.contains('open')) closeQuickAdd();
       document.querySelectorAll('.modal-overlay.open').forEach(m => closeModal(m.id));
       document.querySelectorAll('.action-sheet-overlay.open').forEach(m => m.classList.remove('open'));
     }
     if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
       e.preventDefault();
-      openNewTransactionModal();
+      if (!document.querySelector('.modal-overlay.open')) openQuickAdd();
     }
   });
 

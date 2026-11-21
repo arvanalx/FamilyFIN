@@ -2494,3 +2494,74 @@ body.privacy-mode :is(.br-val, .dm-sub-val) { filter: blur(8px); user-select: no
   .chart-note { padding-left: 14px; padding-right: 14px; }
   .dm-sub { padding-left: 37px; }
 }
+
+/* ============================================================
+   QUICK ADD (v0.957)
+   ============================================================ */
+.btn-quick-add {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 14px 0 11px;
+  border-radius: 999px;
+  border: 1px solid var(--accent);
+  background: var(--accent);
+  color: #fff;
+  font: inherit;
+  font-size: .85rem;
+  font-weight: 600;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: filter .15s, transform .15s;
+}
+.btn-quick-add:hover { filter: brightness(1.08); }
+.btn-quick-add:active { transform: scale(.96); }
+.btn-quick-add:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.btn-quick-add .btn-ico { width: 17px; height: 17px; }
+.btn-quick-add[aria-expanded="true"] .btn-ico { transform: rotate(45deg); }
+.btn-quick-add .btn-ico { transition: transform .15s; }
+.page-title { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.qa-btn { padding: 10px 12px; }
+.qa-tile {
+  width: 36px; height: 36px;
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--bg);
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+.action-sheet-btn .qa-tile .btn-ico { width: 18px; height: 18px; color: inherit; }
+.qa-exp { background: var(--danger-light); color: var(--danger); }
+.qa-inc { background: var(--success-light); color: var(--success); }
+.qa-txt { display: flex; flex-direction: column; min-width: 0; font-weight: 600; }
+.qa-txt small { font-size: .78rem; font-weight: 400; color: var(--text-muted); margin-top: 1px; }
+.qa-btn:hover, .qa-btn:focus-visible { background: var(--bg); outline: none; }
+.qa-back { color: var(--text-muted); font-size: .88rem; padding: 10px 12px; }
+.qa-back .btn-ico { transform: rotate(180deg); width: 16px; height: 16px; }
+
+/* Desktop: a dropdown under the button instead of a bottom sheet */
+@media (min-width: 769px) {
+  .qa-overlay { background: transparent; align-items: flex-start; animation: none; }
+  .qa-overlay.open { animation: none; }
+  .qa-overlay .qa-sheet {
+    position: fixed;
+    top: var(--qa-top, 64px);
+    right: var(--qa-right, 24px);
+    width: 280px;
+    padding: 6px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    animation: qaDrop .14s ease;
+  }
+  .qa-overlay .action-sheet-title,
+  .qa-overlay .action-sheet-cancel { display: none; }
+}
+@keyframes qaDrop { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+
+@media (max-width: 768px) {
+  .btn-quick-add { width: 36px; height: 36px; padding: 0; justify-content: center; }
+  .btn-quick-add .qa-lbl { display: none; }
+  .btn-quick-add .btn-ico { width: 19px; height: 19px; }
+}
